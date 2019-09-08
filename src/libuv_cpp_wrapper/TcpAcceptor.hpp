@@ -12,6 +12,18 @@ namespace net{
   class TcpAcceptor {
   public:
     TcpAcceptor(uv_loop_t* loop, const char* ip = DEFAULT_IP, int port = DEFAULT_PORT);
+    ~TcpAcceptor();
+
+    void listen();
+    uv_loop_t* getLoop();
+    bool isListen();
+    void onNewConnect(uv_tcp_t* client);
+    void setNewCallBack(ConnectionCallback callback);
+  private:
+    bool listened;
+    uv_loop_t* loop;
+    ConnectionCallback callback;
+    uv_tcp_t server;
   };
 }
 #endif
