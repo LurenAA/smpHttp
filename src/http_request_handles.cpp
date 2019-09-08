@@ -78,8 +78,9 @@ void send_document_in_chunked(std::string path, RequestContext* reqCon, uv_write
   }
   std::getline(fsrm, str);
   if(str.size()) {
-    int strSize = str.size();
-    std::string res(std::to_string(strSize));
+    char len[10] = "";
+    sprintf(len,"%x", (unsigned int)str.size());
+    std::string res(len);
     res += "\r\n" + str + "\r\n";
     if(sbuf.base) {
       delete [] sbuf.base;
