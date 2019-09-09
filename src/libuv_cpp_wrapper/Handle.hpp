@@ -10,15 +10,16 @@ typedef std::function<void ()> HandleCloseFunc;
 class Handle 
 {
   public:
-    Handle(uv_handle_t* handle,HandleCloseFunc close_cb = nullptr);
+    Handle(uv_handle_t* handle);
+    Handle(uv_tcp_t* handle);
     virtual void executeClose_cb();
     virtual ~Handle();
-    virtual void setClose_cb(HandleCloseFunc close_cb);
+    static void setClose_cb(HandleCloseFunc close_cb);
   protected:
     virtual bool isClosing();
     virtual void close();
     std::shared_ptr<uv_handle_t> handle;
-    HandleCloseFunc close_cb;
+    static HandleCloseFunc close_cb;
 };
 
 }

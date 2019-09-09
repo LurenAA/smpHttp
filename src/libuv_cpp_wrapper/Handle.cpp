@@ -3,14 +3,16 @@
 using namespace std;
 using namespace uvx;
 
+HandleCloseFunc Handle::close_cb = nullptr;
+
 bool Handle::isClosing() {
   if(!handle) 
     return false;
   return static_cast<bool>(uv_is_closing(handle.get()));
 }
 
-Handle::Handle(uv_handle_t* handle,HandleCloseFunc close_cb) :
-  handle(handle), close_cb(close_cb)
+Handle::Handle(uv_handle_t* handle) :
+  handle(handle)
 {
   handle->data = static_cast<void*>(this);
 }
@@ -29,10 +31,14 @@ void Handle::close() {
 }
 
 void Handle::setClose_cb(HandleCloseFunc close_cb) {
-  this->close_cb = close_cb;
+  Handle::close_cb = close_cb;
 }
 
 void Handle::executeClose_cb() {
   if(close_cb) 
     close_cb();
 }
+
+Handle::Handle(uv_tcp_t* handle) 
+  : Handle(reinterpret_cast<uv_handle_t*>(handle))
+{}

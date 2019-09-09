@@ -60,3 +60,7 @@ Loop::~Loop() {
   if(state == STOPPED)
     close();
 }
+
+uv_loop_t* Loop::getLoop() {
+  return this->loop;
+}
