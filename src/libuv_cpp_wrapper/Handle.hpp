@@ -14,7 +14,7 @@ class Handle
     Handle(uv_tcp_t* handle);
     virtual void executeClose_cb();
     virtual ~Handle();
-    uv_handle_t* getHandle();
+    // uv_handle_t* getHandle();
     static void setClose_cb(HandleCloseFunc close_cb);
   protected:
     virtual bool isClosing();

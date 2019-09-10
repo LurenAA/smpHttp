@@ -1,33 +1,12 @@
 #include "Tcp.hpp"
 #include "Loop.hpp"
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 using namespace uvx;
 
 ConnectionCallback Tcp::connectionCallback = nullptr;
-
-void listenHandle(uv_stream_t *server, int status)
-{
-  Tcp *tcp = static_cast<Tcp *>(server->data);
-  uv_tcp_t *client = new uv_tcp_t();
-  // uv_tcp_init(, )
-  int flag2 = uv_accept(reinterpret_cast<uv_stream_t *>(tcp->getHandle()),
-                        reinterpret_cast<uv_stream_t *>(client));
-  if (flag2 < 0)
-  {
-    cerr << "error: uv_accept " << uv_strerror(flag2) << endl;
-    delete client;
-  }
-  else
-  {
-    Connection *c = new Connection(client);
-    shared_ptr<Connection> cli(c);
-    tcp->addConnection(cli);
-    if (Tcp::connectionCallback)
-      Tcp::connectionCallback((uv_stream_t *)tcp->getHandle(), client);
-  }
-}
 
 void error_exit_helper(Loop &loop, string place, int flag)
 {
@@ -63,12 +42,45 @@ bool Tcp::listen()
   //   return false;
   // }
   cout << "log: listen on port " << port << endl;
-  int flag = uv_listen(reinterpret_cast<uv_stream_t *>(handle.get()), backlog,
-                       []);
+  int flag = uv_listen(reinterpret_cast<uv_stream_t *>(handle.get()), backlog, uvx::listenHandle);
   return flag < 0 ? false : true;
 }
 
 void Tcp::addConnection(std::shared_ptr<Connection> &newOne)
 {
   connectionList.push_back(newOne);
+}
+
+void uvx::listenHandle(uv_stream_t *server, int status)
+{
+  Tcp *tcp = static_cast<Tcp *>(server->data);
+  uv_tcp_t *client = new uv_tcp_t();
+  uv_tcp_init(tcp->loop.getLoop(), client);
+  int flag2 = uv_accept(reinterpret_cast<uv_stream_t *>(tcp->handle.get()),
+                        reinterpret_cast<uv_stream_t *>(client));
+  if (flag2 < 0)
+  {
+    cerr << "error: uv_accept " << uv_strerror(flag2) << endl;
+    uv_close(reinterpret_cast<uv_handle_t *>(client), [] (uv_handle_t *handle) {
+      delete handle;
+    });
+    delete client;
+  }
+  else
+  {
+    Connection *c = new Connection(client, tcp);
+    shared_ptr<Connection> cli(c);
+    tcp->addConnection(cli);
+    if (Tcp::connectionCallback)
+      Tcp::connectionCallback(reinterpret_cast<uv_stream_t *>(tcp->handle.get()), client);
+  }
+}
+
+void Tcp::removeConnection(std::shared_ptr<Connection>& con) {
+  auto deleteOne = find(connectionList.begin(), connectionList.end(), con);
+  if(deleteOne == connectionList.end()) {
+    cerr << "error: con is not in the connectionList" << endl;
+    return ;
+  }
+  connectionList.erase(deleteOne);
 }

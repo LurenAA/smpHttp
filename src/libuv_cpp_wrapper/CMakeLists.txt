@@ -13,7 +13,7 @@ add_library(Tcp ./Tcp.cpp)
 add_library(Connection ./Connection.cpp)
 target_link_libraries(Handle /home/ele/libuv/out/Debug/libuv.a)
 target_link_libraries(Loop /home/ele/libuv/out/Debug/libuv.a)
-target_link_libraries(Connection Handle /home/ele/libuv/out/Debug/libuv.a)
+target_link_libraries(Connection Handle /home/ele/libuv/out/Debug/libuv.a Tcp)
 target_link_libraries(Tcp Loop Handle Connection)
 target_link_libraries(libuv_cpp_wrapper Loop Tcp /home/ele/libuv/out/Debug/libuv.a pthread)
 
