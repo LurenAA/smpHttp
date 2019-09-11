@@ -22,17 +22,13 @@ void Connection::startRead() {
   uv_read_start(reinterpret_cast<uv_stream_t*>(handle.get()),
     Connection::allocFunc, [] (uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
       Connection::readFunc(stream, nread,  buf);
-      delete [] buf;
+      delete [] buf->base;
     }
   );
 }
 
 void alloc_buf(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
-  uv_buf_init(new char[suggested_size], suggested_size);
-}
-
-void Connection::addReadFunc(uv_read_cb rd) {
-  readFunc = rd;
+  *buf = uv_buf_init(new char[suggested_size], suggested_size);
 }
 
 Connection::Connection(uv_tcp_t* handle, Tcp* tcp) 
@@ -52,9 +48,30 @@ void Connection::write(const std::string& str) {
   uv_write(&req, reinterpret_cast<uv_stream_t*>(handle.get()), &buf, 1, afterWrite);
 }
 
+std::shared_ptr<Connection> Connection::sharedMe(){
+  return shared_from_this();
+}
+
 void uvx::afterWrite(uv_write_t *req, int status) {
-  if(status < 0) {
+  // if(status < 0) {
     Connection* con = static_cast<Connection*>(req->data);
-    // con->tcp
-  }
+    con->close();
+  // }
+}
+
+void Connection::close() {
+  this->tcp->removeConnection(sharedMe());
+}
+
+void Connection::setReserve(const char * str, size_t len) {
+  reserve.clear();
+  reserve.assign(str, len);
+}
+
+const uv_buf_t* Connection::getBuf() {
+  return &buf;
+}
+
+uv_write_t* Connection::getReq() {
+  return &req;
 }

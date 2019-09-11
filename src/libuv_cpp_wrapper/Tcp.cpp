@@ -51,6 +51,10 @@ void Tcp::addConnection(std::shared_ptr<Connection> &newOne)
   connectionList.push_back(newOne);
 }
 
+/**
+ * handle coming connections, and make a Connection Object,
+ * then put it into the connectionList
+ **/
 void uvx::listenHandle(uv_stream_t *server, int status)
 {
   Tcp *tcp = static_cast<Tcp *>(server->data);
@@ -76,7 +80,7 @@ void uvx::listenHandle(uv_stream_t *server, int status)
   }
 }
 
-void Tcp::removeConnection(std::shared_ptr<Connection>& con) {
+void Tcp::removeConnection(const std::shared_ptr<Connection>& con) {
   auto deleteOne = find(connectionList.begin(), connectionList.end(), con);
   if(deleteOne == connectionList.end()) {
     cerr << "error: con is not in the connectionList" << endl;

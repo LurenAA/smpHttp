@@ -1,15 +1,12 @@
 #include <iostream>
-#include "Loop.hpp"
-#include "Tcp.hpp"
+#include "EchoServer.hpp"
 
 using namespace std;
 using namespace uvx;
+using namespace echo;
 
 int main(void) {
-  Loop loop;
-  Tcp tcp(loop);
-  tcp.listen();
-  loop.run();
-  loop.close();
+  EchoServer echoServer;
+  echoServer.run();
   return 0;
 }
