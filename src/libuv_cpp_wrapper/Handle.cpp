@@ -26,7 +26,8 @@ void Handle::close() {
     return;
   uv_close(handle.get(), [](uv_handle_t* handle) {
     Handle* had = static_cast<Handle*>(handle->data);
-    had->executeClose_cb();
+    if(Handle::close_cb)
+      had->executeClose_cb();
   });
 }
 

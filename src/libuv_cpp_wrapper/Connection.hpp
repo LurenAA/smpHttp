@@ -12,15 +12,14 @@ namespace uvx {
 class Tcp;
 void afterWrite(uv_write_t *req, int status);
 
-class Connection : public Handle, std::enable_shared_from_this<Connection>{
+class Connection : public Handle, public std::enable_shared_from_this<Connection>{
 friend void afterWrite(uv_write_t *req, int status);
 public:
   // using Handle::Handle;
   Connection(uv_tcp_t* handle, Tcp* tcp);
   void startRead();
-  void write(const std::string& );
+  void write(const char* str, int len);
   void close();
-  void setReserve(const char *, size_t);
   const uv_buf_t* getBuf();
   uv_write_t* getReq();
   uv_tcp_t* getHandle();
@@ -31,6 +30,7 @@ private:
   uv_buf_t buf;
   std::string reserve; // reserve for buf 
   std::shared_ptr<Connection> sharedMe();
+  void setReserve(const char *, size_t);
   static uv_alloc_cb allocFunc;
 };
 }

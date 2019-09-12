@@ -37,12 +37,12 @@ Connection::Connection(uv_tcp_t* handle, Tcp* tcp)
   req.data = this;
 }
 
-void Connection::write(const std::string& str) {
-  if(!str.size()) {
+void Connection::write(const char* str, int len) {
+  if(len <= 0) {
     cerr << "warning: do not write a empty str" << endl;
     return ;
   } 
-  reserve = str;
+  setReserve(str, len);
   buf.base = const_cast<char*>(reserve.c_str());
   buf.len = reserve.size();
   uv_write(&req, reinterpret_cast<uv_stream_t*>(handle.get()), &buf, 1, afterWrite);

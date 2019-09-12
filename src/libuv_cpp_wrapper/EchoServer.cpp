@@ -26,14 +26,14 @@ void rdClbk(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
   Connection* cl = nullptr;
   if(stream->data)
     cl = static_cast<Connection*>(stream->data);
-  cl->setReserve(buf->base, nread);
-  uv_write(cl->getReq(), stream, 
-    cl->getBuf(), 1, [](uv_write_t* req, int status) {
-      if(status < 0) {
-        cerr << "error: uv_write " << uv_strerror(status) << endl;
-        exit(1);
-      }
-    });
+  cl->write(buf->base, nread);
+  // uv_write(cl->getReq(), reinterpret_cast<uv_stream_t*>(cl->getHandle()), 
+  //   cl->getBuf(), 1, [](uv_write_t* req, int status) {
+  //     if(status < 0) {
+  //       cerr << "error: uv_write " << uv_strerror(status) << endl;
+  //       exit(1);
+  //     }
+  //   });
 }
 
 void EchoServer::run() {
