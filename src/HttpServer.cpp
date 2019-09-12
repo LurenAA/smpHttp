@@ -1,14 +1,14 @@
-#include "EchoServer.hpp"
+#include "HttpServer.hpp"
 #include <iostream>
 
 using namespace std;
 using namespace uvx;
-using namespace echo;
+using namespace smpHttp;
 
 void aConcClbk(uv_stream_t* server, uv_tcp_t* tcp);
 void rdClbk(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf);
 
-EchoServer::EchoServer() :
+HttpServer::HttpServer() :
   loop(), tcpServer(loop)
 {
   Tcp::connectionCallback = aConcClbk;
@@ -29,7 +29,7 @@ void rdClbk(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
   cl->write(buf->base, nread);
 }
 
-void EchoServer::run() {
+void HttpServer::run() {
   tcpServer.listen();
   loop.run();
 }
