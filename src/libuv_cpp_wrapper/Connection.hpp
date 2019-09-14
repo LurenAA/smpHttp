@@ -23,6 +23,8 @@ public:
   const uv_buf_t* getBuf();
   uv_write_t* getReq();
   uv_tcp_t* getHandle();
+  Tcp* getTcp() {return tcp;}
+  void* data;
   static uv_read_cb readFunc;
 private:
   Tcp* tcp;

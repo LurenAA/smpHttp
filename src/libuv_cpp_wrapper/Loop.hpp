@@ -20,7 +20,7 @@ public:
   int run(uv_run_mode mode = UV_RUN_DEFAULT);
   void stop();
   void close();
-
+  void* data;
 private:
   LoopState state;
   uv_loop_t *loop;

@@ -10,9 +10,17 @@ namespace hpr {
       std::shared_ptr<HttpResult> handleDatagram(const char* str, int len);
     private:
       void parseMethod(std::string::const_iterator& iter,
-        const std::string::const_iterator& iend, 
+        std::string::const_iterator& iend, 
         std::shared_ptr<HttpResult>& res);
-
+      void parseRequestTarget(std::string::const_iterator& iter,
+        std::string::const_iterator& iend, 
+        std::shared_ptr<HttpResult>& res);
+      void parseHttpVersion(std::string::const_iterator& iter,
+        std::string::const_iterator& iend, 
+        std::shared_ptr<HttpResult>& res);
+      void parseHeaders(std::string::const_iterator& iter,
+        std::string::const_iterator& iend, 
+        std::shared_ptr<HttpResult>& res);
   };
 }
 
