@@ -6,7 +6,7 @@ using namespace std;
 using namespace uvx;
 void alloc_buf(uv_handle_t*, size_t, uv_buf_t*);
 
-uv_read_cb Connection::readFunc = nullptr;
+ReadFunc_t Connection::readFunc = nullptr;
 uv_alloc_cb Connection::allocFunc = alloc_buf;
 
 
@@ -45,7 +45,9 @@ void Connection::write(const char* str, int len) {
   setReserve(str, len);
   buf.base = const_cast<char*>(reserve.c_str());
   buf.len = reserve.size();
-  uv_write(&req, reinterpret_cast<uv_stream_t*>(handle.get()), &buf, 1, afterWrite);
+  uv_write(&req, reinterpret_cast<uv_stream_t*>(handle.get()), &buf, 1, [](uv_write_t *req, int status){
+    afterWrite(req, status);
+  });
 }
 
 std::shared_ptr<Connection> Connection::sharedMe(){
@@ -53,10 +55,11 @@ std::shared_ptr<Connection> Connection::sharedMe(){
 }
 
 void uvx::afterWrite(uv_write_t *req, int status) {
-  // if(status < 0) {
+  if(status < 0) {
     Connection* con = static_cast<Connection*>(req->data);
+    cerr << "log: close a connection" << endl;
     con->close();
-  // }
+  }
 }
 
 void Connection::close() {

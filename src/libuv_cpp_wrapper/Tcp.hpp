@@ -25,7 +25,6 @@ public:
   Tcp(Loop& loop, std::string ip = DEFAULT_IP, int port = DEFAULT_PORT,int backlog = DEFAULT_BACKLOG);
   bool listen();
   static ConnectionCallback connectionCallback;
-  void* data;
 private:
   void addConnection(std::shared_ptr<Connection>&);
   void removeConnection(const std::shared_ptr<Connection>&);
