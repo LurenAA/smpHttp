@@ -9,6 +9,7 @@
 namespace uvx {
 using ReadFunc_t = std::function<void(uv_stream_t*, ssize_t, const uv_buf_t *)>;
 // using Alloc_t = std::function<void (uv_handle_t*, size_t, uv_buf_t* buf)>;
+using WriteFunc_t = std::function<void()>;
 class Tcp;
 void afterWrite(uv_write_t *req, int status);
 
@@ -24,6 +25,7 @@ public:
   uv_write_t* getReq();
   uv_tcp_t* getHandle();
   static ReadFunc_t readFunc;
+  WriteFunc_t wfunc;
 private:
   Tcp* tcp;
   uv_write_t req;

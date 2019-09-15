@@ -19,6 +19,6 @@ void* RadixTree::route(const char* s){
   return ::route(tree.get(), s);
 }
 
-void* route(const std::string &s) {
+void* RadixTree::route(const std::string &s) {
   return route(s.c_str());
 }

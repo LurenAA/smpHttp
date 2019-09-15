@@ -35,6 +35,7 @@ Connection::Connection(uv_tcp_t* handle, Tcp* tcp)
   : Handle(handle), tcp(tcp)
 {
   req.data = this;
+  wfunc = nullptr;
 }
 
 void Connection::write(const char* str, int len) {
@@ -47,6 +48,10 @@ void Connection::write(const char* str, int len) {
   buf.len = reserve.size();
   uv_write(&req, reinterpret_cast<uv_stream_t*>(handle.get()), &buf, 1, [](uv_write_t *req, int status){
     afterWrite(req, status);
+    Connection* con = static_cast<Connection*>(req->data);
+    if(con->wfunc) {
+      con->wfunc();
+    }
   });
 }
 
@@ -59,7 +64,7 @@ void uvx::afterWrite(uv_write_t *req, int status) {
     Connection* con = static_cast<Connection*>(req->data);
     cerr << "log: close a connection" << endl;
     con->close();
-  }
+  } 
 }
 
 void Connection::close() {
