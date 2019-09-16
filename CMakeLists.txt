@@ -18,6 +18,7 @@ add_library(Url src/Url.cpp)
 add_library(Util src/Util.cpp)
 add_library(IfstreamCon src/IfstreamCon.cpp)
 add_library(HttpServer src/HttpServer.cpp)
+target_link_libraries(Url Util)
 target_link_libraries(HttpServer Util IfstreamCon Url radix_tree HttpParser Tcp Loop Handle Connection /home/ele/libuv/out/Debug/libuv.a pthread)
 list(APPEND deps /home/ele/libuv/out/Debug/libuv.a HttpServer)
 

@@ -6,8 +6,9 @@
 namespace smpHttp {
   class Url {
     public:
-      void addHeader(std::string name, std::string value);
+      void addHeader(const std::string& name,const  std::string& value);
       std::string get();
+      void setContentType(const std::string &s);
       static std::string chunk_data(std::string s);
     private:
       std::map<std::string, std::string> headers;

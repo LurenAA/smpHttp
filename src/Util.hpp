@@ -1,6 +1,8 @@
 #ifndef __UTIL_HPP__
 #define __UTIL_HPP__
 #include <string>
+#include <map>
+#include <memory>
 
 namespace smpHttp {
   class Util {
@@ -9,6 +11,8 @@ namespace smpHttp {
       static std::string getRootPath();
       static std::string getMime(const std::string&);
       static std::string getExt(const std::string &);
+    private:
+      static std::shared_ptr<std::map<std::string, std::string>> mimes;
   };
 }
 #endif //__UTIL_HPP__

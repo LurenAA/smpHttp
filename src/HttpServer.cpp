@@ -92,7 +92,7 @@ void smpHttp::handleWrite(HttpServer* that, shared_ptr<HttpResult> parseRes, Con
     that->fstreamMap.insert({staticPath, newF});
     Url chunkBegin;       
     //check the type
-    chunkBegin.addHeader("Content-Type", "text/html");
+    chunkBegin.setContentType(staticPath);
     chunkBegin.addHeader("Transfer-Encoding", "chunked");
     string res = chunkBegin.get();
     auto wfunc = bind(handleWrite, that, parseRes, cl, staticPath);

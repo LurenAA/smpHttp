@@ -8,7 +8,7 @@ void routeHandleFunc1(std::shared_ptr<hpr::HttpResult> parseRes, uvx::Connection
 
 int main() {
   smpHttp::HttpServer server;
-  server.addRoute("/", routeHandleFunc1);
+  server.addRoute("/asd", routeHandleFunc1);
   server.run();
   
   return 0;
