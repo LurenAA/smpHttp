@@ -5,24 +5,20 @@
 #include <iterator>
 #include <functional>
 #include "Url.hpp"
+#include <unistd.h>
+#include <algorithm>
+#include "Util.hpp"
 
 using namespace std;
 using namespace uvx;
 using namespace smpHttp;
 using namespace hpr;
 using namespace radix;
+using namespace std::placeholders;
 
 #define RES \
   "HTTP/1.1 200 OK\r\n" \
   "\r\n"
-
-void trim(std::string& s) {
-  if( !s.empty() )
-  {
-    s.erase(0,s.find_first_not_of(" "));
-    s.erase(s.find_last_not_of(" ") + 1, s.size());
-  }
-}
 
 void smpHttp::afterConnect(HttpServer* ts,uv_stream_t* server, uv_tcp_t* tcp){
   Connection* cl = nullptr;
@@ -46,18 +42,16 @@ void smpHttp::afterRead(HttpServer* that, uv_stream_t *stream, ssize_t nread, co
 void smpHttp::handleRoute(HttpServer* that, shared_ptr<HttpResult> parseRes, Connection* cl) {
   //route
   string target = parseRes->getRequestTarget();
-  if(target == "/favicon.ico") {
-    cl->wfunc = nullptr;    //temporary deal
-    cl->write(RES, strlen(RES));
-    return ;
-  } else if(target.find("/http") != string::npos) {
+  if(target.find("/http") != string::npos) {
     //access to static resource
     handleWrite(that, parseRes, cl, target);
   } else {
     void* func = that->rax.route(target);
     if(!func) {
-      handleWrite(that, parseRes, cl, "http/404.html");
+      handleWrite(that, parseRes, cl, "/http/404.html");
     } else {
+      routeHandleFunc hFunc = reinterpret_cast<routeHandleFunc>(func);
+      hFunc(parseRes, cl);
       //do something
     }
   }
@@ -76,7 +70,7 @@ void smpHttp::handleWrite(HttpServer* that, shared_ptr<HttpResult> parseRes, Con
     string s, shelper;
     int countSize = 0;
     while(countSize < CHUNK_SIZE && getline(fstrm->getFs(), shelper)) {
-      trim(shelper);
+      Util::trim(shelper);
       s += shelper;
       countSize += shelper.size();
     }
@@ -90,13 +84,14 @@ void smpHttp::handleWrite(HttpServer* that, shared_ptr<HttpResult> parseRes, Con
   } catch(...) {
     //never use it before
     shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
-    newF->open(staticPath);
+    newF->open(Util::getRootPath() + staticPath);
     if(!newF->is_open()) {
-      cerr << "errno: newF is not open" << endl;
+      cerr << "errno: newF is not open" << staticPath << endl;
       return ;
     }
     that->fstreamMap.insert({staticPath, newF});
     Url chunkBegin;       
+    //check the type
     chunkBegin.addHeader("Content-Type", "text/html");
     chunkBegin.addHeader("Transfer-Encoding", "chunked");
     string res = chunkBegin.get();
@@ -110,9 +105,9 @@ void smpHttp::handleWrite(HttpServer* that, shared_ptr<HttpResult> parseRes, Con
 HttpServer::HttpServer() :
   loop(), tcpServer(loop)
 {
-  auto afterConnectbind = bind(afterConnect, this, placeholders::_1, placeholders::_2);
+  auto afterConnectbind = bind(afterConnect, this, _1, _2);
   Tcp::connectionCallback = afterConnectbind;
-  auto afterReadbind = bind(afterRead, this, placeholders::_1, placeholders::_2, placeholders::_3);
+  auto afterReadbind = bind(afterRead, this, _1, _2, _3);
   Connection::readFunc = afterReadbind;
 }
 
@@ -121,4 +116,10 @@ void HttpServer::run() {
   loop.run();
 }
 
+void HttpServer::addRoute(std::string s, routeHandleFunc func){
+  this->rax.insert(s, reinterpret_cast<void*>(func));
+}
 
+void HttpServer::setStaticPath(std::string s) {
+  staticPathSet.insert(s);
+}
