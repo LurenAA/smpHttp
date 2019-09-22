@@ -4,26 +4,31 @@ project(smpHttp VERSION 0.1.0)
 include(CTest)
 enable_testing()
 
-include_directories(/home/ele/libuv/include)
-include_directories(src/libuv_cpp_wrapper)
-include_directories(./src)
-include_directories(./src/radix_tree)
-include_directories(./src/http_parser)
-include_directories(./src/http_parser)
-add_definitions("-Wall -g -fPIC")
+list(APPEND dics /home/ele/libuv/include/ 
+${PROJECT_SOURCE_DIR}/src/libuv_cpp_wrapper/
+${PROJECT_SOURCE_DIR}/src/
+${PROJECT_SOURCE_DIR}/src/radix_tree/
+${PROJECT_SOURCE_DIR}/src/http_parser/)
+
+include_directories(${dics})
 add_subdirectory(src/radix_tree)
 add_subdirectory(src/libuv_cpp_wrapper)
 add_subdirectory(src/http_parser)
-add_library(Url src/Url.cpp)
-add_library(Util src/Util.cpp)
-add_library(IfstreamCon src/IfstreamCon.cpp)
-add_library(HttpServer src/HttpServer.cpp)
-target_link_libraries(Url Util)
-target_link_libraries(HttpServer Util IfstreamCon Url radix_tree HttpParser Tcp Loop Handle Connection /home/ele/libuv/out/Debug/libuv.a pthread)
-list(APPEND deps /home/ele/libuv/out/Debug/libuv.a HttpServer)
 
-add_executable(smpHttp test/main.cpp)
-target_LINK_LIbraries(smpHttp ${deps})
+AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/src srcs)
+AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/test srcs)
+
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") 
+SET(CMAKE_BUILD_TYPE "Debug")
+SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
+
+list(APPEND links /home/ele/libuv/out/Debug/libuv.a -pthread 
+radix_tree HttpParser Tcp Loop Handle Connection)
+add_executable(smpHttp ${srcs})
+target_LINK_LIbraries(smpHttp ${links})
+
+MESSAGE("building...")
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
