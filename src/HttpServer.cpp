@@ -20,14 +20,16 @@ using namespace std::placeholders;
   "HTTP/1.1 200 OK\r\n" \
   "\r\n"
 
-void smpHttp::afterConnect(HttpServer* ts,uv_stream_t* server, uv_tcp_t* tcp){
+void HttpServer::afterConnect(uv_stream_t* server, uv_tcp_t* tcp){
   Connection* cl = nullptr;
   if(tcp->data)
     cl = static_cast<Connection*>(tcp->data);
+  auto afterReadbind = bind(&HttpServer::afterRead, this, _1, _2, _3);
+  cl->readFunc = afterReadbind;
   cl->startRead();
 };
 
-void smpHttp::afterRead(HttpServer* that, uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf){
+void HttpServer::afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf){
   Connection* cl = nullptr;
   if(stream->data)
     cl = static_cast<Connection*>(stream->data);
@@ -35,8 +37,8 @@ void smpHttp::afterRead(HttpServer* that, uv_stream_t *stream, ssize_t nread, co
     cl->close();
     return ;
   }
-  shared_ptr<HttpResult> parseRes = that->parser.handleDatagram(buf->base, nread);
-  handleRoute(that, parseRes, cl);
+  shared_ptr<HttpResult> parseRes = this->parser.handleDatagram(buf->base, nread);
+  handleRoute(this, parseRes, cl);
 };
 
 void smpHttp::handleRoute(HttpServer* that, shared_ptr<HttpResult> parseRes, Connection* cl) {
@@ -105,10 +107,8 @@ void smpHttp::handleWrite(HttpServer* that, shared_ptr<HttpResult> parseRes, Con
 HttpServer::HttpServer() :
   loop(), tcpServer(loop)
 {
-  auto afterConnectbind = bind(afterConnect, this, _1, _2);
-  Tcp::connectionCallback = afterConnectbind;
-  auto afterReadbind = bind(afterRead, this, _1, _2, _3);
-  Connection::readFunc = afterReadbind;
+  auto afterConnectbind = bind(&HttpServer::afterConnect, this, _1, _2);
+  tcpServer.connectionCallback = afterConnectbind;
 }
 
 void HttpServer::run() {

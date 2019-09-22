@@ -6,7 +6,6 @@ using namespace std;
 using namespace uvx;
 void alloc_buf(uv_handle_t*, size_t, uv_buf_t*);
 
-ReadFunc_t Connection::readFunc = nullptr;
 uv_alloc_cb Connection::allocFunc = alloc_buf;
 
 
@@ -21,7 +20,8 @@ void Connection::startRead() {
   }
   uv_read_start(reinterpret_cast<uv_stream_t*>(handle.get()),
     Connection::allocFunc, [] (uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
-      Connection::readFunc(stream, nread,  buf);
+      Connection* con = static_cast<Connection*>(stream->data);
+      con->readFunc(stream, nread,  buf);
       delete [] buf->base;
     }
   );
@@ -47,8 +47,11 @@ void Connection::write(const char* str, int len) {
   buf.base = const_cast<char*>(reserve.c_str());
   buf.len = reserve.size();
   uv_write(&req, reinterpret_cast<uv_stream_t*>(handle.get()), &buf, 1, [](uv_write_t *req, int status){
-    afterWrite(req, status);
     Connection* con = static_cast<Connection*>(req->data);
+    if(status < 0) {
+      cerr << "log: close a connection" << endl;
+      con->close();
+    } 
     if(con->wfunc) {
       con->wfunc();
     }
@@ -57,14 +60,6 @@ void Connection::write(const char* str, int len) {
 
 std::shared_ptr<Connection> Connection::sharedMe(){
   return shared_from_this();
-}
-
-void uvx::afterWrite(uv_write_t *req, int status) {
-  if(status < 0) {
-    Connection* con = static_cast<Connection*>(req->data);
-    cerr << "log: close a connection" << endl;
-    con->close();
-  } 
 }
 
 void Connection::close() {

@@ -6,8 +6,6 @@
 using namespace std;
 using namespace uvx;
 
-ConnectionCallback Tcp::connectionCallback = nullptr;
-
 void error_exit_helper(Loop &loop, string place, int flag)
 {
   cerr << "error: " << place << " " << uv_strerror(flag) << endl;
@@ -16,7 +14,9 @@ void error_exit_helper(Loop &loop, string place, int flag)
   exit(1);
 }
 
-Tcp::Tcp(Loop &loop, std::string ip, int port, int backlog) : Handle(new uv_tcp_t()), loop(loop), ip(ip), port(port), backlog(backlog)
+Tcp::Tcp(Loop &loop, std::string ip, int port, int backlog) 
+: Handle(new uv_tcp_t()),connectionCallback(nullptr)
+, loop(loop), ip(ip), port(port), backlog(backlog)
 {
   uv_tcp_init(loop.loop, reinterpret_cast<uv_tcp_t *>(handle.get()));
   struct sockaddr_in addr;
@@ -75,8 +75,8 @@ void uvx::listenHandle(uv_stream_t *server, int status)
     Connection *c = new Connection(client, tcp);
     shared_ptr<Connection> cli(c);
     tcp->addConnection(cli);
-    if (Tcp::connectionCallback)
-      Tcp::connectionCallback(reinterpret_cast<uv_stream_t *>(tcp->handle.get()), client);
+    if (tcp->connectionCallback)
+      tcp->connectionCallback(reinterpret_cast<uv_stream_t *>(tcp->handle.get()), client);
   }
 }
 

@@ -14,17 +14,16 @@ namespace uvx {
 using ConnectionCallback = std::function<void(uv_stream_t* server, uv_tcp_t* tcp)>;
 class Loop;
 void listenHandle(uv_stream_t *server, int status);
-void afterWrite(uv_write_t *req, int status);
 
 class Tcp : public Handle
 {
 friend void uvx::listenHandle(uv_stream_t *server, int status);
-friend void uvx::afterWrite(uv_write_t *req, int status);
+//in uv-cpp ,the author uses a lambda, I use a friend function instead
 friend class Connection;
 public:
   Tcp(Loop& loop, std::string ip = DEFAULT_IP, int port = DEFAULT_PORT,int backlog = DEFAULT_BACKLOG);
   bool listen();
-  static ConnectionCallback connectionCallback;
+  ConnectionCallback connectionCallback;
 private:
   void addConnection(std::shared_ptr<Connection>&);
   void removeConnection(const std::shared_ptr<Connection>&);

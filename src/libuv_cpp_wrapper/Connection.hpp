@@ -11,10 +11,8 @@ using ReadFunc_t = std::function<void(uv_stream_t*, ssize_t, const uv_buf_t *)>;
 // using Alloc_t = std::function<void (uv_handle_t*, size_t, uv_buf_t* buf)>;
 using WriteFunc_t = std::function<void()>;
 class Tcp;
-void afterWrite(uv_write_t *req, int status);
 
 class Connection : public Handle, public std::enable_shared_from_this<Connection>{
-friend void afterWrite(uv_write_t *req, int status);
 public:
   // using Handle::Handle;
   Connection(uv_tcp_t* handle, Tcp* tcp);
@@ -24,7 +22,8 @@ public:
   const uv_buf_t* getBuf();
   uv_write_t* getReq();
   uv_tcp_t* getHandle();
-  static ReadFunc_t readFunc;
+  
+  ReadFunc_t readFunc;
   WriteFunc_t wfunc;
 private:
   Tcp* tcp;
