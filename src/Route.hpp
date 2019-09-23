@@ -9,7 +9,8 @@
 namespace smpHttp {
   class HttpRequest;
   class HttpResponse;
-  using routeHandleFunc = void(*)(HttpRequest*, HttpResponse*);
+  using routeHandleFunc = void(*)(std::shared_ptr<HttpRequest>
+    , std::shared_ptr<HttpResponse>);
   /**
    * can not use "std::function", because there is 
    * not cast from std::function<...>

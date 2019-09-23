@@ -34,6 +34,9 @@ namespace hpr {
   class HttpResult {
     friend class HttpParser;
     public:
+      HttpResult() = default;
+      HttpResult(HttpResult*);
+      virtual ~HttpResult() {}
       Method getMethod() {return method;}
       const std::string getRequestTarget() {return requestTarget;}
       double getHttpVersion() {return httpVersion;}

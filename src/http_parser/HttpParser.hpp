@@ -6,21 +6,21 @@
 namespace hpr {
   class HttpParser {
     public: 
-      std::shared_ptr<HttpResult> handleDatagram(const std::string& datagram);
-      std::shared_ptr<HttpResult> handleDatagram(const char* str, int len);
+      HttpResult* handleDatagram(const std::string& datagram);
+      HttpResult* handleDatagram(const char* str, int len);
     private:
       void parseMethod(std::string::const_iterator& iter,
         std::string::const_iterator& iend, 
-        std::shared_ptr<HttpResult>& res);
+        HttpResult* res);
       void parseRequestTarget(std::string::const_iterator& iter,
         std::string::const_iterator& iend, 
-        std::shared_ptr<HttpResult>& res);
+        HttpResult* res);
       void parseHttpVersion(std::string::const_iterator& iter,
         std::string::const_iterator& iend, 
-        std::shared_ptr<HttpResult>& res);
+        HttpResult* res);
       void parseHeaders(std::string::const_iterator& iter,
         std::string::const_iterator& iend, 
-        std::shared_ptr<HttpResult>& res);
+        HttpResult* res);
   };
 }
 

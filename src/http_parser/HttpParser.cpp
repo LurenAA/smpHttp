@@ -7,10 +7,10 @@ using namespace hpr;
 
 string trimString(string::const_iterator,string::const_iterator);
 
-shared_ptr<HttpResult> HttpParser::handleDatagram(const std::string& datagram) {
+HttpResult* HttpParser::handleDatagram(const std::string& datagram) {
   auto iter = datagram.cbegin(), 
     iend = datagram.cend();
-  shared_ptr<HttpResult> res(make_shared<HttpResult>());
+  HttpResult* res = new HttpResult();
   parseMethod(iter, iend, res);
   parseRequestTarget(iter, iend, res);
   parseHttpVersion(iter, iend, res);
@@ -19,14 +19,14 @@ shared_ptr<HttpResult> HttpParser::handleDatagram(const std::string& datagram) {
   return res;
 }
 
-shared_ptr<HttpResult> HttpParser::handleDatagram(const char* str, int len) {
+HttpResult* HttpParser::handleDatagram(const char* str, int len) {
   string datagram(str, len);
   return handleDatagram(datagram);
 }
 
 void HttpParser::parseMethod(string::const_iterator& iter,
   string::const_iterator& iend, 
-  shared_ptr<HttpResult>& res) 
+  HttpResult* res) 
 {
   auto firstSpace = find(iter, iend, ' ');
   res->setMethod(iter, firstSpace);
@@ -35,7 +35,7 @@ void HttpParser::parseMethod(string::const_iterator& iter,
 
 void HttpParser::parseRequestTarget(string::const_iterator& iter,
   string::const_iterator& iend, 
-  shared_ptr<HttpResult>& res)
+  HttpResult* res)
 {
   auto firstSpace = find(iter, iend, ' ');
   res->setRequestTarget(iter, firstSpace);
@@ -44,7 +44,7 @@ void HttpParser::parseRequestTarget(string::const_iterator& iter,
 
 void HttpParser::parseHttpVersion(string::const_iterator& iter,
   string::const_iterator& iend, 
-  shared_ptr<HttpResult>& res)
+  HttpResult* res)
 {
   auto firstSpace = find(iter, iend, '\r');
   res->setHttpVersion(iter, firstSpace);
@@ -53,7 +53,7 @@ void HttpParser::parseHttpVersion(string::const_iterator& iter,
 
 void HttpParser::parseHeaders(std::string::const_iterator& iter,
   std::string::const_iterator& iend, 
-  std::shared_ptr<HttpResult>& res)
+  HttpResult* res)
 {
   while (*iter != '\r')
   {

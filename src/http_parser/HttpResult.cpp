@@ -5,6 +5,12 @@
 using namespace hpr;
 using namespace std;
 
+HttpResult::HttpResult(HttpResult* s) :
+  method(s->method), requestTarget(s->requestTarget)
+  , httpVersion(s->httpVersion), headers(s->headers)
+{
+}
+
 void HttpResult::setMethod(const string& str) {
   MethodValue(CASE, method, str);
 }

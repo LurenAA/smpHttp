@@ -28,7 +28,7 @@ namespace smpHttp {
       std::map<std::string, std::shared_ptr<IfstreamCon>> fstreamMap; 
       Route route;
 
-      void deal_with_static(HttpRequest, HttpResponse);
+      void deal_with_static(std::shared_ptr<HttpRequest>,std::shared_ptr<HttpResponse>);
 
       void handleRoute(std::shared_ptr<hpr::HttpResult> parseRes, uvx::Connection* cl);
       void afterConnect(uv_stream_t* server, uv_tcp_t* tcp);

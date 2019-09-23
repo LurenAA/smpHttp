@@ -4,7 +4,7 @@
 #include <iostream>
 #include <iterator>
 #include <functional>
-#include "Url.hpp"
+#include "Packet.hpp"
 #include <unistd.h>
 #include <algorithm>
 #include "Util.hpp"
@@ -39,7 +39,7 @@ void HttpServer::afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
     cl->close();
     return ;
   }
-  shared_ptr<HttpResult> parseRes = this->parser.handleDatagram(buf->base, nread);
+  shared_ptr<HttpRequest> parseRes(make_shared<HttpRequest>(parser.handleDatagram(buf->base, nread)));
   handleRoute(parseRes, cl);
 };
 
@@ -48,7 +48,9 @@ void HttpServer::handleRoute(shared_ptr<HttpResult> parseRes, Connection* cl) {
   string target = parseRes->getRequestTarget();
   if(route.route_static(target)) {
     //access to static resource
-    handleWrite(parseRes, cl, target);
+    // handleWrite(parseRes, cl, target);
+
+    // deal_with_static()
   } else {
     void* func = route.route(target);
     if(!func) {
@@ -81,11 +83,12 @@ void HttpServer::handleWrite(shared_ptr<HttpResult> parseRes, Connection* cl, st
     }
     auto wfunc = bind(&HttpServer::handleWrite, this, parseRes, cl, staticPath);
     cl->wfunc = wfunc;
-    string res = Url::chunk_data(s);
+    // string res = Packet::chunk_data(s);
+
     if(countSize < CHUNK_SIZE) {
       fstrm->close();
     }
-    cl->write(res.c_str(), res.size());
+    // cl->write(res.c_str(), res.size());
   } catch(...) {
     //never use it before
     shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
@@ -97,7 +100,7 @@ void HttpServer::handleWrite(shared_ptr<HttpResult> parseRes, Connection* cl, st
       return ;
     }
     fstreamMap.insert({staticPath, newF});
-    Url chunkBegin;       
+    Packet chunkBegin;       
     //check the type
     chunkBegin.setContentType(staticPath);
     chunkBegin.addHeader("Transfer-Encoding", "chunked");
@@ -129,6 +132,8 @@ void HttpServer::add_static_path(std::string s) {
   route.add_static(s);
 }
 
-void HttpServer::deal_with_static(HttpRequest req, HttpResponse res){
+void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
+    , std::shared_ptr<HttpResponse> res)
+{
 
 }

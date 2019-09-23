@@ -3,9 +3,9 @@
 #include "HttpResult.hpp"
 
 namespace smpHttp {
-  class HttpRequest {
-    private:
-
+  class HttpRequest : public hpr::HttpResult{
+    public:
+      HttpRequest(hpr::HttpResult* s): hpr::HttpResult(s) {}
   };
 }
 #endif //__HTTP_REQUREST_HPP_
