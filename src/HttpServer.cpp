@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <algorithm>
 #include "Util.hpp"
+#include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
 
 using namespace std;
 using namespace uvx;
@@ -44,7 +46,7 @@ void HttpServer::afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
 void HttpServer::handleRoute(shared_ptr<HttpResult> parseRes, Connection* cl) {
   //route
   string target = parseRes->getRequestTarget();
-  if(target.find("/http") != string::npos) {
+  if(route.route_static(target)) {
     //access to static resource
     handleWrite(parseRes, cl, target);
   } else {
@@ -52,7 +54,7 @@ void HttpServer::handleRoute(shared_ptr<HttpResult> parseRes, Connection* cl) {
     if(!func) {
       handleWrite(parseRes, cl, "/http/404.html");
     } else {
-      routeHandleFunc hFunc = static_cast<routeHandleFunc>(func);
+      routeHandleFunc hFunc = reinterpret_cast<routeHandleFunc>(func);
       // hFunc(parseRes, cl);
 
       //do something
@@ -88,6 +90,8 @@ void HttpServer::handleWrite(shared_ptr<HttpResult> parseRes, Connection* cl, st
     //never use it before
     shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
     newF->open(Util::getRootPath() + staticPath);
+    //to do : if path is error, ...
+
     if(!newF->is_open()) {
       cerr << "errno: newF is not open" << staticPath << endl;
       return ;
@@ -123,4 +127,8 @@ void HttpServer::add_route(std::string s, routeHandleFunc func){
 
 void HttpServer::add_static_path(std::string s) {
   route.add_static(s);
+}
+
+void HttpServer::deal_with_static(HttpRequest req, HttpResponse res){
+
 }

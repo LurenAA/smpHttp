@@ -212,37 +212,9 @@ void Util::trim(std::string& s) {
   }
 }
 
-/**
- * when I run it in "/home/ele/smpHttp/build",
- * the cwd is "/home/ele/smpHttp/build",
- * but when I debug in vs code using GDB and ssh, 
- * getcwd(NULL, 0) return "/home/ele/smpHttp".
- * so I cut the "/build" in the string.
- **/ 
 std::string Util::getRootPath() {
-#define ERR_STR "/build"
-  static string path(getcwd(nullptr, 0));
-  static bool flag = false;
-  if(!flag) {
-    string comparseOne(ERR_STR);
-    auto ri1 = comparseOne.rbegin();
-    auto ri = path.rbegin();
-    int t = 6;
-    for(;t > 0; --t){
-      if(*ri == *ri1) {
-        ++ri;
-        ++ri1;
-      } else {
-        break;
-      }
-    }
-    if(t == 0) {
-      path.erase(path.end() - 6, path.end());
-    }
-    flag = true;
-  }
+  string path(getcwd(nullptr, 0));
   return path;
-#undef ERR_STR
 }
 
 string Util::getMime(const std::string& s){
@@ -260,4 +232,14 @@ std::string Util::getExt(const std::string &s) {
     return "";
   }
   return s.substr(pos + 1);
+}
+
+bool Util::starts_with(const std::string& sou, const std::string& key){
+  if(sou.size() < key.size())
+    return false;
+  auto p = mismatch(sou.cbegin(), sou.cend(), key.cbegin());
+  if(p.second == key.cend()) {
+    return true;
+  } 
+  return false;
 }

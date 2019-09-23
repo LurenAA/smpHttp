@@ -11,8 +11,9 @@
 #include "Route.hpp"
 
 namespace smpHttp {
-  class HttpServer;
-  
+  class HttpRequest;
+  class HttpResponse;
+
   class HttpServer {
     public:
       HttpServer();
@@ -26,6 +27,8 @@ namespace smpHttp {
       hpr::HttpParser parser;
       std::map<std::string, std::shared_ptr<IfstreamCon>> fstreamMap; 
       Route route;
+
+      void deal_with_static(HttpRequest, HttpResponse);
 
       void handleRoute(std::shared_ptr<hpr::HttpResult> parseRes, uvx::Connection* cl);
       void afterConnect(uv_stream_t* server, uv_tcp_t* tcp);

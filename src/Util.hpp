@@ -8,9 +8,10 @@ namespace smpHttp {
   class Util {
     public:
       static void trim(std::string& s);
-      static std::string getRootPath(); //just for debug using visual code on windows
+      static std::string getRootPath(); 
       static std::string getMime(const std::string&);
       static std::string getExt(const std::string &);
+      static bool starts_with(const std::string& source, const std::string& );
     private:
       static std::shared_ptr<std::map<std::string, std::string>> mimes;
   };

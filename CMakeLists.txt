@@ -30,6 +30,7 @@ target_LINK_LIbraries(smpHttp ${links})
 
 MESSAGE("building...")
 
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/)
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
