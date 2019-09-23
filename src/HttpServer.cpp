@@ -38,33 +38,34 @@ void HttpServer::afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
     return ;
   }
   shared_ptr<HttpResult> parseRes = this->parser.handleDatagram(buf->base, nread);
-  handleRoute(this, parseRes, cl);
+  handleRoute(parseRes, cl);
 };
 
-void smpHttp::handleRoute(HttpServer* that, shared_ptr<HttpResult> parseRes, Connection* cl) {
+void HttpServer::handleRoute(shared_ptr<HttpResult> parseRes, Connection* cl) {
   //route
   string target = parseRes->getRequestTarget();
   if(target.find("/http") != string::npos) {
     //access to static resource
-    handleWrite(that, parseRes, cl, target);
+    handleWrite(parseRes, cl, target);
   } else {
-    void* func = that->rax.route(target);
+    void* func = route.route(target);
     if(!func) {
-      handleWrite(that, parseRes, cl, "/http/404.html");
+      handleWrite(parseRes, cl, "/http/404.html");
     } else {
-      routeHandleFunc hFunc = reinterpret_cast<routeHandleFunc>(func);
-      hFunc(parseRes, cl);
+      routeHandleFunc hFunc = static_cast<routeHandleFunc>(func);
+      // hFunc(parseRes, cl);
+
       //do something
     }
   }
 }
 
-void smpHttp::handleWrite(HttpServer* that, shared_ptr<HttpResult> parseRes, Connection* cl, string staticPath) {
+void HttpServer::handleWrite(shared_ptr<HttpResult> parseRes, Connection* cl, string staticPath) {
 #define CHUNK_SIZE 50
   try {
-    shared_ptr<IfstreamCon> fstrm = that->fstreamMap.at(staticPath);
+    shared_ptr<IfstreamCon> fstrm = fstreamMap.at(staticPath);
     if(!fstrm->is_open()) {
-      that->fstreamMap.erase(staticPath);
+      fstreamMap.erase(staticPath);
       cl->wfunc = nullptr;
       cl->write("0\r\n\r\n", 5);
       return ;
@@ -76,7 +77,7 @@ void smpHttp::handleWrite(HttpServer* that, shared_ptr<HttpResult> parseRes, Con
       s += shelper;
       countSize += shelper.size();
     }
-    auto wfunc = bind(handleWrite, that, parseRes, cl, staticPath);
+    auto wfunc = bind(&HttpServer::handleWrite, this, parseRes, cl, staticPath);
     cl->wfunc = wfunc;
     string res = Url::chunk_data(s);
     if(countSize < CHUNK_SIZE) {
@@ -91,13 +92,13 @@ void smpHttp::handleWrite(HttpServer* that, shared_ptr<HttpResult> parseRes, Con
       cerr << "errno: newF is not open" << staticPath << endl;
       return ;
     }
-    that->fstreamMap.insert({staticPath, newF});
+    fstreamMap.insert({staticPath, newF});
     Url chunkBegin;       
     //check the type
     chunkBegin.setContentType(staticPath);
     chunkBegin.addHeader("Transfer-Encoding", "chunked");
     string res = chunkBegin.get();
-    auto wfunc = bind(handleWrite, that, parseRes, cl, staticPath);
+    auto wfunc = bind(&HttpServer::handleWrite, this, parseRes, cl, staticPath);
     cl->wfunc = wfunc;
     cl->write(res.c_str(), res.size());
   }
@@ -116,10 +117,10 @@ void HttpServer::run() {
   loop.run();
 }
 
-void HttpServer::addRoute(std::string s, routeHandleFunc func){
-  this->rax.insert(s, reinterpret_cast<void*>(func));
+void HttpServer::add_route(std::string s, routeHandleFunc func){
+  route.insert(s, func);
 }
 
-void HttpServer::setStaticPath(std::string s) {
-  staticPathSet.insert(s);
+void HttpServer::add_static_path(std::string s) {
+  route.add_static(s);
 }
