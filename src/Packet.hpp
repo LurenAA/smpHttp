@@ -89,6 +89,7 @@ namespace smpHttp {
       void addHeader(const std::string& name,const  std::string& value);
       std::string get();
       void setContentType(const std::string &s);
+      void addMessage(const std::string& s) {message += s;}
       // static std::string chunk_data(std::string s);
 
     private:
@@ -96,6 +97,7 @@ namespace smpHttp {
       TransMode mode = NORMAL;
       HttpVersion http_version = HTTP_11;
       HttpStatus status = HTTP_OK;
+      std::string message = "";
 
       std::string translate_version_to_string();
   };

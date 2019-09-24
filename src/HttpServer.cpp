@@ -40,16 +40,16 @@ void HttpServer::afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
     return ;
   }
   shared_ptr<HttpRequest> parseRes(make_shared<HttpRequest>(parser.handleDatagram(buf->base, nread)));
-  handleRoute(parseRes, cl);
+  handleRoute(move(parseRes), cl);
 };
 
-void HttpServer::handleRoute(shared_ptr<HttpResult> parseRes, Connection* cl) {
+void HttpServer::handleRoute(shared_ptr<HttpRequest> parseRes, Connection* cl) {
   //route
   string target = parseRes->getRequestTarget();
   if(route.route_static(target)) {
     //access to static resource
     // handleWrite(parseRes, cl, target);
-
+    cout << parseRes.use_count() << endl;
     // deal_with_static()
   } else {
     void* func = route.route(target);

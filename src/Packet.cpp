@@ -1,9 +1,12 @@
 #include "Packet.hpp"
 #include "Util.hpp"
 #include <iostream>
+#include <cstring>
 
 using namespace std;
 using namespace smpHttp;
+
+#define CRLF "\r\n"
 
 void Packet::addHeader(const std::string& name,const  std::string& value) {
   if(mode == CHUNKED || name == "Transfer-Encoding"){
@@ -15,12 +18,31 @@ void Packet::addHeader(const std::string& name,const  std::string& value) {
 }
 
 std::string Packet::get() {
-  string res = "HTTP/1.1 200 OK\r\n";
-  for(auto iter = headers.cbegin(); iter != headers.cend(); iter++) {
-    res += iter->first + ":" + iter->second + "\r\n";
-  }
-  res += "\r\n";
+#define AXX(nu, sm, des) \
+  if(nu == static_cast<int>(status)) \
+    res += #sm; \
+
+  string res = "";
+  bool if_set_content_length = false; //determine if set content-length
+  if(mode != CHUNKED) {
+    res += translate_version_to_string() + " ";
+    res += static_cast<int>(status) + " ";
+    HTTP_STATUS_MAP(AXX);
+    res += CRLF;
+    for(auto x : headers) {
+      res += x.first + ":" + x.second + CRLF;
+      if(!strcasecmp(x.first.c_str(), "Content-Length"))
+        if_set_content_length = true;
+    }
+    if(mode == NORMAL) 
+      res += "Content-Length:" + to_string(message.size()) + CRLF;
+      
+  } 
+
+  res += CRLF; //below is the portion for message body
+
   return res;
+#undef AXX(nu, sm, des)
 }
 
 // std::string Packet::chunk_data(std::string s) {
