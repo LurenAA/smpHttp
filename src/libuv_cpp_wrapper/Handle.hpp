@@ -12,6 +12,7 @@ class Handle
   public:
     Handle(uv_handle_t* handle);
     Handle(uv_tcp_t* handle);
+    bool is_active();
     virtual void executeClose_cb();
     virtual ~Handle();
     // uv_handle_t* getHandle();

@@ -1,13 +1,19 @@
 #ifndef __HTTP_RESPONSE_
 #define __HTTP_RESPONSE_
 #include "Packet.hpp"
+#include "Connection.hpp"
 
 namespace smpHttp {
-  class HttpResponse {
+  using WriteFunc_t = std::function<void()>;
+  class HttpResponse : public Packet{
     public:
-      
+      void setAfterWrite(WriteFunc_t);
+      HttpResponse(uvx::Connection* ); 
+      void end();
+      ~HttpResponse();
     private:
-      Packet pack;
+      bool is_end = false;
+      uvx::Connection* cl;
   };
 }
 

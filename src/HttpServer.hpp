@@ -10,10 +10,10 @@
 #include <set>
 #include "Route.hpp"
 
-namespace smpHttp {
-  class HttpRequest;
-  class HttpResponse;
 
+namespace smpHttp {
+  class HttpResponse;
+  class HttpRequest;
   class HttpServer {
     public:
       HttpServer();

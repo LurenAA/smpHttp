@@ -18,9 +18,9 @@ void Route::add_static(std::string s) {
   static_path_set.insert(s);
 }
 
-bool Route::route_static(std::string s) {
+std::string Route::route_static(std::string s) {
   if(!static_path_set.size())
-    return false;
+    return "";
   auto ie = s.find_first_of('?');
   if(ie != string::npos){
     s = s.substr(0, ie);
@@ -28,7 +28,7 @@ bool Route::route_static(std::string s) {
   for(auto eve : static_path_set) {
     bool isFit = Util::starts_with(s, eve);
     if(isFit)
-      return true;
+      return s;
   }
-  return false;
+  return "";
 }

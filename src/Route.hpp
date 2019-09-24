@@ -20,7 +20,7 @@ namespace smpHttp {
     public:
       void insert(std::string s, routeHandleFunc);
       void add_static(std::string s);
-      bool route_static(std::string s);
+      std::string route_static(std::string s);
       void* route(const std::string &s) {return rax.route(s);}
     private:
       std::set<std::string> static_path_set;

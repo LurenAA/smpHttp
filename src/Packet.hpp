@@ -83,6 +83,7 @@ namespace smpHttp {
   };
   class Packet {
     public:
+      virtual ~Packet() {}
       void setHttpVersion(HttpVersion version) {http_version = version;}
       void setMode(TransMode amode) {mode = amode;}
       void setHttpStatus(HttpStatus astatus) {status = astatus;}
@@ -90,16 +91,18 @@ namespace smpHttp {
       std::string get();
       void setContentType(const std::string &s);
       void addMessage(const std::string& s) {message += s;}
-      // static std::string chunk_data(std::string s);
+      void setLastChunked(bool b);
 
     private:
       std::map<std::string, std::string> headers;
       TransMode mode = NORMAL;
       HttpVersion http_version = HTTP_11;
       HttpStatus status = HTTP_OK;
+      bool is_last_chunked = false;
       std::string message = "";
 
       std::string translate_version_to_string();
+      std::string chunk_data(std::string s);
   };
 }
 #endif //__URL_HPP_

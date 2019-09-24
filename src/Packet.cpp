@@ -7,6 +7,7 @@ using namespace std;
 using namespace smpHttp;
 
 #define CRLF "\r\n"
+#define CHUNK_END "0\r\n\r\n"
 
 void Packet::addHeader(const std::string& name,const  std::string& value) {
   if(mode == CHUNKED || name == "Transfer-Encoding"){
@@ -34,24 +35,33 @@ std::string Packet::get() {
       if(!strcasecmp(x.first.c_str(), "Content-Length"))
         if_set_content_length = true;
     }
-    if(mode == NORMAL) 
+    if(mode == NORMAL && !if_set_content_length) 
       res += "Content-Length:" + to_string(message.size()) + CRLF;
-      
+    else if(mode == CHUNKED)
+      res += "Transfer-Encoding:chunked\r\n";  
   } 
 
-  res += CRLF; //below is the portion for message body
+  if(mode != CHUNKED) 
+    res += CRLF; //below is the portion for message body
+  if(mode == NORMAL) {
+    res += message;
+  } else {
+    res += chunk_data(message);
+  }
 
+  if(is_last_chunked)
+    res += CHUNK_END;
+#undef AXX
   return res;
-#undef AXX(nu, sm, des)
 }
 
-// std::string Packet::chunk_data(std::string s) {
-//   char chunkSize[10] = "";
-//   sprintf(chunkSize, "%x", static_cast<unsigned int>(s.size()));
-//   string res(chunkSize);
-//   res += "\r\n" + s + "\r\n";
-//   return res;
-// }
+std::string Packet::chunk_data(std::string s) {
+  char chunkSize[10] = "";
+  sprintf(chunkSize, "%x", static_cast<unsigned int>(s.size()));
+  string res(chunkSize);
+  res += "\r\n" + s + "\r\n";
+  return res;
+}
 
 void Packet::setContentType(const std::string &s) {
   string ext = Util::getExt(s);
@@ -70,5 +80,10 @@ std::string Packet::translate_version_to_string() {
     return "HTTP/1.0";
   else 
     return "HTTP/1.1";
+}
+
+void Packet::setLastChunked(bool b) {
+  if(mode != NORMAL) 
+    is_last_chunked = b;
 }
 

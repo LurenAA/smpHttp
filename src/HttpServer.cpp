@@ -8,8 +8,8 @@
 #include <unistd.h>
 #include <algorithm>
 #include "Util.hpp"
-#include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
+#include "HttpRequest.hpp"
 
 using namespace std;
 using namespace uvx;
@@ -39,22 +39,24 @@ void HttpServer::afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
     cl->close();
     return ;
   }
-  shared_ptr<HttpRequest> parseRes(make_shared<HttpRequest>(parser.handleDatagram(buf->base, nread)));
-  handleRoute(move(parseRes), cl);
+  shared_ptr<HttpRequest> parseReq(make_shared<HttpRequest>(parser.handleDatagram(buf->base, nread)));
+  handleRoute(move(parseReq), cl);
 };
 
-void HttpServer::handleRoute(shared_ptr<HttpRequest> parseRes, Connection* cl) {
+void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
   //route
-  string target = parseRes->getRequestTarget();
-  if(route.route_static(target)) {
+  string target = parseReq->getRequestTarget();
+  string static_path = route.route_static(target);
+  if(static_path.size()) {
     //access to static resource
     // handleWrite(parseRes, cl, target);
-    cout << parseRes.use_count() << endl;
-    // deal_with_static()
+    shared_ptr<HttpResponse> parseRes(make_shared<HttpResponse>(cl));
+    parseReq->static_path =  static_path;  
+    deal_with_static(parseReq,parseRes);
   } else {
     void* func = route.route(target);
     if(!func) {
-      handleWrite(parseRes, cl, "/http/404.html");
+      handleWrite(parseReq, cl, "/http/404.html");
     } else {
       routeHandleFunc hFunc = reinterpret_cast<routeHandleFunc>(func);
       // hFunc(parseRes, cl);
@@ -135,5 +137,49 @@ void HttpServer::add_static_path(std::string s) {
 void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
     , std::shared_ptr<HttpResponse> res)
 {
+#define CHUNK_SIZE 500
+  try {
+    shared_ptr<IfstreamCon> fstrm = fstreamMap.at(req->getStaticPath());
+    if(!fstrm->is_open()) {
+      fstreamMap.erase(req->getStaticPath());
+      res->setAfterWrite(nullptr);
+      
+      return ;
+    }
+  //   string s, shelper;
+  //   int countSize = 0;
+  //   while(countSize < CHUNK_SIZE && getline(fstrm->getFs(), shelper)) {
+  //     Util::trim(shelper);
+  //     s += shelper;
+  //     countSize += shelper.size();
+  //   }
+  //   auto wfunc = bind(&HttpServer::handleWrite, this, parseRes, cl, staticPath);
+  //   cl->wfunc = wfunc;
+  //   // string res = Packet::chunk_data(s);
 
+  //   if(countSize < CHUNK_SIZE) {
+  //     fstrm->close();
+  //   }
+  //   // cl->write(res.c_str(), res.size());
+  } catch(...) {
+  //   //never use it before
+  //   shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
+  //   newF->open(Util::getRootPath() + staticPath);
+  //   //to do : if path is error, ...
+
+  //   if(!newF->is_open()) {
+  //     cerr << "errno: newF is not open" << staticPath << endl;
+  //     return ;
+  //   }
+  //   fstreamMap.insert({staticPath, newF});
+  //   Packet chunkBegin;       
+  //   //check the type
+  //   chunkBegin.setContentType(staticPath);
+  //   chunkBegin.addHeader("Transfer-Encoding", "chunked");
+  //   string res = chunkBegin.get();
+  //   auto wfunc = bind(&HttpServer::handleWrite, this, parseRes, cl, staticPath);
+  //   cl->wfunc = wfunc;
+  //   cl->write(res.c_str(), res.size());
+  }
+#undef CHUNK_SIZE
 }

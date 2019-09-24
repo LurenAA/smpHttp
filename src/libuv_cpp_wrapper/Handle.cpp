@@ -47,3 +47,6 @@ Handle::Handle(uv_tcp_t* handle)
 // uv_handle_t* Handle::getHandle() {
 //   return handle.get();
 // }
+bool Handle::is_active(){
+  return uv_is_active(handle.get());
+}
