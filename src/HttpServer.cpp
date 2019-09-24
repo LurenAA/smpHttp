@@ -1,15 +1,14 @@
 #include "HttpServer.hpp"
-#include "HttpResult.hpp"
 #include <cstring>
 #include <iostream>
 #include <iterator>
 #include <functional>
-#include "Packet.hpp"
 #include <unistd.h>
 #include <algorithm>
 #include "Util.hpp"
 #include "HttpResponse.hpp"
 #include "HttpRequest.hpp"
+#include <string>
 
 using namespace std;
 using namespace uvx;
@@ -50,15 +49,15 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
   if(static_path.size()) {
     //access to static resource
     // handleWrite(parseRes, cl, target);
-    shared_ptr<HttpResponse> parseRes(make_shared<HttpResponse>(cl));
-    parseReq->static_path =  static_path;  
+    parseReq->static_path =  static_path; 
+    shared_ptr<HttpResponse> parseRes(make_shared<HttpResponse>(cl)); 
     deal_with_static(parseReq,parseRes);
   } else {
     void* func = route.route(target);
     if(!func) {
       handleWrite(parseReq, cl, "/http/404.html");
     } else {
-      routeHandleFunc hFunc = reinterpret_cast<routeHandleFunc>(func);
+      // routeHandleFunc hFunc = reinterpret_cast<routeHandleFunc>(func);
       // hFunc(parseRes, cl);
 
       //do something
@@ -138,48 +137,63 @@ void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
     , std::shared_ptr<HttpResponse> res)
 {
 #define CHUNK_SIZE 500
+START:
   try {
     shared_ptr<IfstreamCon> fstrm = fstreamMap.at(req->getStaticPath());
     if(!fstrm->is_open()) {
       fstreamMap.erase(req->getStaticPath());
       res->setAfterWrite(nullptr);
-      
+
+      //to do time wheel
       return ;
     }
-  //   string s, shelper;
-  //   int countSize = 0;
-  //   while(countSize < CHUNK_SIZE && getline(fstrm->getFs(), shelper)) {
-  //     Util::trim(shelper);
-  //     s += shelper;
-  //     countSize += shelper.size();
-  //   }
-  //   auto wfunc = bind(&HttpServer::handleWrite, this, parseRes, cl, staticPath);
-  //   cl->wfunc = wfunc;
-  //   // string res = Packet::chunk_data(s);
+    string s, shelper;
+    int countSize = 0;
+    while(countSize < CHUNK_SIZE && getline(fstrm->getFs(), shelper)) {
+      Util::trim(shelper);
+      s += shelper;
+      countSize += shelper.size();
+    }
 
-  //   if(countSize < CHUNK_SIZE) {
-  //     fstrm->close();
-  //   }
-  //   // cl->write(res.c_str(), res.size());
+    if(countSize <= CHUNK_SIZE) {
+      if(res->isFirst()) {
+        res->addHeader("Content-Length", to_string(s.size()));
+      }
+      fstrm->close();
+    } else if(res->isFirst() && countSize > CHUNK_SIZE){
+      res->setMode(CHUNKED_FIRST);
+    } else {
+      res->setMode(CHUNKED);
+    }
+    res->addMessage(s);
+
+    bool isFirstCopy = res->isFirst();
+    if(res->isFirst())
+      res->setNotFirst();
+    
+    if(isFirstCopy && countSize <= CHUNK_SIZE) res->setAfterWrite(nullptr);
+    else {
+      auto wfunc = bind(&HttpServer::deal_with_static, this, 
+        req, shared_ptr<HttpResponse>(new HttpResponse(*res)));
+      res->setAfterWrite(wfunc);
+    }
+
+    cout << res->get() << endl;
   } catch(...) {
-  //   //never use it before
-  //   shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
-  //   newF->open(Util::getRootPath() + staticPath);
-  //   //to do : if path is error, ...
+    //never use it before
+    shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
+    newF->open(Util::getRootPath() + req->getStaticPath());
+    //to do : if path is error, ...
 
-  //   if(!newF->is_open()) {
-  //     cerr << "errno: newF is not open" << staticPath << endl;
-  //     return ;
-  //   }
-  //   fstreamMap.insert({staticPath, newF});
-  //   Packet chunkBegin;       
-  //   //check the type
-  //   chunkBegin.setContentType(staticPath);
-  //   chunkBegin.addHeader("Transfer-Encoding", "chunked");
-  //   string res = chunkBegin.get();
-  //   auto wfunc = bind(&HttpServer::handleWrite, this, parseRes, cl, staticPath);
-  //   cl->wfunc = wfunc;
-  //   cl->write(res.c_str(), res.size());
+    if(!newF->is_open()) {
+      //to do with error
+      cerr << "errno: newF is not open " << req->getStaticPath() << endl;
+      return ;
+    }
+    fstreamMap.insert({req->getStaticPath(), newF});
+    //check the type
+    res->setContentType(req->getStaticPath());
+    goto START;
   }
 #undef CHUNK_SIZE
 }

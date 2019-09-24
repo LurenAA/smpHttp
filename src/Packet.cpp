@@ -27,7 +27,7 @@ std::string Packet::get() {
   bool if_set_content_length = false; //determine if set content-length
   if(mode != CHUNKED) {
     res += translate_version_to_string() + " ";
-    res += static_cast<int>(status) + " ";
+    res += to_string(static_cast<int>(status)) + " ";
     HTTP_STATUS_MAP(AXX);
     res += CRLF;
     for(auto x : headers) {

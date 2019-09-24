@@ -1,19 +1,28 @@
 #ifndef __HTTP_RESPONSE_
 #define __HTTP_RESPONSE_
 #include "Packet.hpp"
-#include "Connection.hpp"
+#include <functional>
+
+namespace uvx {
+  class Connection;
+}
 
 namespace smpHttp {
   using WriteFunc_t = std::function<void()>;
   class HttpResponse : public Packet{
     public:
+      HttpResponse() = default;
+      HttpResponse(const HttpResponse&);
       void setAfterWrite(WriteFunc_t);
       HttpResponse(uvx::Connection* ); 
       void end();
-      ~HttpResponse();
+      ~HttpResponse() override;
+      void setNotFirst() {is_first = false;}
+      bool isFirst() {return is_first;}
     private:
       bool is_end = false;
       uvx::Connection* cl;
+      bool is_first = true;  //if it is firstly enter the callback
   };
 }
 

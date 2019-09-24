@@ -35,6 +35,7 @@ namespace hpr {
     friend class HttpParser;
     public:
       HttpResult() = default;
+      // HttpResult(const HttpResult&);
       HttpResult(HttpResult*);
       virtual ~HttpResult() {}
       Method getMethod() {return method;}
