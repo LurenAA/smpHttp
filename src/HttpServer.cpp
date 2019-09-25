@@ -96,44 +96,87 @@ START:
       //to do time wheel
       return ;
     }
-    string s, shelper;
-    int countSize = 0;
-    while(countSize < CHUNK_SIZE && getline(fstrm->getFs(), shelper)) {
-      Util::trim(shelper);
-      s += shelper;
-      countSize += shelper.size();
+    string s;
+    fstrm->read(s, CHUNK_SIZE); //read from the fstream
+    cout << s.size() << endl;
+    res->addMessage(s); //add message body
+    bool if_set_next_func = false; //if need a next deal_with_static call
+    IfstreamCon::size_type remain = fstrm->remainNum();
+    if(remain == 0) {
+      /**
+       * for normal datagram
+       **/ 
+      if(res->getMode() == NORMAL && res->isFirst()) { 
+        res->addHeader("Content-Length", to_string(s.size()));
+      } 
+      /**
+       * for the last chunk 
+       **/ 
+      else if(res->getMode() == CHUNKED && !res->isFirst()){
+        res->setLastChunked();
+      } else {
+        cout << "error:" << to_string(__LINE__) <<
+        res->getMode() << " " << res->isFirst() << endl;
+        return ;
+      }
+    } else {
+      /**
+       * for the first chunked one
+       **/ 
+      if(res->isFirst()) {
+        res->setNotFirst();
+        res->setMode(CHUNKED_FIRST);
+      }
+      /**
+       * for a normal chunked one
+       **/  
+      else {
+        res->setMode(CHUNKED);
+      }
+      if_set_next_func = true;
     }
 
-    if(countSize <= CHUNK_SIZE ) {
-      if(res->isFirst())
-        res->addHeader("Content-Length", to_string(s.size()));
+    if(if_set_next_func) {
+      shared_ptr<HttpResponse> rres(new HttpResponse(*res));
+      if(res->getMode() == CHUNKED || res->getMode() == CHUNKED_FIRST) 
+        rres->setMode(CHUNKED);
+      auto wfunc = bind(&HttpServer::deal_with_static, this, req, rres);
+      res->setAfterWrite(wfunc);    
+    } else{
       fstrm->close();
       fstreamMap.erase(req->getStaticPath());
       res->setAfterWrite(nullptr);
-    } else if(res->isFirst() && countSize > CHUNK_SIZE){
-      res->setMode(CHUNKED_FIRST);
-    } 
-      
-    res->addMessage(s);
-
-    if(res->isFirst())
-      res->setNotFirst();
-    
-    if(res->getMode() != NORMAL) 
-    {
-      if(countSize <= CHUNK_SIZE) {
-        res->setLastChunked();
-      } else {
-        shared_ptr<HttpResponse> rres(new HttpResponse(*res));
-        if(res->getMode() == CHUNKED || res->getMode() == CHUNKED_FIRST) 
-          rres->setMode(CHUNKED);
-        auto wfunc = bind(&HttpServer::deal_with_static, this, 
-          req, rres);
-        res->setAfterWrite(wfunc);
-      }
     }
+    // if(fstrm->remainNum() == 0) {
+    //   if(res->isFirst())
+    //     res->addHeader("Content-Length", to_string(s.size()));
+    //   fstrm->close();
+    //   fstreamMap.erase(req->getStaticPath());
+    //   res->setAfterWrite(nullptr);
+    // } else if(res->isFirst() && fstrm->remainNum() > 0){
+    //   res->setMode(CHUNKED_FIRST);
+    // } 
+      
+    // res->addMessage(s);
 
-    // cout << res->get() << endl;
+    // if(res->isFirst())
+    //   res->setNotFirst();
+    
+    // if(res->getMode() != NORMAL) 
+    // {
+    //   if(!fstrm->remainNum()) {
+    //     res->setLastChunked();
+    //   } else {
+    //     shared_ptr<HttpResponse> rres(new HttpResponse(*res));
+    //     if(res->getMode() == CHUNKED || res->getMode() == CHUNKED_FIRST) 
+    //       rres->setMode(CHUNKED);
+    //     auto wfunc = bind(&HttpServer::deal_with_static, this, 
+    //       req, rres);
+    //     res->setAfterWrite(wfunc);
+    //   }
+    // }
+
+    cout << res->get() << endl;
   } catch(...) {
     //never use it before
     shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
