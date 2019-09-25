@@ -92,6 +92,8 @@ namespace smpHttp {
       void setContentType(const std::string &s);
       void addMessage(const std::string& s) {message += s;}
       void setLastChunked(bool b);
+      void setLastChunked() {is_last_chunked = true;}
+      const TransMode getMode() {return mode;}
 
     private:
       std::map<std::string, std::string> headers;

@@ -39,7 +39,7 @@ void HttpServer::afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
     return ;
   }
   shared_ptr<HttpRequest> parseReq(make_shared<HttpRequest>(parser.handleDatagram(buf->base, nread)));
-  handleRoute(move(parseReq), cl);
+  return handleRoute(move(parseReq), cl);
 };
 
 void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
@@ -55,7 +55,7 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
   } else {
     void* func = route.route(target);
     if(!func) {
-      handleWrite(parseReq, cl, "/http/404.html");
+      // handleWrite(parseReq, cl, "/http/404.html");
     } else {
       // routeHandleFunc hFunc = reinterpret_cast<routeHandleFunc>(func);
       // hFunc(parseRes, cl);
@@ -143,7 +143,6 @@ START:
     if(!fstrm->is_open()) {
       fstreamMap.erase(req->getStaticPath());
       res->setAfterWrite(nullptr);
-
       //to do time wheel
       return ;
     }
@@ -155,27 +154,33 @@ START:
       countSize += shelper.size();
     }
 
-    if(countSize <= CHUNK_SIZE) {
-      if(res->isFirst()) {
+    if(countSize <= CHUNK_SIZE ) {
+      if(res->isFirst())
         res->addHeader("Content-Length", to_string(s.size()));
-      }
       fstrm->close();
+      fstreamMap.erase(req->getStaticPath());
+      res->setAfterWrite(nullptr);
     } else if(res->isFirst() && countSize > CHUNK_SIZE){
       res->setMode(CHUNKED_FIRST);
-    } else {
-      res->setMode(CHUNKED);
-    }
+    } 
+      
     res->addMessage(s);
 
-    bool isFirstCopy = res->isFirst();
     if(res->isFirst())
       res->setNotFirst();
     
-    if(isFirstCopy && countSize <= CHUNK_SIZE) res->setAfterWrite(nullptr);
-    else {
-      auto wfunc = bind(&HttpServer::deal_with_static, this, 
-        req, shared_ptr<HttpResponse>(new HttpResponse(*res)));
-      res->setAfterWrite(wfunc);
+    if(res->getMode() != NORMAL) 
+    {
+      if(countSize <= CHUNK_SIZE) {
+        res->setLastChunked();
+      } else {
+        shared_ptr<HttpResponse> rres(new HttpResponse(*res));
+        if(res->getMode() == CHUNKED || res->getMode() == CHUNKED_FIRST) 
+          rres->setMode(CHUNKED);
+        auto wfunc = bind(&HttpServer::deal_with_static, this, 
+          req, rres);
+        res->setAfterWrite(wfunc);
+      }
     }
 
     cout << res->get() << endl;

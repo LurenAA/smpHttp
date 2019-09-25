@@ -37,7 +37,7 @@ std::string Packet::get() {
     }
     if(mode == NORMAL && !if_set_content_length) 
       res += "Content-Length:" + to_string(message.size()) + CRLF;
-    else if(mode == CHUNKED)
+    else if(mode == CHUNKED_FIRST)
       res += "Transfer-Encoding:chunked\r\n";  
   } 
 
