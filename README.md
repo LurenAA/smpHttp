@@ -4,3 +4,5 @@
 + 时间轮(tcp::collectionList, HttpServer::fstreamMap)
 + 路由匹配$等变量值
 + 静态路径的处理
++ keep-alive
++ Accept-Ranges: bytes

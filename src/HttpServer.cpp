@@ -46,71 +46,21 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
   //route
   string target = parseReq->getRequestTarget();
   string static_path = route.route_static(target);
+  shared_ptr<HttpResponse> parseRes(make_shared<HttpResponse>(cl)); 
   if(static_path.size()) {
     //access to static resource
     // handleWrite(parseRes, cl, target);
     parseReq->static_path =  static_path; 
-    shared_ptr<HttpResponse> parseRes(make_shared<HttpResponse>(cl)); 
     deal_with_static(parseReq,parseRes);
   } else {
     void* func = route.route(target);
     if(!func) {
-      // handleWrite(parseReq, cl, "/http/404.html");
+      deal_with_error(parseReq, parseRes, "error: no such route");
     } else {
-      // routeHandleFunc hFunc = reinterpret_cast<routeHandleFunc>(func);
-      // hFunc(parseRes, cl);
 
       //do something
     }
   }
-}
-
-void HttpServer::handleWrite(shared_ptr<HttpResult> parseRes, Connection* cl, string staticPath) {
-#define CHUNK_SIZE 50
-  try {
-    shared_ptr<IfstreamCon> fstrm = fstreamMap.at(staticPath);
-    if(!fstrm->is_open()) {
-      fstreamMap.erase(staticPath);
-      cl->wfunc = nullptr;
-      cl->write("0\r\n\r\n", 5);
-      return ;
-    }
-    string s, shelper;
-    int countSize = 0;
-    while(countSize < CHUNK_SIZE && getline(fstrm->getFs(), shelper)) {
-      Util::trim(shelper);
-      s += shelper;
-      countSize += shelper.size();
-    }
-    auto wfunc = bind(&HttpServer::handleWrite, this, parseRes, cl, staticPath);
-    cl->wfunc = wfunc;
-    // string res = Packet::chunk_data(s);
-
-    if(countSize < CHUNK_SIZE) {
-      fstrm->close();
-    }
-    // cl->write(res.c_str(), res.size());
-  } catch(...) {
-    //never use it before
-    shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
-    newF->open(Util::getRootPath() + staticPath);
-    //to do : if path is error, ...
-
-    if(!newF->is_open()) {
-      cerr << "errno: newF is not open" << staticPath << endl;
-      return ;
-    }
-    fstreamMap.insert({staticPath, newF});
-    Packet chunkBegin;       
-    //check the type
-    chunkBegin.setContentType(staticPath);
-    chunkBegin.addHeader("Transfer-Encoding", "chunked");
-    string res = chunkBegin.get();
-    auto wfunc = bind(&HttpServer::handleWrite, this, parseRes, cl, staticPath);
-    cl->wfunc = wfunc;
-    cl->write(res.c_str(), res.size());
-  }
-#undef CHUNK_SIZE
 }
 
 HttpServer::HttpServer() :
@@ -183,7 +133,7 @@ START:
       }
     }
 
-    cout << res->get() << endl;
+    // cout << res->get() << endl;
   } catch(...) {
     //never use it before
     shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
@@ -192,7 +142,11 @@ START:
 
     if(!newF->is_open()) {
       //to do with error
-      cerr << "errno: newF is not open " << req->getStaticPath() << endl;
+      std::string s = "errno:" +  req->getStaticPath() 
+      + " does not exist " +  __FILE__ + " " + to_string(__LINE__);
+      cout << s << endl;
+      res->addMessage(s);
+      res->setAfterWrite(nullptr);
       return ;
     }
     fstreamMap.insert({req->getStaticPath(), newF});
@@ -201,4 +155,10 @@ START:
     goto START;
   }
 #undef CHUNK_SIZE
+}
+
+void HttpServer::deal_with_error(std::shared_ptr<HttpRequest> req,
+  std::shared_ptr<HttpResponse> res,const std::string& s)
+{
+  res->addMessage(s);
 }

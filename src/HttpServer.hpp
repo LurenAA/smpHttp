@@ -29,11 +29,11 @@ namespace smpHttp {
       Route route;
 
       void deal_with_static(std::shared_ptr<HttpRequest>,std::shared_ptr<HttpResponse>);
+      void deal_with_error(std::shared_ptr<HttpRequest>,std::shared_ptr<HttpResponse>,const std::string&);
 
       void handleRoute(std::shared_ptr<HttpRequest> parseRes, uvx::Connection* cl);
       void afterConnect(uv_stream_t* server, uv_tcp_t* tcp);
       void afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf);
-      void handleWrite(std::shared_ptr<hpr::HttpResult> parseRes, uvx::Connection* cl, std::string staticPath);
   };
 }
 #endif //__HTTPSERVER_H_ 

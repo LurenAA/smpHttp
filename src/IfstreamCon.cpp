@@ -6,7 +6,7 @@ using namespace smpHttp;
 bool IfstreamCon::open(std::string apath){
   if(apath.size()) {
     path = apath;
-    fs.open(apath);
+    fs.open(apath, ios::binary);
     return is_open();
   }
   return false;
