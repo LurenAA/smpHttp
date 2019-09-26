@@ -1,4 +1,5 @@
 #include "IfstreamCon.hpp"
+#include <iostream>
 
 using namespace std;
 using namespace smpHttp;
@@ -31,6 +32,7 @@ void IfstreamCon::close() {
 IfstreamCon::size_type IfstreamCon::read(std::string& s, size_type max_size){
   char buf[max_size + 1] = ""; //the additional one space is very important
   size_type remain = asize - has_read;
+  // cout << remain << endl;
   if(remain <= max_size) {
     fs.read(buf, remain);
     has_read += remain;
@@ -39,7 +41,8 @@ IfstreamCon::size_type IfstreamCon::read(std::string& s, size_type max_size){
   } else {
     fs.read(buf, max_size);
     has_read += max_size;
-    s.assign(buf);
+    s.assign(buf, max_size);
+    // cout << s.size() << endl;
     return max_size;
   }
 }

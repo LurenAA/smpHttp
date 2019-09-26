@@ -101,7 +101,6 @@ START:
     res->addMessage(s); //add message body
     bool if_set_next_func = false; //if need a next deal_with_static call
     IfstreamCon::size_type remain = fstrm->remainNum();
-    cout << s.size() << endl;
     if(remain == 0) {
       /**
        * for normal datagram
@@ -148,7 +147,7 @@ START:
       res->setAfterWrite(nullptr);
     }
 
-    cout << res->get() << endl;
+    // cout << res->get() << endl;
   } catch(...) {
     //never use it before
     shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
