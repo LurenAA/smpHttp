@@ -86,7 +86,7 @@ void HttpServer::add_static_path(std::string s) {
 void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
     , std::shared_ptr<HttpResponse> res)
 {
-#define CHUNK_SIZE 500
+#define CHUNK_SIZE 5000
 START:
   try {
     shared_ptr<IfstreamCon> fstrm = fstreamMap.at(req->getStaticPath());
@@ -98,10 +98,10 @@ START:
     }
     string s;
     fstrm->read(s, CHUNK_SIZE); //read from the fstream
-    cout << s.size() << endl;
     res->addMessage(s); //add message body
     bool if_set_next_func = false; //if need a next deal_with_static call
     IfstreamCon::size_type remain = fstrm->remainNum();
+    cout << s.size() << endl;
     if(remain == 0) {
       /**
        * for normal datagram
@@ -147,34 +147,6 @@ START:
       fstreamMap.erase(req->getStaticPath());
       res->setAfterWrite(nullptr);
     }
-    // if(fstrm->remainNum() == 0) {
-    //   if(res->isFirst())
-    //     res->addHeader("Content-Length", to_string(s.size()));
-    //   fstrm->close();
-    //   fstreamMap.erase(req->getStaticPath());
-    //   res->setAfterWrite(nullptr);
-    // } else if(res->isFirst() && fstrm->remainNum() > 0){
-    //   res->setMode(CHUNKED_FIRST);
-    // } 
-      
-    // res->addMessage(s);
-
-    // if(res->isFirst())
-    //   res->setNotFirst();
-    
-    // if(res->getMode() != NORMAL) 
-    // {
-    //   if(!fstrm->remainNum()) {
-    //     res->setLastChunked();
-    //   } else {
-    //     shared_ptr<HttpResponse> rres(new HttpResponse(*res));
-    //     if(res->getMode() == CHUNKED || res->getMode() == CHUNKED_FIRST) 
-    //       rres->setMode(CHUNKED);
-    //     auto wfunc = bind(&HttpServer::deal_with_static, this, 
-    //       req, rres);
-    //     res->setAfterWrite(wfunc);
-    //   }
-    // }
 
     cout << res->get() << endl;
   } catch(...) {
