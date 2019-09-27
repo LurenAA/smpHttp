@@ -17,10 +17,6 @@ using namespace hpr;
 using namespace radix;
 using namespace std::placeholders;
 
-#define RES \
-  "HTTP/1.1 200 OK\r\n" \
-  "\r\n"
-
 void HttpServer::afterConnect(uv_stream_t* server, uv_tcp_t* tcp){
   Connection* cl = nullptr;
   if(tcp->data)
@@ -58,7 +54,6 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
     } else {
       routeHandleFunc func_1 = reinterpret_cast<routeHandleFunc>(func);
       func_1(parseReq, parseRes);
-      //do something
     }
   }
 }
@@ -152,7 +147,6 @@ START:
     //never use it before
     shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
     newF->open(Util::getRootPath() + req->getStaticPath());
-    //to do : if path is error, ...
 
     if(!newF->is_open()) {
       //to do with error
