@@ -49,7 +49,6 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
   shared_ptr<HttpResponse> parseRes(make_shared<HttpResponse>(cl)); 
   if(static_path.size()) {
     //access to static resource
-    // handleWrite(parseRes, cl, target);
     parseReq->static_path =  static_path; 
     deal_with_static(parseReq,parseRes);
   } else {
@@ -57,7 +56,8 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
     if(!func) {
       deal_with_error(parseReq, parseRes, "error: no such route");
     } else {
-
+      routeHandleFunc func_1 = reinterpret_cast<routeHandleFunc>(func);
+      func_1(parseReq, parseRes);
       //do something
     }
   }
