@@ -22,11 +22,13 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") 
 SET(CMAKE_BUILD_TYPE "Debug")
 SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+add_subdirectory(src/nlohmann_json)
 
 list(APPEND links /home/ele/libuv/out/Debug/libuv.a -pthread 
 radix_tree HttpParser Tcp Loop Handle Connection)
 add_executable(smpHttp ${srcs})
-target_LINK_LIbraries(smpHttp ${links})
+target_LINK_LIbraries(smpHttp PRIVATE nlohmann_json::nlohmann_json ${links})
 
 MESSAGE("building...")
 
