@@ -1,6 +1,5 @@
 #include <iostream>
 #include "smpHttp.hpp"
-#include <nlohmann/json.hpp>
 using namespace std;
 
 void test1(std::shared_ptr<smpHttp::HttpRequest> req
@@ -15,5 +14,4 @@ int main() {
   server.add_route("/hello", test1);
   server.run();
   
-  return 0;
 }
