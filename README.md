@@ -8,7 +8,6 @@
 + 静态路由
 + 多种文件格式传输
 
-
 ###  🎯 to do:
 + 时间轮(tcp::collectionList, HttpServer::fstreamMap)
 + 路由匹配$等变量值
@@ -17,6 +16,9 @@
 + Accept-Ranges: bytes
 &ensp;
 
+### 🗼 第三方依赖
++[libuv](https://github.com/libuv/libuv)
++[json](https://github.com/nlohmann/json)
 
 ### 🚇 simple example
 
