@@ -1,6 +1,10 @@
 #include <iostream>
+#include <string>
 #include "smpHttp.hpp"
+#include "mysqlx/xdevapi.h"
 using namespace std;
+using namespace ::mysqlx;
+
 
 void test1(std::shared_ptr<smpHttp::HttpRequest> req
   , std::shared_ptr<smpHttp::HttpResponse> res) 
@@ -8,10 +12,14 @@ void test1(std::shared_ptr<smpHttp::HttpRequest> req
   res->addMessage("hello world");
 }
 
-int main() {
-  smpHttp::HttpServer server;
-  server.add_static_path("/http"); //add static route
-  server.add_route("/hello", test1);
-  server.run();
-  
+int main(int argc, const char* argv[]) {
+  // smpHttp::HttpServer server;
+  // server.add_static_path("/http"); //add static route
+  // server.add_route("/hello", test1);
+  // server.run();
+
+  Session sess("mysqlx://root:root@192.168.204.1");
+
+  Schema sch= sess.getSchema("test");
+
 }

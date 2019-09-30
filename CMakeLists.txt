@@ -8,7 +8,9 @@ list(APPEND dics /home/ele/libuv/include/
 ${PROJECT_SOURCE_DIR}/src/libuv_cpp_wrapper/
 ${PROJECT_SOURCE_DIR}/src/
 ${PROJECT_SOURCE_DIR}/src/radix_tree/
-${PROJECT_SOURCE_DIR}/src/http_parser/)
+${PROJECT_SOURCE_DIR}/src/http_parser/
+/usr/local/mysql/connector-c++-8.0/include/
+)
 
 include_directories(${dics})
 add_subdirectory(src/radix_tree)
@@ -26,7 +28,9 @@ set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(src/nlohmann_json)
 
 list(APPEND links /home/ele/libuv/out/Debug/libuv.a -pthread 
-radix_tree HttpParser Tcp Loop Handle Connection)
+radix_tree HttpParser Tcp Loop Handle Connection
+/usr/local/mysql/connector-c++-8.0/lib64/debug/libmysqlcppconn8.so
+)
 add_executable(smpHttp ${srcs})
 target_LINK_LIbraries(smpHttp PRIVATE nlohmann_json::nlohmann_json ${links})
 
