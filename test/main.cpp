@@ -13,12 +13,12 @@ void test1(std::shared_ptr<smpHttp::HttpRequest> req
 }
 
 int main(int argc, const char* argv[]) {
-  // smpHttp::HttpServer server;
-  // server.add_static_path("/http"); //add static route
-  // server.add_route("/hello", test1);
-  // server.run();
+  smpHttp::HttpServer server;
+  server.add_static_path("/http"); //add static route
+  server.add_route("/hello", test1);
+  server.run();
 
-  Session sess("mysqlx://root:root@192.168.204.1");
+  Session sess("mysqlx://root:root@47.103.210.8");
 
   Schema sch= sess.getSchema("test");
 
