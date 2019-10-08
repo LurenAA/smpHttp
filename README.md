@@ -9,7 +9,6 @@
 + 多种文件格式传输
 
 ###  🎯 to do:
-+ 使用静态编译生成Connector/C++的静态库，然后链接静态库，避免编译后文件依赖动态库
 + 时间轮(tcp::collectionList, HttpServer::fstreamMap)
 + 路由匹配$等变量值
 + 复杂静态路径的处理
@@ -21,7 +20,6 @@
 + [libuv](https://github.com/libuv/libuv)
 + [json](https://github.com/nlohmann/json)
 + [mysql-connector-cpp](https://github.com/mysql/mysql-connector-cpp)
-+ [boost](https://www.boost.org/)
 
 
 ### 🚇 simple example

@@ -1,5 +1,6 @@
 #include "IfstreamCon.hpp"
 #include <iostream>
+#include "unistd.h"
 
 using namespace std;
 using namespace smpHttp;
@@ -36,7 +37,8 @@ IfstreamCon::size_type IfstreamCon::read(std::string& s, size_type max_size){
   if(remain <= max_size) {
     fs.read(buf, remain);
     has_read += remain;
-    s.assign(buf);
+    s.assign(buf, remain);
+    // cout << s.size() << endl;
     return remain;
   } else {
     fs.read(buf, max_size);
