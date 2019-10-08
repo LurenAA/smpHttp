@@ -167,6 +167,7 @@ using namespace smpHttp;
   XX(trm	,"application/x-msterminal",tar) \
   XX(tsv	,"text/tab-separated-values",tar) \
   XX(txt	,"text/plain",tar) \
+  XX(ttf, "font/ttf", tar)\
   XX(uls	,"text/iuls",tar) \
   XX(ustar	,"application/x-ustar",tar) \
   XX(vcf	,"text/x-vcard",tar) \
@@ -178,6 +179,7 @@ using namespace smpHttp;
   XX(wmf	,"application/x-msmetafile",tar) \
   XX(wps	,"application/vnd.ms-works",tar) \
   XX(wri	,"application/x-mswrite",tar) \
+  XX(woff, "font/woff", tar) \
   XX(wrl	,"x-world/x-vrml",tar) \
   XX(wrz	,"x-world/x-vrml",tar) \
   XX(xaf	,"x-world/x-vrml",tar) \
