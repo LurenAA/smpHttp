@@ -34,17 +34,14 @@ IfstreamCon::size_type IfstreamCon::read(std::string& s, size_type max_size){
   char buf[max_size + 1] = ""; //the additional one space is very important
   size_type remain = asize - has_read;
   // cout << remain << endl;
+  bool key = true; 
   if(remain <= max_size) {
-    fs.read(buf, remain);
-    has_read += remain;
-    s.assign(buf, remain);
-    // cout << s.size() << endl;
-    return remain;
-  } else {
-    fs.read(buf, max_size);
-    has_read += max_size;
-    s.assign(buf, max_size);
-    // cout << s.size() << endl;
-    return max_size;
-  }
+    key = false;
+  } 
+  std::streamsize si = key ? max_size : remain;
+  fs.read(buf, si);
+  buf[si] = '\0';
+  has_read += si;
+  s.assign(buf, si);
+  return si;
 }

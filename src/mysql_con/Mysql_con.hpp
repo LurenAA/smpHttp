@@ -7,7 +7,7 @@
 namespace mysqlx{
   class Mysql_con {
     public:
-      explicit Mysql_con(const std::string&, const std::string &user, 
+      explicit Mysql_con(const std::string& host, const std::string &user, 
         const char* pwd=nullptr, unsigned port = 33060);
       Mysql_con(const Mysql_con&) = delete;
       Mysql_con& operator=(const Mysql_con&) = delete;

@@ -4,6 +4,9 @@
 &emsp;
 不断完善中。
 
+### 😂 已知bug
++ 同ip同时请求复数个同一资源
+
 ### 🍕 finished：
 + 静态路由
 + 多种文件格式传输
@@ -20,7 +23,6 @@
 + [libuv](https://github.com/libuv/libuv)
 + [json](https://github.com/nlohmann/json)
 + [mysql-connector-cpp](https://github.com/mysql/mysql-connector-cpp)
-
 
 ### 🚇 simple example
 
@@ -44,3 +46,4 @@ int main() {
   return 0;
 }
 ```
+

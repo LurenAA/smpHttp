@@ -15,6 +15,8 @@ friend class Tcp;
 public:
   Loop();
   ~Loop();
+  Loop(const Loop&) = delete;
+  Loop& operator=(const Loop&) = delete;
   void setLoop(uv_loop_t *);
   uv_loop_t *getLoop();
   int run(uv_run_mode mode = UV_RUN_DEFAULT);

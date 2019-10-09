@@ -88,6 +88,8 @@ START:
     if(!fstrm->is_open()) {
       fstreamMap.erase(req->getStaticPath());
       res->setAfterWrite(nullptr);
+      cout << "error: open " << req->getStaticPath() << endl;
+      cout << "log: close " << req->getStaticPath() << ":" << fstreamMap.size() << endl ;
       //to do time wheel
       return ;
     }
@@ -140,6 +142,7 @@ START:
       fstrm->close();
       fstreamMap.erase(req->getStaticPath());
       res->setAfterWrite(nullptr);
+      cout << "log: close " << req->getStaticPath() << ":" << fstreamMap.size() << endl;
     }
 
     // cout << res->get() << endl;

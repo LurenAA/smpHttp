@@ -10,10 +10,7 @@ void rdClbk(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf);
 
 EchoServer::EchoServer() :
   loop(), tcpServer(loop)
-{
-  Tcp::connectionCallback = aConcClbk;
-  Connection::readFunc = rdClbk;
-}
+{}
 
 void aConcClbk(uv_stream_t* server, uv_tcp_t* tcp) {
   Connection* cl = nullptr;

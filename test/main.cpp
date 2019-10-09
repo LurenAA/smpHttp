@@ -1,7 +1,10 @@
 #include <iostream>
 #include <string>
 #include "smpHttp.hpp"
+#include "Mysql_con.hpp"
 using namespace std;
+using namespace ::mysqlx;
+// Mysql_con mq("192.168.204.1", "root", "root");
 
 void test1(std::shared_ptr<smpHttp::HttpRequest> req
   , std::shared_ptr<smpHttp::HttpResponse> res) 
