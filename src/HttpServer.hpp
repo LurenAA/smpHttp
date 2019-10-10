@@ -25,7 +25,7 @@ namespace smpHttp {
       uvx::Loop loop;
       uvx::Tcp tcpServer;
       hpr::HttpParser parser;
-      std::map<std::string, std::shared_ptr<IfstreamCon>> fstreamMap; 
+      // std::map<std::string, std::shared_ptr<IfstreamCon>> fstreamMap; 
       Route route;
 
       void deal_with_static(std::shared_ptr<HttpRequest>,std::shared_ptr<HttpResponse>);

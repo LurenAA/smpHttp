@@ -82,14 +82,33 @@ void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
     , std::shared_ptr<HttpResponse> res)
 {
 #define CHUNK_SIZE 5000
-START:
-  try {
-    shared_ptr<IfstreamCon> fstrm = fstreamMap.at(req->getStaticPath());
+  if(!req->fstream){
+    //never use it before
+    shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
+    newF->open(Util::getRootPath() + req->getStaticPath());
+
+    if(!newF->is_open()) {
+      //to do with error
+      std::string s = "errno:" +  req->getStaticPath() 
+      + " does not exist " +  __FILE__ + " " + to_string(__LINE__);
+      cout << s << endl;
+      res->addMessage(s);
+      res->setAfterWrite(nullptr);
+      return ;
+    }
+    // fstreamMap.insert({req->getStaticPath(), newF});
+    req->fstream = newF;
+    //check the type
+    res->setContentType(req->getStaticPath());
+  }
+
+
+  if(req->fstream) {
+    shared_ptr<IfstreamCon> fstrm = req->fstream;
     if(!fstrm->is_open()) {
-      fstreamMap.erase(req->getStaticPath());
       res->setAfterWrite(nullptr);
       cout << "error: open " << req->getStaticPath() << endl;
-      cout << "log: close " << req->getStaticPath() << ":" << fstreamMap.size() << endl ;
+      cout << "log: close " << req->getStaticPath()  << endl ;
       //to do time wheel
       return ;
     }
@@ -140,31 +159,13 @@ START:
       res->setAfterWrite(wfunc);    
     } else{
       fstrm->close();
-      fstreamMap.erase(req->getStaticPath());
+      // fstreamMap.erase(req->getStaticPath());
       res->setAfterWrite(nullptr);
-      cout << "log: close " << req->getStaticPath() << ":" << fstreamMap.size() << endl;
+      cout << "log: close " << req->getStaticPath() << endl;
     }
 
     // cout << res->get() << endl;
-  } catch(...) {
-    //never use it before
-    shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
-    newF->open(Util::getRootPath() + req->getStaticPath());
-
-    if(!newF->is_open()) {
-      //to do with error
-      std::string s = "errno:" +  req->getStaticPath() 
-      + " does not exist " +  __FILE__ + " " + to_string(__LINE__);
-      cout << s << endl;
-      res->addMessage(s);
-      res->setAfterWrite(nullptr);
-      return ;
-    }
-    fstreamMap.insert({req->getStaticPath(), newF});
-    //check the type
-    res->setContentType(req->getStaticPath());
-    goto START;
-  }
+  } 
 #undef CHUNK_SIZE
 }
 
