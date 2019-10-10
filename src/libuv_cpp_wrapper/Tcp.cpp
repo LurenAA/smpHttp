@@ -55,6 +55,7 @@ void Tcp::addConnection(std::shared_ptr<Connection> &newOne)
  * handle coming connections, and make a Connection Object,
  * then put it into the connectionList
  **/
+int visitor_count = 0;
 void uvx::listenHandle(uv_stream_t *server, int status)
 {
   Tcp *tcp = static_cast<Tcp *>(server->data);
@@ -75,6 +76,7 @@ void uvx::listenHandle(uv_stream_t *server, int status)
     Connection *c = new Connection(client, tcp);
     shared_ptr<Connection> cli(c);
     tcp->addConnection(cli);
+  cout << "log: visitor " << ++visitor_count << endl;
     if (tcp->connectionCallback)
       tcp->connectionCallback(reinterpret_cast<uv_stream_t *>(tcp->handle.get()), client);
   }

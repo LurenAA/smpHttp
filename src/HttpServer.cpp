@@ -21,6 +21,8 @@ void HttpServer::afterConnect(uv_stream_t* server, uv_tcp_t* tcp){
   Connection* cl = nullptr;
   if(tcp->data)
     cl = static_cast<Connection*>(tcp->data);
+  else 
+    cout << "error: afterConnect no tcp->data" << endl;
   auto afterReadbind = bind(&HttpServer::afterRead, this, _1, _2, _3);
   cl->readFunc = afterReadbind;
   cl->startRead();
@@ -30,9 +32,16 @@ void HttpServer::afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
   Connection* cl = nullptr;
   if(stream->data)
     cl = static_cast<Connection*>(stream->data);
+  else 
+    cout << "warn: error afterRead no stream->data" << endl;
   if(nread < 0) {
+    cout << "warn:" << __FILE__ << ": " 
+      << __LINE__ << " :nread < 0" << endl;
     cl->close();
     return ;
+  } else if(nread == 0) {
+    cout << "warn:" << __FILE__ << ": " 
+      << __LINE__ << " :nread == 0" << endl;
   }
   shared_ptr<HttpRequest> parseReq(make_shared<HttpRequest>(parser.handleDatagram(buf->base, nread)));
   return handleRoute(move(parseReq), cl);

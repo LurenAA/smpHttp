@@ -1,4 +1,5 @@
 #include "Handle.hpp"
+#include <iostream>
 
 using namespace std;
 using namespace uvx;
@@ -25,6 +26,7 @@ void Handle::close() {
   if(isClosing())
     return;
   uv_close(handle.get(), [](uv_handle_t* handle) {
+    cout << "log: close one" << endl;
     Handle* had = static_cast<Handle*>(handle->data);
     if(Handle::close_cb)
       had->executeClose_cb();
