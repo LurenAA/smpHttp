@@ -4,6 +4,11 @@ project(http-parser VERSION 0.1.0)
 include(CTest)
 enable_testing()
 
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") 
+SET(CMAKE_BUILD_TYPE "Debug")
+SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
+
 add_library(HttpParser HttpParser.cpp)
 add_library(HttpResult HttpResult.cpp)
 target_link_libraries(HttpParser HttpResult)

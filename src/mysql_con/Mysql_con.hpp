@@ -7,13 +7,14 @@
 namespace mysqlx{
   class Mysql_con {
     public:
-      explicit Mysql_con(const std::string& host, const std::string &user, 
-        const char* pwd=nullptr, unsigned port = 33060);
+      explicit Mysql_con(const std::string& host, const std::string &user
+      , const std::string& db, const char* pwd=nullptr, unsigned port = 33060);
       Mysql_con(const Mysql_con&) = delete;
       Mysql_con& operator=(const Mysql_con&) = delete;
       ~Mysql_con();
       void addSchema(const std::string&);
-      Table getTable(const std::string&, const std::string&);
+      Table getTable(const std::string&, const std::string&); 
+      SqlStatement sql(const string& query) {return session.sql(query);}	
     private:
       Session session;
       std::map<std::string, Schema> map_sch;

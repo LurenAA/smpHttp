@@ -4,10 +4,9 @@
 using namespace ::mysqlx;
 using namespace std;
 
-Mysql_con::Mysql_con(const std::string& host, const std::string &user, const char* pwd, unsigned port) try:
-  session(host, port, user, pwd), host(host), user(user), pwd(pwd), port(port)
+Mysql_con::Mysql_con(const std::string& host, const std::string &user,const std::string& db, const char* pwd, unsigned port) try:
+  session(host, port, user, pwd, db), host(host), user(user), pwd(pwd), db(db), port(port)
 {
-  
 } catch(Error e) {
   cout << e.what() << endl;
 }

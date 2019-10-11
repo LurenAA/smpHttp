@@ -49,7 +49,7 @@ void HttpServer::afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
 
 void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
   //route
-  string target = parseReq->getRequestTarget();
+  string target = parseReq->getRequestPath();
   string static_path = route.route_static(target);
   shared_ptr<HttpResponse> parseRes(make_shared<HttpResponse>(cl)); 
   if(static_path.size()) {
@@ -90,7 +90,7 @@ void HttpServer::add_static_path(std::string s) {
 void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
     , std::shared_ptr<HttpResponse> res)
 {
-#define CHUNK_SIZE 5000
+#define CHUNK_SIZE 50000
   if(!req->fstream){
     //never use it before
     shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
