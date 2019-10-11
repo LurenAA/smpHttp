@@ -2,11 +2,6 @@
 
 &emsp;基于libuv的一个简单C++ http服务器 \
 &emsp;
-不断完善中。
-
-### bugs
-不应该在析构函数中应用handle的close，这样出现
-bug在于等事件循环到达时，内存已经释放。
 
 ### 🍕 finished：
 + 静态路由
