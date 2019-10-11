@@ -62,10 +62,6 @@ std::shared_ptr<Connection> Connection::sharedMe(){
   return shared_from_this();
 }
 
-void Connection::close() {
-  this->tcp->removeConnection(sharedMe());
-}
-
 void Connection::setReserve(const char * str, size_t len) {
   reserve.clear();
   reserve.assign(str, len);
@@ -77,4 +73,8 @@ const uv_buf_t* Connection::getBuf() {
 
 uv_write_t* Connection::getReq() {
   return &req;
+}
+
+void Connection::close_cb() {
+  tcp->removeConnection(sharedMe());
 }

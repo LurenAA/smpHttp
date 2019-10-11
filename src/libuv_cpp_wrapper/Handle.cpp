@@ -1,10 +1,9 @@
 #include "Handle.hpp"
 #include <iostream>
+#include <cassert>
 
 using namespace std;
 using namespace uvx;
-
-HandleCloseFunc Handle::close_cb = nullptr;
 
 bool Handle::isClosing() {
   if(!handle) 
@@ -19,27 +18,17 @@ Handle::Handle(uv_handle_t* handle) :
 }
 
 Handle::~Handle(){
-  this->close();
+  assert(isClosing());
 }
 
 void Handle::close() {
   if(isClosing())
     return;
   uv_close(handle.get(), [](uv_handle_t* handle) {
-    cout << "log: close one" << endl;
+    cout << "log: close a handle" << endl;
     Handle* had = static_cast<Handle*>(handle->data);
-    if(Handle::close_cb)
-      had->executeClose_cb();
+    had->close_cb();
   });
-}
-
-void Handle::setClose_cb(HandleCloseFunc close_cb) {
-  Handle::close_cb = close_cb;
-}
-
-void Handle::executeClose_cb() {
-  if(close_cb) 
-    close_cb();
 }
 
 Handle::Handle(uv_tcp_t* handle) 

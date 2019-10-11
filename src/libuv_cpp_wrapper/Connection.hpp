@@ -18,11 +18,11 @@ public:
   Connection(uv_tcp_t* handle, Tcp* tcp);
   void startRead();
   void write(const char* str, int len);
-  void close();
   const uv_buf_t* getBuf();
   uv_write_t* getReq();
   uv_tcp_t* getHandle();
   
+  void close_cb() override;
   ReadFunc_t readFunc;
   WriteFunc_t wfunc;
 private:
