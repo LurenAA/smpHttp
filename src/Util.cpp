@@ -245,3 +245,28 @@ bool Util::starts_with(const std::string& sou, const std::string& key){
   } 
   return false;
 }
+
+std::string Util::join(const std::vector<std::string>& vec, char j){
+  string rs;
+  for(auto x: vec) {
+    rs += x + j;
+  }
+  rs.erase(rs.end() - 1);
+  return rs;
+}
+
+std::vector<std::string> Util::split(const std::string& str, char j) {
+  vector<string> str_vec;
+  string::size_type pos = 0,
+    pre_pos = 0;
+  while(1) {
+    pos = str.find(j, pre_pos);
+    string s(str.substr(pre_pos, pos - pre_pos));
+    str_vec.push_back(s);
+    if(pos == string::npos) {
+      break;
+    }
+    pre_pos = pos + 1;
+  }
+  return str_vec;
+}

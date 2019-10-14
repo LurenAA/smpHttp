@@ -4,5 +4,6 @@
 #include "HttpServer.hpp"
 #include "HttpResponse.hpp"
 #include "HttpRequest.hpp"
+#include "Util.hpp"
 
 #endif //__SMP_HTTP__HPP_
