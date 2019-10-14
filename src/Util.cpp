@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <iostream>
 #include <algorithm>
+#include <codecvt>
+#include <locale>
 
 using namespace std;
 using namespace smpHttp;
@@ -269,4 +271,9 @@ std::vector<std::string> Util::split(const std::string& str, char j) {
     pre_pos = pos + 1;
   }
   return str_vec;
+}
+
+std::string Util::utf16Toutf8(const mysqlx::Value& v) {
+  mysqlx::string s = v;
+  return std::wstring_convert< std::codecvt_utf8_utf16<char16_t>, char16_t >{}.to_bytes(s.c_str());
 }
