@@ -3,6 +3,7 @@
 #include "HttpResult.hpp"
 #include <string>
 #include "IfstreamCon.hpp"
+#include "Connection.hpp"
 
 namespace smpHttp {
   class HttpServer;
@@ -10,12 +11,15 @@ namespace smpHttp {
     friend class HttpServer;
     public:
       HttpRequest() = default;
+      ~HttpRequest();
       HttpRequest(const HttpRequest& s);
-      HttpRequest(hpr::HttpResult* s): hpr::HttpResult(s) {}
+      HttpRequest(hpr::HttpResult* s, uvx::Connection* c)
+        : hpr::HttpResult(s), connection(c) {}
       const std::string& getStaticPath() {return static_path;}
       std::shared_ptr<IfstreamCon> fstream = nullptr;
     private:
       std::string static_path = "";
+      uvx::Connection* connection;
   };
 }
 #endif //__HTTP_REQUREST_HPP_

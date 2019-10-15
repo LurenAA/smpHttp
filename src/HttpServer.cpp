@@ -43,7 +43,7 @@ void HttpServer::afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
     cout << "warn:" << __FILE__ << ": " 
       << __LINE__ << " :nread == 0" << endl;
   }
-  shared_ptr<HttpRequest> parseReq(make_shared<HttpRequest>(parser.handleDatagram(buf->base, nread)));
+  shared_ptr<HttpRequest> parseReq(make_shared<HttpRequest>(parser.handleDatagram(buf->base, nread),cl));
   return handleRoute(move(parseReq), cl);
 };
 
@@ -168,7 +168,6 @@ void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
       res->setAfterWrite(wfunc);    
     } else{
       fstrm->close();
-      // fstreamMap.erase(req->getStaticPath());
       res->setAfterWrite(nullptr);
       cout << "log: close " << req->getStaticPath() << endl;
     }
