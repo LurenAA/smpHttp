@@ -57,6 +57,16 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
     parseReq->static_path =  static_path; 
     deal_with_static(parseReq,parseRes);
   } else {
+    /**
+     * temporary handle
+     **/ 
+    void* base_func = route.route("/");
+    if(base_func) {
+      routeHandleFunc func_2 = reinterpret_cast<routeHandleFunc>(base_func);
+      func_2(parseReq, parseRes);
+    }
+      
+
     void* func = route.route(target);
     if(!func) {
       deal_with_error(parseReq, parseRes, "error: no such route");

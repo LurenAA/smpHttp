@@ -5,6 +5,8 @@
 #include <nlohmann/json.hpp>
 #include <codecvt>
 #include <locale>
+#include "jwt/jwt_all.h"
+
 using json = nlohmann::json;
 using namespace std;
 using namespace ::mysqlx;
@@ -56,8 +58,8 @@ void handle_json_lab(std::shared_ptr<smpHttp::HttpRequest> req
     j["membersData"]["studentsData"] = studentsData;
     std::string jso = j.dump();
     res->addMessage(jso);
-  } catch(exception ex) {
-    cout << ex.what() << endl;
+  } catch(...) {
+    cout << "error in handle_json_lab" << endl;
   }
 }
 
@@ -86,15 +88,22 @@ void handle_json_news(std::shared_ptr<smpHttp::HttpRequest> req
     }
     std::string jso = resj.dump();
     res->addMessage(jso);
-  } catch(exception ex) {
-    cout << ex.what() << endl;
+  } catch(...) {
+    cout << "error in handle_json_lab" << endl;
   }
+}
+
+void handle_base(std::shared_ptr<smpHttp::HttpRequest> req
+  , std::shared_ptr<smpHttp::HttpResponse> res) 
+{
+  cout << "here" << endl;
 }
 
 int main(int argc, const char* argv[]) {
   smpHttp::HttpServer server;
   server.add_route("/json_lab", handle_json_lab);
   server.add_route("/json_news", handle_json_news);
+  server.add_route("/", handle_base); //need to change
   server.add_static_path("/resources"); //add static route
   server.run();
 }

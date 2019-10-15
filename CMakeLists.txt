@@ -31,6 +31,7 @@ set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(src/nlohmann_json)
 
 list(APPEND links /home/ele/libuv/out/Debug/libuv.a -pthread 
+/usr/local/lib/libjwt.a
 radix_tree HttpParser Tcp Loop Handle Connection
 # /usr/local/mysql/connector-c++-8.0/lib64/debug/libmysqlcppconn8.so
 /home/ele/mysql-cpp-8-static/libmysqlcppconn8-static.a 

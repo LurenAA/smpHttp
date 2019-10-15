@@ -12,6 +12,7 @@ Mysql_con::Mysql_con(const std::string& host, const std::string &user,const std:
 }
 
 Mysql_con::~Mysql_con() {
+  cout << "warn: Mysql_con close" << endl;
   session.close();
 }
 

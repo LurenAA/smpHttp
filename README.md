@@ -9,18 +9,19 @@
 + 连接mysql
 
 ###  🎯 to do:
-+ 时间轮(tcp::collectionList)关闭长久不用的连接
 + 路由匹配$等变量值(/url/$abc/col?a=10)
 + 复杂静态路径的处理(/root/file/*.jpg或者文件不存在)
 + keep-alive
 + Accept-Ranges: bytes
 + 数据库连接池
++ 仿照[webcc](https://github.com/sprinfall/webcc/blob/master/webcc/router.h) 的方式做路由，代替radix_tree
 &ensp;
 
 ### 🗼 第三方依赖
 + [libuv](https://github.com/libuv/libuv)
 + [json](https://github.com/nlohmann/json)
 + [mysql-connector-cpp](https://github.com/mysql/mysql-connector-cpp)
++ [jwt-cpp](https://github.com/pokowaka/jwt-cpp)
 
 ### 🚇 simple example
 
