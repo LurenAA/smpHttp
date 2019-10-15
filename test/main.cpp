@@ -19,7 +19,6 @@ void handle_json_lab(std::shared_ptr<smpHttp::HttpRequest> req
   res->addHeader("Access-Control-Max-Age", "3600");
   res->addHeader("Access-Control-Allow-Headers",
                 "Origin, X-Requested-With, Content-Type, Accept,token");
-  res->addHeader("Access-Control-Allow-Credentials", "true");
   auto sqlres = mq.sql("Select content FROM labimformation where type = 'labIntroduction'").execute();
   auto i = sqlres.fetchOne();
   std::string s_8 = smpHttp::Util::utf16Toutf8(i.get(0));
@@ -58,9 +57,36 @@ void handle_json_lab(std::shared_ptr<smpHttp::HttpRequest> req
   res->addMessage(jso);
 }
 
+void handle_json_news(std::shared_ptr<smpHttp::HttpRequest> req
+  , std::shared_ptr<smpHttp::HttpResponse> res) 
+{
+  res->addHeader("Content-Type","application/json;charset=utf-8");
+  res->addHeader("Access-Control-Allow-Origin", "*");
+  res->addHeader("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE, PATCH");
+  res->addHeader("Access-Control-Max-Age", "3600");
+  res->addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept,token");
+  auto sqlres = mq.sql("Select * FROM labnews").execute();
+  json resj;
+  resj["news"] = json::array();
+  Row member_row;
+  while(member_row = sqlres.fetchOne()){
+    json tj = json::object();
+    tj["id"] = static_cast<int>(member_row.get(0));
+    tj["newTitle"] = smpHttp::Util::utf16Toutf8(member_row.get(1));
+    tj["newContent"] = smpHttp::Util::utf16Toutf8(member_row.get(2));
+    tj["newAuthor"] = smpHttp::Util::utf16Toutf8(member_row.get(3));
+    tj["newDate"] = smpHttp::Util::utf16Toutf8(member_row.get(4));
+    tj["newImage"] = smpHttp::Util::utf16Toutf8(member_row.get(5));
+    resj["news"].push_back(tj);
+  }
+  std::string jso = resj.dump();
+  res->addMessage(jso);
+}
+
 int main(int argc, const char* argv[]) {
   smpHttp::HttpServer server;
   server.add_route("/json_lab", handle_json_lab);
+  server.add_route("/json_news", handle_json_news);
   server.add_static_path("/resources"); //add static route
   server.run();
 }
