@@ -6,6 +6,9 @@
 #include <codecvt>
 #include <locale>
 #include "jwt/jwt_all.h"
+#include "stdlib.h"
+#include <execinfo.h>
+#include <exception>
 
 using json = nlohmann::json;
 using namespace std;
@@ -96,14 +99,42 @@ void handle_json_news(std::shared_ptr<smpHttp::HttpRequest> req
 void handle_base(std::shared_ptr<smpHttp::HttpRequest> req
   , std::shared_ptr<smpHttp::HttpResponse> res) 
 {
-  cout << "here" << endl;
+  
+}
+
+void func(){
+  int nptrs;
+    #define SIZE 100
+    void *buffer[100];
+  
+    nptrs = backtrace(buffer, SIZE);
+  
+    backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO);
+
+    #undef SIZE
 }
 
 int main(int argc, const char* argv[]) {
-  smpHttp::HttpServer server;
-  server.add_route("/json_lab", handle_json_lab);
-  server.add_route("/json_news", handle_json_news);
-  server.add_route("/", handle_base); //need to change
-  server.add_static_path("/resources"); //add static route
-  server.run();
+  set_terminate(func);
+  try {
+    smpHttp::HttpServer server;
+    server.add_route("/json_lab", handle_json_lab);
+    server.add_route("/json_news", handle_json_news);
+    server.add_route("/", handle_base); //need to change
+    server.add_static_path("/resources"); //add static route
+    server.run();
+  }catch(...) {
+    int nptrs;
+    #define SIZE 100
+    void *buffer[100];
+  
+    nptrs = backtrace(buffer, SIZE);
+  
+    backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO);
+
+    #undef SIZE
+  }
 }
+
+// terminate called after throwing an instance of 'std::length_error'
+//   what():  basic_string::_M_create

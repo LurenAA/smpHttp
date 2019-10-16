@@ -126,7 +126,6 @@ void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
     shared_ptr<IfstreamCon> fstrm = req->fstream;
     if(!fstrm->is_open()) {
       res->setAfterWrite(nullptr);
-      cout << "error: open " << req->getStaticPath() << endl;
       cout << "log: close " << req->getStaticPath()  << endl ;
       //to do time wheel
       return ;
@@ -169,17 +168,20 @@ void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
       }
       if_set_next_func = true;
     }
-
+    
+    shared_ptr<HttpResponse> rres(new HttpResponse(*res));
     if(if_set_next_func) {
-      shared_ptr<HttpResponse> rres(new HttpResponse(*res));
       if(res->getMode() == CHUNKED || res->getMode() == CHUNKED_FIRST) 
         rres->setMode(CHUNKED);
       auto wfunc = bind(&HttpServer::deal_with_static, this, req, rres);
       res->setAfterWrite(wfunc);    
     } else{
+      /**
+       * close the connection next loop
+       **/ 
       fstrm->close();
-      res->setAfterWrite(nullptr);
-      cout << "log: close " << req->getStaticPath() << endl;
+      auto wfunc = bind(&HttpServer::deal_with_static, this, req, rres);
+      res->setAfterWrite(wfunc);  
     }
 
     // cout << res->get() << endl;

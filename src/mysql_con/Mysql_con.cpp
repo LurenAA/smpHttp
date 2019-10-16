@@ -8,7 +8,7 @@ Mysql_con::Mysql_con(const std::string& host, const std::string &user,const std:
   session(host, port, user, pwd, db), host(host), user(user), pwd(pwd), db(db), port(port)
 {
 } catch(Error e) {
-  cout << e.what() << endl;
+  cout << "Mysql_con: " <<  e.what() << endl;
 }
 
 Mysql_con::~Mysql_con() {
@@ -21,7 +21,7 @@ void Mysql_con::addSchema(const std::string& s) {
     Schema sch = session.getSchema(s, true);
     map_sch.insert({s, sch});
   } catch(Error e) {
-    cout << e.what() << endl;
+    cout << __FUNCTION__ << " : " << __LINE__ << e.what() << endl;
   }
 }
 
