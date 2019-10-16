@@ -56,6 +56,16 @@ void HttpServer::afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
   try {
     HttpResult* r = parser.handleDatagram(buf->base, nread);
     shared_ptr<HttpRequest> parseReq(make_shared<HttpRequest>(r ,cl));
+    //to complete
+    if(parseReq->getMethod() == hpr::OPTIONS) {
+      shared_ptr<HttpResponse> res(make_shared<HttpResponse>(cl)); 
+      res->addHeader("Access-Control-Allow-Origin", parseReq->getHeaders().at("Origin"));
+      res->addHeader("Access-Control-Allow-Methods","POST, GET, OPTIONS");
+      res->addHeader("Access-Control-Max-Age","86400");
+      res->addHeader("Connection","keep-alive");
+      res->addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept,token");
+      return ;
+    }
     return handleRoute(move(parseReq), cl);
   } catch (std::exception& e){
     cl->close();

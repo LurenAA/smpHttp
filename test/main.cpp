@@ -113,14 +113,10 @@ void err_func(){
 
 int main(int argc, const char* argv[]) {
   set_terminate(err_func);
-  try {
-    smpHttp::HttpServer server;
-    server.add_route("/json_lab", handle_json_lab);
-    server.add_route("/json_news", handle_json_news);
-    server.add_route("/", handle_base); //need to change
-    server.add_static_path("/resources"); //add static route
-    server.run();
-  }catch(...) {
-    err_func();
-  }
+  smpHttp::HttpServer server;
+  server.add_route("/json_lab", handle_json_lab);
+  server.add_route("/json_news", handle_json_news);
+  server.add_route("/", handle_base); //need to change
+  server.add_static_path("/resources"); //add static route
+  server.run();
 }
