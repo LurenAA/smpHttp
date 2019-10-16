@@ -10,6 +10,8 @@
 #include "HttpRequest.hpp"
 #include <string>
 
+#define DEBUG_FLAG 1
+
 using namespace std;
 using namespace uvx;
 using namespace smpHttp;
@@ -42,9 +44,24 @@ void HttpServer::afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
   } else if(nread == 0) {
     cout << "warn:" << __FILE__ << ": " 
       << __LINE__ << " :nread == 0" << endl;
-  }
-  shared_ptr<HttpRequest> parseReq(make_shared<HttpRequest>(parser.handleDatagram(buf->base, nread),cl));
-  return handleRoute(move(parseReq), cl);
+  } 
+  #ifdef DEBUG_FLAG
+    cout << "datagram: " << endl;
+    for(int i = 0; i< nread; ++i) {
+      cout << buf->base[i];
+    }
+    cout << endl;
+  #endif
+
+  try {
+    HttpResult* r = parser.handleDatagram(buf->base, nread);
+    shared_ptr<HttpRequest> parseReq(make_shared<HttpRequest>(r ,cl));
+    return handleRoute(move(parseReq), cl);
+  } catch (std::exception& e){
+    cl->close();
+    cout<< "warn:" << __FILE__ << ": " 
+      << __LINE__ <<" it is not a right http datagram :" <<  e.what() << endl;
+  } 
 };
 
 void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {

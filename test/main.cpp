@@ -61,8 +61,8 @@ void handle_json_lab(std::shared_ptr<smpHttp::HttpRequest> req
     j["membersData"]["studentsData"] = studentsData;
     std::string jso = j.dump();
     res->addMessage(jso);
-  } catch(...) {
-    cout << "error in handle_json_lab" << endl;
+  } catch(exception& e) {
+    cout << "error: " << __LINE__ << " : " << __func__ << e.what() << endl;
   }
 }
 
@@ -91,8 +91,8 @@ void handle_json_news(std::shared_ptr<smpHttp::HttpRequest> req
     }
     std::string jso = resj.dump();
     res->addMessage(jso);
-  } catch(...) {
-    cout << "error in handle_json_lab" << endl;
+  } catch(exception& e) {
+    cout << "error: " << __LINE__ << " : " << __func__ << e.what() << endl;
   }
 }
 
@@ -102,20 +102,17 @@ void handle_base(std::shared_ptr<smpHttp::HttpRequest> req
   
 }
 
-void func(){
+void err_func(){
   int nptrs;
-    #define SIZE 100
-    void *buffer[100];
-  
-    nptrs = backtrace(buffer, SIZE);
-  
-    backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO);
-
-    #undef SIZE
+  #define SIZE 100
+  void *buffer[100];
+  nptrs = backtrace(buffer, SIZE);
+  backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO);
+  #undef SIZE
 }
 
 int main(int argc, const char* argv[]) {
-  set_terminate(func);
+  set_terminate(err_func);
   try {
     smpHttp::HttpServer server;
     server.add_route("/json_lab", handle_json_lab);
@@ -124,17 +121,6 @@ int main(int argc, const char* argv[]) {
     server.add_static_path("/resources"); //add static route
     server.run();
   }catch(...) {
-    int nptrs;
-    #define SIZE 100
-    void *buffer[100];
-  
-    nptrs = backtrace(buffer, SIZE);
-  
-    backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO);
-
-    #undef SIZE
+    err_func();
   }
 }
-
-// terminate called after throwing an instance of 'std::length_error'
-//   what():  basic_string::_M_create

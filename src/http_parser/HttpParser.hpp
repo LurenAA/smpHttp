@@ -4,6 +4,10 @@
 #include "HttpResult.hpp"
 
 namespace hpr {
+  class HttpParserError : std::runtime_error {
+    public: 
+      HttpParserError(const char* e) : std::runtime_error(e) {}
+  };
   class HttpParser {
     public: 
       HttpResult* handleDatagram(const std::string& datagram);
