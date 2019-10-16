@@ -4,7 +4,7 @@
 #include "HttpResult.hpp"
 
 namespace hpr {
-  class HttpParserError : std::runtime_error {
+  class HttpParserError : public std::runtime_error {
     public: 
       HttpParserError(const char* e) : std::runtime_error(e) {}
   };

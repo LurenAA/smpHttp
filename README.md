@@ -16,7 +16,7 @@
 + 数据库连接池
 + 仿照[webcc](https://github.com/sprinfall/webcc/blob/master/webcc/router.h) 的方式做路由，代替radix_tree
 + 检查数据报格式是否正确
-
++ 使用base64来传输图片文件
 &ensp;
 
 ### 🗼 第三方依赖

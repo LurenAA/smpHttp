@@ -12,7 +12,7 @@ HttpResult* HttpParser::handleDatagram(const std::string& datagram) {
   auto iter = datagram.cbegin(), 
     iend = datagram.cend();
   HttpResult* res = new HttpResult();
-  // try {
+  try {
     parseMethod(iter, iend, res);
     parseRequestTarget(iter, iend, res);
     parseHttpVersion(iter, iend, res);
@@ -20,9 +20,9 @@ HttpResult* HttpParser::handleDatagram(const std::string& datagram) {
 
     parseQueries(res);
     parseRequestPath(res);
-  // } catch(...){
-  //   throw HttpParserError("error datagram format");
-  // } 
+  } catch(exception& e){
+    throw HttpParserError("error datagram format");
+  } 
   
   return res;
 }
@@ -63,20 +63,15 @@ void HttpParser::parseHeaders(std::string::const_iterator& iter,
   std::string::const_iterator& iend, 
   HttpResult* res)
 {
-  // try{
-    while (iter != iend && *iter != '\r')
-    {
-      auto im = find(iter, iend, ':');
-      auto ie = find(iter, iend, '\r');
-      string name = trimString(iter, im),
-        value = trimString(im + 1, ie);
-      res->headers.insert({name, value});
-      iter = ie + 2;
-    }  
-  // } catch(exception& e) {
-  //   cout << "error :parseHeaders :"<< e.what() << endl;
-  //   throw runtime_error("parseHeaders error");
-  // }
+  while (iter != iend && *iter != '\r')
+  {
+    auto im = find(iter, iend, ':');
+    auto ie = find(iter, iend, '\r');
+    string name = trimString(iter, im),
+      value = trimString(im + 1, ie);
+    res->headers.insert({name, value});
+    iter = ie + 2;
+  }   
 }
 
 void HttpParser::parseQueries(HttpResult* res)

@@ -70,7 +70,7 @@ void HttpServer::afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *b
   } catch (std::exception& e){
     cl->close();
     cout<< "warn:" << __FILE__ << ": " 
-      << __LINE__ <<" it is not a right http datagram :" <<  e.what() << endl;
+      << __LINE__ <<" ：" <<  e.what() << endl;
   } 
 };
 
