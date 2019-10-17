@@ -29,30 +29,53 @@ void Connection::startRead() {
         con->close();
         return ;
       }
-      if(con->remain == INT_MIN) {
-        try {
-          char* l = strstr(buf->base, "Content-Length:");
-          char* r = strchr(l, '\r');
-          string len_s(l + strlen("Content-Length:"), r);
-          con->remain = atoi(len_s.c_str());
-          char *d = strstr(buf->base, "\r\n\r\n");
-          if(d)
-            con->remain += d - buf->base + 4;
-        } catch(exception& e) {
-          cout << "log: " << __LINE__ <<" : " << __FILE__ << " : " 
-          << e.what() << endl;
-          delete [] buf->base;
-          con->close();
-          return ;
-        }
+      char* method_end = strstr(buf->base, " ");
+      if(!method_end) {
+        cout << "error:  method_end == null" << endl;
+        delete [] buf->base;
+        con->close();
+        return ;
       }
-      con->remain -= nread;
-      con->reserve_for_read += buf->base;
-      if(con->remain <= 0) 
+      string method(buf->base, method_end);
+      con->reserve_for_read += string(buf->base, nread);
+      if(method == "POST") {
+        if(con->remain == INT_MIN) {
+        char* l = strstr(buf->base, "Content-Length:");
+        if(!l) {
+          cout << "log: " << __LINE__ <<" : " << __FILE__ << " : " 
+            << strerror(errno) << endl;
+            delete [] buf->base;
+            con->close();
+            return ;
+        }
+        char* r = strchr(l, '\r');
+        if(!r){
+          cout << "log: " << __LINE__ <<" : " << __FILE__ << " : " 
+            << strerror(errno) << endl;
+            delete [] buf->base;
+            con->close();
+            return ;
+        }
+        string len_s(l + strlen("Content-Length:"), r);
+        con->remain = atoi(len_s.c_str());
+        char *d = strstr(buf->base, "\r\n\r\n");
+        if(d)
+          con->remain += d - buf->base + 4;
+        con->remain -= nread;
+        if(con->remain <= 0) 
+          con->readFunc(con);
+      } 
+    } else if (method == "GET") {
+      if(con->reserve_for_read.back() == '\n' && *(con->reserve_for_read.end() - 2) == '\r')
         con->readFunc(con);
-      delete [] buf->base;
+      else {
+        cout << buf->base << endl;
+        con->close();
+      }
     }
-  );
+    
+    delete [] buf->base;
+  });
 }
 
 void alloc_buf(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {

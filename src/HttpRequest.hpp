@@ -17,6 +17,7 @@ namespace smpHttp {
         : hpr::HttpResult(s), connection(c) {}
       const std::string& getStaticPath() {return static_path;}
       std::shared_ptr<IfstreamCon> fstream = nullptr;
+      void close() {connection->close();}
     private:
       std::string static_path = "";
       uvx::Connection* connection;

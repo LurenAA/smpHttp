@@ -151,6 +151,9 @@ void handle_login(std::shared_ptr<smpHttp::HttpRequest> req
     res->addMessage(rj.dump());
   } catch(exception& e) {
     cout << "error: handle_login : " << e.what() << endl;
+    res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
+    res->addMessage(e.what());
+    return ;
   } 
 }
 

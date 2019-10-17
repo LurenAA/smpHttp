@@ -18,11 +18,15 @@ HttpResult* HttpParser::handleDatagram(const std::string& datagram) {
     parseRequestTarget(iter, iend, res);
     parseHttpVersion(iter, iend, res);
     parseHeaders(iter, iend, res);
-    parseContent(iter, iend, res);
+    if(res->getMethod() == POST) {
+      parseContent(iter, iend, res);
+      check(res);
+    }
+      
 
     parseQueries(res);
     parseRequestPath(res);
-    check(res);
+    
   } catch(HttpParserError& e) {
     throw HttpParserError(e.what());
   } catch(exception& e){
