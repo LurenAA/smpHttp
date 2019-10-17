@@ -13,12 +13,22 @@
 using json = nlohmann::json;
 using namespace std;
 using namespace ::mysqlx;
-Mysql_con mq("47.103.210.8", "root", "lab", "root");
+Client cli(SessionOption::USER, "root",
+  SessionOption::PWD,  "root",
+  SessionOption::HOST, "47.103.210.8",
+  SessionOption::PORT, 33060,
+  SessionOption::DB,   "lab",
+  SessionOption::SSL_MODE, SSLMode::DISABLED,
+  ClientOption::POOLING, true,
+  ClientOption::POOL_MAX_SIZE, 10,
+  ClientOption::POOL_QUEUE_TIMEOUT, 1000,
+  ClientOption::POOL_MAX_IDLE_TIME, 500);
 
 void handle_json_lab(std::shared_ptr<smpHttp::HttpRequest> req
   , std::shared_ptr<smpHttp::HttpResponse> res) 
 {
   try{
+    Session mq = cli.getSession();
     res->addHeader("Content-Type","application/json;charset=utf-8");
     res->addHeader("Access-Control-Allow-Origin", "*");
     res->addHeader("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE, PATCH");
@@ -70,6 +80,7 @@ void handle_json_news(std::shared_ptr<smpHttp::HttpRequest> req
   , std::shared_ptr<smpHttp::HttpResponse> res) 
 {
   try {
+    Session mq = cli.getSession();
     res->addHeader("Content-Type","application/json;charset=utf-8");
     res->addHeader("Access-Control-Allow-Origin", "*");
     res->addHeader("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE, PATCH");
@@ -99,7 +110,15 @@ void handle_json_news(std::shared_ptr<smpHttp::HttpRequest> req
 void handle_base(std::shared_ptr<smpHttp::HttpRequest> req
   , std::shared_ptr<smpHttp::HttpResponse> res) 
 {
-  
+  if(req->getHeader("Authorization").size()) {
+    
+  }
+}
+
+void handle_login(std::shared_ptr<smpHttp::HttpRequest> req
+  , std::shared_ptr<smpHttp::HttpResponse> res) 
+{
+
 }
 
 void err_func(){
@@ -116,7 +135,9 @@ int main(int argc, const char* argv[]) {
   smpHttp::HttpServer server;
   server.add_route("/json_lab", handle_json_lab);
   server.add_route("/json_news", handle_json_news);
+  server.add_route("/login", handle_login);
   server.add_route("/", handle_base); //need to change
   server.add_static_path("/resources"); //add static route
   server.run();
+  cli.close();
 }

@@ -42,3 +42,11 @@ void HttpResult::setHttpVersion(string::const_iterator& iter,
   }
   httpVersion = 1.1;  
 }
+
+std::string HttpResult::getHeader(const std::string& s) {
+  try {
+    return headers.at(s);
+  } catch (std::out_of_range& e) {
+    return "";
+  }
+}
