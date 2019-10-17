@@ -1,6 +1,7 @@
 #include "Connection.hpp"
 #include <iostream>
 #include "Tcp.hpp"
+#include <cstring>
 
 using namespace std;
 using namespace uvx;
@@ -20,8 +21,35 @@ void Connection::startRead() {
   }
   uv_read_start(reinterpret_cast<uv_stream_t*>(handle.get()),
     Connection::allocFunc, [] (uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
+      cout << "log: " << __LINE__ <<" : " << __FILE__ << " read : " << nread << endl;
       Connection* con = static_cast<Connection*>(stream->data);
-      con->readFunc(stream, nread,  buf);
+      if(nread <= 0) {
+        cout << "log: close a connection" << endl;
+        delete [] buf->base;
+        con->close();
+        return ;
+      }
+      if(con->remain == INT_MIN) {
+        try {
+          char* l = strstr(buf->base, "Content-Length:");
+          char* r = strchr(l, '\r');
+          string len_s(l + strlen("Content-Length:"), r);
+          con->remain = atoi(len_s.c_str());
+          char *d = strstr(buf->base, "\r\n\r\n");
+          if(d)
+            con->remain += d - buf->base + 4;
+        } catch(exception& e) {
+          cout << "log: " << __LINE__ <<" : " << __FILE__ << " : " 
+          << e.what() << endl;
+          delete [] buf->base;
+          con->close();
+          return ;
+        }
+      }
+      con->remain -= nread;
+      con->reserve_for_read += buf->base;
+      if(con->remain <= 0) 
+        con->readFunc(con);
       delete [] buf->base;
     }
   );

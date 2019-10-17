@@ -44,6 +44,7 @@ namespace hpr {
       const std::string getRequestPath() {return requestPath;}
       const std::map<std::string, std::string>& getHeaders() {return headers;}
       const std::map<std::string, std::string>& getQueries() {return queries;}
+      std::string getData() {return data;}
       std::string getHeader(const std::string&);
     private:
       void setMethod(const std::string& str);
@@ -51,12 +52,14 @@ namespace hpr {
       void setRequestTarget(std::string::const_iterator& iter, std::string::const_iterator& iend);
       void setHttpVersion(std::string::const_iterator& iter, std::string::const_iterator& iend);
       void setRequestPath(std::string&& s) {requestPath = std::move(s);}
+      void setData(std::string&& s) {data = std::move(s);}
       Method method;
       std::string requestTarget; 
       std::string requestPath; 
       double httpVersion;
       std::map<std::string, std::string> headers;
       std::map<std::string, std::string> queries;
+      std::string data;
   };
 }
 #endif //__HTTP_RESULT_HPP_

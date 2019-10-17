@@ -33,7 +33,7 @@ namespace smpHttp {
 
       void handleRoute(std::shared_ptr<HttpRequest> parseRes, uvx::Connection* cl);
       void afterConnect(uv_stream_t* server, uv_tcp_t* tcp);
-      void afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf);
+      void afterRead( uvx::Connection* cl);
   };
 }
 #endif //__HTTPSERVER_H_ 

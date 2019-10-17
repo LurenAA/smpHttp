@@ -2,6 +2,7 @@
 #include <string>
 #include <algorithm>
 #include <iostream>
+#include <cstring>
 
 using namespace std;
 using namespace hpr;
@@ -17,9 +18,13 @@ HttpResult* HttpParser::handleDatagram(const std::string& datagram) {
     parseRequestTarget(iter, iend, res);
     parseHttpVersion(iter, iend, res);
     parseHeaders(iter, iend, res);
+    parseContent(iter, iend, res);
 
     parseQueries(res);
     parseRequestPath(res);
+    check(res);
+  } catch(HttpParserError& e) {
+    throw HttpParserError(e.what());
   } catch(exception& e){
     throw HttpParserError("error datagram format");
   } 
@@ -110,4 +115,24 @@ void HttpParser::parseRequestPath(HttpResult* res){
   string tar = res->getRequestTarget();
   auto ie = tar.find_first_of('?');
   res->setRequestPath(tar.substr(0, ie - 0));
+}
+
+void HttpParser::parseContent(std::string::const_iterator& iter,
+  std::string::const_iterator& iend, HttpResult* res)
+{
+  while(*iter == '\r' || *iter == '\n') {
+    ++iter;
+  }
+  if(iter == iend && res->getHeader("Content-length") == "0") 
+    return ;
+  else{
+    res->setData(string(iter, iend));
+  } 
+}
+
+void HttpParser::check(HttpResult* res){
+  if(res->data.size() >= 0) {
+    if(to_string(res->data.size()) != res->getHeader("Content-Length"))
+      throw HttpParserError("Content-Length not equal to the data");
+  }
 }

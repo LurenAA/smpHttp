@@ -7,7 +7,8 @@
 #include <string>
 
 namespace uvx {
-using ReadFunc_t = std::function<void(uv_stream_t*, ssize_t, const uv_buf_t *)>;
+class Connection;
+using ReadFunc_t = std::function<void(Connection*)>;
 // using Alloc_t = std::function<void (uv_handle_t*, size_t, uv_buf_t* buf)>;
 using WriteFunc_t = std::function<void()>;
 class Tcp;
@@ -21,8 +22,10 @@ public:
   const uv_buf_t* getBuf();
   uv_write_t* getReq();
   uv_tcp_t* getHandle();
-  
+
+  ssize_t remain = INT_MIN; //  remain len to read
   void close_cb() override;
+  std::string reserve_for_read = "";
   ReadFunc_t readFunc;
   WriteFunc_t wfunc;
 private:
@@ -31,6 +34,7 @@ private:
   uv_buf_t buf;
   std::string reserve; // reserve for buf 
   std::shared_ptr<Connection> sharedMe();
+  
   void setReserve(const char *, size_t);
   static uv_alloc_cb allocFunc;
 };

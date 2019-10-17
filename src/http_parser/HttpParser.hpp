@@ -27,6 +27,10 @@ namespace hpr {
         HttpResult* res);
       void parseQueries(HttpResult* res);
       void parseRequestPath(HttpResult* res);
+      void parseContent(std::string::const_iterator& iter,
+        std::string::const_iterator& iend, 
+        HttpResult* res);
+      void check(HttpResult* res);
   };
 }
 

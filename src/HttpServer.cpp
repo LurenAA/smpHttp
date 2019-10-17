@@ -25,36 +25,33 @@ void HttpServer::afterConnect(uv_stream_t* server, uv_tcp_t* tcp){
     cl = static_cast<Connection*>(tcp->data);
   else 
     cout << "error: afterConnect no tcp->data" << endl;
-  auto afterReadbind = bind(&HttpServer::afterRead, this, _1, _2, _3);
+  auto afterReadbind = bind(&HttpServer::afterRead, this, _1);
   cl->readFunc = afterReadbind;
   cl->startRead();
 };
 
-void HttpServer::afterRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf){
-  Connection* cl = nullptr;
-  if(stream->data)
-    cl = static_cast<Connection*>(stream->data);
-  else 
-    cout << "warn: error afterRead no stream->data" << endl;
-  if(nread < 0) {
-    cout << "warn:" << __FILE__ << ": " 
-      << __LINE__ << " :nread < 0" << endl;
-    cl->close();
-    return ;
-  } else if(nread == 0) {
-    cout << "warn:" << __FILE__ << ": " 
-      << __LINE__ << " :nread == 0" << endl;
-  } 
+void HttpServer::afterRead( uvx::Connection* cl){
+  // Connection* cl = nullptr;
+  // if(stream->data)
+  //   cl = static_cast<Connection*>(stream->data);
+  // else 
+  //   cout << "warn: error afterRead no stream->data" << endl;
+  // if(nread < 0) {
+  //   cout << "warn:" << __FILE__ << ": " 
+  //     << __LINE__ << " :nread < 0" << endl;
+  //   cl->close();
+  //   return ;
+  // } else if(nread == 0) {
+  //   cout << "warn:" << __FILE__ << ": " 
+  //     << __LINE__ << " :nread == 0" << endl;
+  // } 
   #ifdef DEBUG_FLAG
-    cout << "datagram: " << endl;
-    for(int i = 0; i< nread; ++i) {
-      cout << buf->base[i];
-    }
-    cout << endl;
+    cout << "datagram: " << "\r\n" 
+    << cl->reserve_for_read << endl;
   #endif
 
   try {
-    HttpResult* r = parser.handleDatagram(buf->base, nread);
+    HttpResult* r = parser.handleDatagram(cl->reserve_for_read);
     shared_ptr<HttpRequest> parseReq(make_shared<HttpRequest>(r ,cl));
     //to complete
     if(parseReq->getMethod() == hpr::OPTIONS) {
@@ -85,14 +82,15 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
     deal_with_static(parseReq,parseRes);
   } else {
     /**
-     * temporary handle
+     * temporary handle ... to complete later
      **/ 
-    void* base_func = route.route("/");
-    if(base_func) {
-      routeHandleFunc func_2 = reinterpret_cast<routeHandleFunc>(base_func);
-      func_2(parseReq, parseRes);
-    }
-      
+    if(target != "/") {
+      void* base_func = route.route("/");
+      if(base_func) {
+        routeHandleFunc func_2 = reinterpret_cast<routeHandleFunc>(base_func);
+        func_2(parseReq, parseRes);
+      }
+    } 
 
     void* func = route.route(target);
     if(!func) {

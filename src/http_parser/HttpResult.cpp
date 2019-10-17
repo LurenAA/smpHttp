@@ -8,7 +8,7 @@ using namespace std;
 HttpResult::HttpResult(HttpResult* s) :
   method(s->method), requestTarget(s->requestTarget)
   , requestPath(s->requestPath), httpVersion(s->httpVersion), 
-  headers(s->headers), queries(s->queries)
+  headers(s->headers), queries(s->queries), data(s->data)
 {
 }
 

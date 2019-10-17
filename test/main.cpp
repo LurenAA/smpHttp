@@ -9,6 +9,9 @@
 #include "stdlib.h"
 #include <execinfo.h>
 #include <exception>
+#include <ctime>
+
+#define EXPIRE  1 * 60
 
 using json = nlohmann::json;
 using namespace std;
@@ -110,15 +113,45 @@ void handle_json_news(std::shared_ptr<smpHttp::HttpRequest> req
 void handle_base(std::shared_ptr<smpHttp::HttpRequest> req
   , std::shared_ptr<smpHttp::HttpResponse> res) 
 {
-  if(req->getHeader("Authorization").size()) {
+  if(req->getHeader("token").size()) {
     
-  }
+  } 
 }
 
 void handle_login(std::shared_ptr<smpHttp::HttpRequest> req
   , std::shared_ptr<smpHttp::HttpResponse> res) 
 {
-
+  try{
+    json j = json::parse(req->getData());
+    std::string username(j["username"]),
+      password(j["password"]);
+    auto mq = cli.getSession();
+    auto tb = mq.getSchema("lab").getTable("labmembers");
+    std::string condition = "username='"+username+"' AND "+"password='"+password + "'";
+    auto sqlres = tb.select("name","sort").where(std::move(condition)).limit(1).execute();
+    if(sqlres.count() == 0) {
+      res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
+      res->addMessage("error password or username");
+      return ;
+    }
+    res->addHeader("Content-Type","application/json;charset=utf-8");
+    Row r = sqlres.fetchOne();
+    json rj = json::object();
+    rj["name"] = smpHttp::Util::utf16Toutf8(r.get(0));
+    rj["sort"] = (bool)r.get(1);
+    time_t tim = time(nullptr);
+    tim += EXPIRE;
+    tim *= 1000;
+    HS256Validator signer(password);
+    json payload;
+    payload.push_back({"exp", tim});
+    payload.push_back({"username", username});
+    std::string token = JWT::Encode(signer, payload);
+    rj["token"] = token;
+    res->addMessage(rj.dump());
+  } catch(exception& e) {
+    cout << "error: handle_login : " << e.what() << endl;
+  } 
 }
 
 void err_func(){
