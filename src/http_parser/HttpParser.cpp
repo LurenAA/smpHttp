@@ -25,12 +25,13 @@ HttpResult* HttpParser::handleDatagram(const std::string& datagram) {
       
 
     parseQueries(res);
-    parseRequestPath(res);
-    
+    parseRequestPath(res); 
   } catch(HttpParserError& e) {
     throw HttpParserError(e.what());
   } catch(exception& e){
-    throw HttpParserError("error datagram format");
+    string serr("error datagram format:");
+    serr += e.what();
+    throw HttpParserError(serr.c_str());
   } 
   
   return res;

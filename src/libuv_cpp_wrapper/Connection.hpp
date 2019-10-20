@@ -24,6 +24,7 @@ public:
   uv_tcp_t* getHandle();
 
   ssize_t remain = INT_MIN; //  remain len to read
+  std::string method = "";
   void close_cb() override;
   std::string reserve_for_read = "";
   ReadFunc_t readFunc;

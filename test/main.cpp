@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 #include "smpHttp.hpp"
-#include "Mysql_con.hpp"
 #include <nlohmann/json.hpp>
 #include <codecvt>
 #include <locale>
@@ -114,7 +113,26 @@ void handle_base(std::shared_ptr<smpHttp::HttpRequest> req
   , std::shared_ptr<smpHttp::HttpResponse> res) 
 {
   if(req->getHeader("token").size()) {
-    
+    ExpValidator exp1;
+    try{
+      HS256Validator signer("secret");
+      ::json header, payload;
+      std::tie(header, payload) = JWT::Decode(req->getHeader("token"), &signer, &exp1);
+      payload["exp"] = time(nullptr) + EXPIRE;
+      std::string token = JWT::Encode(signer, payload);
+      res->addHeader("token", token);
+    }
+    catch (TokenFormatError &tfe) {
+      res->addHeader("token", "error");
+      cout << "error: " << tfe.what() << endl;
+    }
+    catch (InvalidTokenError &tfe) {
+      json header, payload;
+      std::tie(header, payload) = JWT::Decode(req->getHeader("token"));
+      std::cout << "Payload: " << payload << std::endl;
+      cout << "error: " << tfe.what() << endl;
+      res->addHeader("token", "error");
+    }
   } 
 }
 
@@ -141,18 +159,15 @@ void handle_login(std::shared_ptr<smpHttp::HttpRequest> req
     rj["sort"] = (bool)r.get(1);
     time_t tim = time(nullptr);
     tim += EXPIRE;
-    tim *= 1000;
-    HS256Validator signer(password);
-    json payload;
-    payload.push_back({"exp", tim});
-    payload.push_back({"username", username});
+    HS256Validator signer("secret");
+    json payload = {{"exp", tim}, {"username", username}};
     std::string token = JWT::Encode(signer, payload);
     rj["token"] = token;
     res->addMessage(rj.dump());
   } catch(exception& e) {
     cout << "error: handle_login : " << e.what() << endl;
     res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
-    res->addMessage(e.what());
+    res->addMessage("e.what()");
     return ;
   } 
 }

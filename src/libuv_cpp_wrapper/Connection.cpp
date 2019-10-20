@@ -29,16 +29,19 @@ void Connection::startRead() {
         con->close();
         return ;
       }
-      char* method_end = strstr(buf->base, " ");
-      if(!method_end) {
-        cout << "error:  method_end == null" << endl;
-        delete [] buf->base;
-        con->close();
-        return ;
+      if(!con->method.size() && con->remain == INT_MIN) { 
+        //firstly enter
+        char* method_end = strstr(buf->base, " ");
+        if(!method_end) {
+          cout << "error:  method_end == null" << endl;
+          delete [] buf->base;
+          con->close();
+          return ;
+        }
+        con->method = string(buf->base, method_end);
       }
-      string method(buf->base, method_end);
       con->reserve_for_read += string(buf->base, nread);
-      if(method == "POST") {
+      if(con->method == "POST") {
         if(con->remain == INT_MIN) {
         char* l = strstr(buf->base, "Content-Length:");
         if(!l) {
@@ -65,13 +68,18 @@ void Connection::startRead() {
         if(con->remain <= 0) 
           con->readFunc(con);
       } 
-    } else if (method == "GET") {
-      if(con->reserve_for_read.back() == '\n' && *(con->reserve_for_read.end() - 2) == '\r')
+    } else if (con->method == "GET") {
+      con->remain = 0;//means it is not the first time entering the function
+      if(con->reserve_for_read.back() == '\n' && *(con->reserve_for_read.end() - 2) == '\r'
+       && *(con->reserve_for_read.end() - 3) == '\n' && *(con->reserve_for_read.end() - 4) == '\r'
+      )
+      {
         con->readFunc(con);
-      else {
-        cout << buf->base << endl;
-        con->close();
       }
+      // else {
+      //   cout << buf->base << endl;
+      //   con->close();
+      // }
     }
     
     delete [] buf->base;
