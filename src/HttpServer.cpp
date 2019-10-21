@@ -9,6 +9,7 @@
 #include "HttpResponse.hpp"
 #include "HttpRequest.hpp"
 #include <string>
+#include <HttpConnection.hpp>
 
 #define DEBUG_FLAG 1
 
@@ -19,10 +20,33 @@ using namespace hpr;
 using namespace radix;
 using namespace std::placeholders;
 
+void listenCallback(Tcp*  tcp) {
+  uv_tcp_t *client = new uv_tcp_t();
+  uv_tcp_init(tcp->getLoop(), client);
+  int flag2 = uv_accept(tcp->getHandle(), reinterpret_cast<uv_stream_t *>(client));
+  if (flag2 < 0)
+  {
+    cerr << "error: uv_accept " << uv_strerror(flag2) << endl;
+    uv_close(reinterpret_cast<uv_handle_t *>(client), [] (uv_handle_t *handle) {
+      delete handle;
+    });
+    delete client;
+  }
+  else
+  {
+    Connection *c = new HttpConnection(client, tcp);
+    shared_ptr<Connection> cli(c);
+    tcp->addConnection(cli);
+  cout << "log: add a visitor " << endl;
+    if (tcp->connectionCallback)
+      tcp->connectionCallback(reinterpret_cast<uv_stream_t *>(tcp->getHandle()), client);
+  }
+}
+
 void HttpServer::afterConnect(uv_stream_t* server, uv_tcp_t* tcp){
-  Connection* cl = nullptr;
+  HttpConnection* cl = nullptr;
   if(tcp->data)
-    cl = static_cast<Connection*>(tcp->data);
+    cl = static_cast<HttpConnection*>(tcp->data);
   else 
     cout << "error: afterConnect no tcp->data" << endl;
   auto afterReadbind = bind(&HttpServer::afterRead, this, _1);
@@ -30,7 +54,7 @@ void HttpServer::afterConnect(uv_stream_t* server, uv_tcp_t* tcp){
   cl->startRead();
 };
 
-void HttpServer::afterRead( uvx::Connection* cl){
+void HttpServer::afterRead(uvx::Connection* acl){
   // Connection* cl = nullptr;
   // if(stream->data)
   //   cl = static_cast<Connection*>(stream->data);
@@ -45,13 +69,14 @@ void HttpServer::afterRead( uvx::Connection* cl){
   //   cout << "warn:" << __FILE__ << ": " 
   //     << __LINE__ << " :nread == 0" << endl;
   // } 
+  HttpConnection* cl = dynamic_cast<HttpConnection*>(acl);
   #ifdef DEBUG_FLAG
     cout << "datagram: " << "\r\n" 
-    << cl->reserve_for_read << endl;
+    << cl->getDatagram() << endl;
   #endif
 
   try {
-    HttpResult* r = parser.handleDatagram(cl->reserve_for_read);
+    HttpResult* r = parser.handleDatagram(cl->getDatagram());
     shared_ptr<HttpRequest> parseReq(make_shared<HttpRequest>(r ,cl));
     //to complete
     if(parseReq->getMethod() == hpr::OPTIONS) {
@@ -107,6 +132,7 @@ HttpServer::HttpServer() :
 {
   auto afterConnectbind = bind(&HttpServer::afterConnect, this, _1, _2);
   tcpServer.connectionCallback = afterConnectbind;
+  tcpServer.setListenCallback(listenCallback);
 }
 
 void HttpServer::run() {

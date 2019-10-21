@@ -162,12 +162,13 @@ void handle_login(std::shared_ptr<smpHttp::HttpRequest> req
     HS256Validator signer("secret");
     json payload = {{"exp", tim}, {"username", username}};
     std::string token = JWT::Encode(signer, payload);
-    rj["token"] = token;
+    // rj["token"] = token;
+    res->addHeader("token", token);
     res->addMessage(rj.dump());
   } catch(exception& e) {
     cout << "error: handle_login : " << e.what() << endl;
     res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
-    res->addMessage("e.what()");
+    res->addMessage(e.what());
     return ;
   } 
 }

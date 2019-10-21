@@ -23,66 +23,8 @@ void Connection::startRead() {
     Connection::allocFunc, [] (uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
       cout << "log: " << __LINE__ <<" : " << __FILE__ << " read : " << nread << endl;
       Connection* con = static_cast<Connection*>(stream->data);
-      if(nread <= 0) {
-        cout << "log: close a connection" << endl;
-        delete [] buf->base;
-        con->close();
-        return ;
-      }
-      if(!con->method.size() && con->remain == INT_MIN) { 
-        //firstly enter
-        char* method_end = strstr(buf->base, " ");
-        if(!method_end) {
-          cout << "error:  method_end == null" << endl;
-          delete [] buf->base;
-          con->close();
-          return ;
-        }
-        con->method = string(buf->base, method_end);
-      }
-      con->reserve_for_read += string(buf->base, nread);
-      if(con->method == "POST") {
-        if(con->remain == INT_MIN) {
-        char* l = strstr(buf->base, "Content-Length:");
-        if(!l) {
-          cout << "log: " << __LINE__ <<" : " << __FILE__ << " : " 
-            << strerror(errno) << endl;
-            delete [] buf->base;
-            con->close();
-            return ;
-        }
-        char* r = strchr(l, '\r');
-        if(!r){
-          cout << "log: " << __LINE__ <<" : " << __FILE__ << " : " 
-            << strerror(errno) << endl;
-            delete [] buf->base;
-            con->close();
-            return ;
-        }
-        string len_s(l + strlen("Content-Length:"), r);
-        con->remain = atoi(len_s.c_str());
-        char *d = strstr(buf->base, "\r\n\r\n");
-        if(d)
-          con->remain += d - buf->base + 4;
-        con->remain -= nread;
-        if(con->remain <= 0) 
-          con->readFunc(con);
-      } 
-    } else if (con->method == "GET") {
-      con->remain = 0;//means it is not the first time entering the function
-      if(con->reserve_for_read.back() == '\n' && *(con->reserve_for_read.end() - 2) == '\r'
-       && *(con->reserve_for_read.end() - 3) == '\n' && *(con->reserve_for_read.end() - 4) == '\r'
-      )
-      {
-        con->readFunc(con);
-      }
-      // else {
-      //   cout << buf->base << endl;
-      //   con->close();
-      // }
-    }
-    
-    delete [] buf->base;
+      con->start_read(stream, nread, buf);
+      delete [] buf->base;
   });
 }
 

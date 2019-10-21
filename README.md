@@ -7,6 +7,9 @@
 + 静态路由
 + 多种文件格式mime传输
 + 连接mysql
++ 返回json请求
++ jwt
++ Cors
 
 ###  🎯 to do:
 + 路由匹配$等变量值(/url/$abc/col?a=10)

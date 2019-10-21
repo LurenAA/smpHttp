@@ -2,6 +2,7 @@
 #include "Loop.hpp"
 #include <iostream>
 #include <algorithm>
+#include <cassert>
 
 using namespace std;
 using namespace uvx;
@@ -42,7 +43,14 @@ bool Tcp::listen()
   //   return false;
   // }
   cout << "log: listen on port " << port << endl;
-  int flag = uv_listen(reinterpret_cast<uv_stream_t *>(handle.get()), backlog, uvx::listenHandle);
+  int flag = uv_listen(reinterpret_cast<uv_stream_t *>(handle.get()), backlog, [](uv_stream_t *server, int status){
+    if(status <= 0) {
+      //to do
+    }
+    Tcp *tcp = static_cast<Tcp *>(server->data);
+    if(tcp->listenCallback)
+      tcp->listenCallback(tcp);
+  });
   return flag < 0 ? false : true;
 }
 
@@ -88,4 +96,8 @@ void Tcp::removeConnection(const std::shared_ptr<Connection>& con) {
     return ;
   }
   connectionList.erase(deleteOne);
+}
+
+ uv_loop_t * Tcp::getLoop() {
+  return loop.getLoop();
 }

@@ -12,6 +12,7 @@
 
 namespace uvx {
 using ConnectionCallback = std::function<void(uv_stream_t* server, uv_tcp_t* tcp)>;
+using ListenCallback = std::function<void(Tcp *)>;
 class Loop;
 void listenHandle(uv_stream_t *server, int status);
 
@@ -23,10 +24,15 @@ friend class Connection;
 public:
   Tcp(Loop& loop, std::string ip = DEFAULT_IP, int port = DEFAULT_PORT,int backlog = DEFAULT_BACKLOG);
   bool listen();
-  ConnectionCallback connectionCallback = nullptr;
-private:
+  void setListenCallback(ListenCallback alistenCallback) {listenCallback = alistenCallback;}
+  uv_loop_t * getLoop(); 
+  uv_stream_t* getHandle() {return reinterpret_cast<uv_stream_t *>(handle.get());}
   void addConnection(std::shared_ptr<Connection>&);
   void removeConnection(const std::shared_ptr<Connection>&);
+
+  ConnectionCallback connectionCallback = nullptr;
+  ListenCallback listenCallback = nullptr;
+private:
   Loop& loop;
   std::string ip;
   int port;

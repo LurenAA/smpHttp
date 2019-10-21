@@ -11,6 +11,7 @@ class Connection;
 using ReadFunc_t = std::function<void(Connection*)>;
 // using Alloc_t = std::function<void (uv_handle_t*, size_t, uv_buf_t* buf)>;
 using WriteFunc_t = std::function<void()>;
+using StartRedFunc_t = std::function<void (uv_stream_t *, ssize_t , const uv_buf_t *)>;
 class Tcp;
 
 class Connection : public Handle, public std::enable_shared_from_this<Connection>{
@@ -23,10 +24,8 @@ public:
   uv_write_t* getReq();
   uv_tcp_t* getHandle();
 
-  ssize_t remain = INT_MIN; //  remain len to read
-  std::string method = "";
   void close_cb() override;
-  std::string reserve_for_read = "";
+  virtual void start_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf){};
   ReadFunc_t readFunc;
   WriteFunc_t wfunc;
 private:
