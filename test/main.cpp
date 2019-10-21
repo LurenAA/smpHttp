@@ -129,17 +129,21 @@ void handle_base(std::shared_ptr<smpHttp::HttpRequest> req
       res->addHeader("token", token);
     }
     catch (TokenFormatError &tfe) {
-      res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
-      res->addHeader("token", "error");
+      // res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
+      res->addHeader("token", "11");
+      cout << "error: " << tfe.what() << endl;
+    }
+    catch(InvalidClaimError& tfe){ //expired
+      res->addHeader("token", "12");
       cout << "error: " << tfe.what() << endl;
     }
     catch (InvalidTokenError &tfe) {
-      res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
+      // res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
       json header, payload;
       std::tie(header, payload) = JWT::Decode(req->getHeader("token"));
       std::cout << "Payload: " << payload << std::endl;
       cout << "error: " << tfe.what() << endl;
-      res->addHeader("token", "error");
+      res->addHeader("token", "13");
     }
   } 
 }
@@ -155,14 +159,16 @@ void handle_login(std::shared_ptr<smpHttp::HttpRequest> req
     auto tb = mq.getSchema("lab").getTable("labmembers");
     std::string condition = "username='"+username+"' AND "+"password='"+password + "'";
     auto sqlres = tb.select("name","sort").where(std::move(condition)).limit(1).execute();
+    res->addHeader("Content-Type","application/json;charset=utf-8");
+    json rj = json::object();
     if(sqlres.count() == 0) {
-      res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
-      res->addMessage("error password or username");
+      rj["status"] = false;
+      res->addMessage(rj.dump());
       return ;
     }
     res->addHeader("Content-Type","application/json;charset=utf-8");
     Row r = sqlres.fetchOne();
-    json rj = json::object();
+    rj["status"] = true;
     rj["name"] = smpHttp::Util::utf16Toutf8(r.get(0));
     rj["sort"] = (bool)r.get(1);
     time_t tim = time(nullptr);
@@ -170,12 +176,11 @@ void handle_login(std::shared_ptr<smpHttp::HttpRequest> req
     HS256Validator signer("secret");
     json payload = {{"exp", tim}, {"username", username}};
     std::string token = JWT::Encode(signer, payload);
-    // rj["token"] = token;
     res->addHeader("token", token);
     res->addMessage(rj.dump());
   } catch(exception& e) {
     cout << "error: handle_login : " << e.what() << endl;
-    res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
+    // res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
     res->addMessage(e.what());
     return ;
   } 
