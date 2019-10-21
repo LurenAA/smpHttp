@@ -38,10 +38,6 @@ Tcp::Tcp(Loop &loop, std::string ip, int port, int backlog)
 
 bool Tcp::listen()
 {
-  // if(!Tcp::connectionCallback){
-  //   cerr << "error: tcp needs a connectionCallback" << endl;
-  //   return false;
-  // }
   cout << "log: listen on port " << port << endl;
   int flag = uv_listen(reinterpret_cast<uv_stream_t *>(handle.get()), backlog, [](uv_stream_t *server, int status){
     if(status <= 0) {

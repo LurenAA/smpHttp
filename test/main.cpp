@@ -36,7 +36,7 @@ void handle_json_lab(std::shared_ptr<smpHttp::HttpRequest> req
     res->addHeader("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE, PATCH");
     res->addHeader("Access-Control-Max-Age", "3600");
     res->addHeader("Access-Control-Allow-Headers",
-                  "Origin, X-Requested-With, Content-Type, Accept,token");
+                  "Origin, X-Requested-With, Content-Type, Accept, token");
     auto sqlres = mq.sql("Select content FROM labimformation where type = 'labIntroduction'").execute();
     auto i = sqlres.fetchOne();
     std::string s_8 = smpHttp::Util::utf16Toutf8(i.get(0));
@@ -87,7 +87,7 @@ void handle_json_news(std::shared_ptr<smpHttp::HttpRequest> req
     res->addHeader("Access-Control-Allow-Origin", "*");
     res->addHeader("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE, PATCH");
     res->addHeader("Access-Control-Max-Age", "3600");
-    res->addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept,token");
+    res->addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept, token");
     auto sqlres = mq.sql("Select * FROM labnews").execute();  
     json resj;
     resj["news"] = json::array();
@@ -112,6 +112,12 @@ void handle_json_news(std::shared_ptr<smpHttp::HttpRequest> req
 void handle_base(std::shared_ptr<smpHttp::HttpRequest> req
   , std::shared_ptr<smpHttp::HttpResponse> res) 
 {
+  res->addHeader("Content-Type","application/json;charset=utf-8");
+  res->addHeader("Access-Control-Allow-Origin", "*");
+  res->addHeader("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE, PATCH");
+  res->addHeader("Access-Control-Max-Age", "3600");
+  res->addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept, token");
+  res->addHeader("Access-Control-Expose-Headers", "token");
   if(req->getHeader("token").size()) {
     ExpValidator exp1;
     try{

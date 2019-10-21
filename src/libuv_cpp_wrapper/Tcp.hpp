@@ -10,6 +10,9 @@
 #define DEFAULT_IP "0.0.0.0"
 #define DEFAULT_BACKLOG 128
 
+/**
+ * maybe I`d better use the name TcpServer instead of Tcp
+ **/ 
 namespace uvx {
 using ConnectionCallback = std::function<void(uv_stream_t* server, uv_tcp_t* tcp)>;
 using ListenCallback = std::function<void(Tcp *)>;
@@ -25,6 +28,7 @@ public:
   Tcp(Loop& loop, std::string ip = DEFAULT_IP, int port = DEFAULT_PORT,int backlog = DEFAULT_BACKLOG);
   bool listen();
   void setListenCallback(ListenCallback alistenCallback) {listenCallback = alistenCallback;}
+
   uv_loop_t * getLoop(); 
   uv_stream_t* getHandle() {return reinterpret_cast<uv_stream_t *>(handle.get());}
   void addConnection(std::shared_ptr<Connection>&);

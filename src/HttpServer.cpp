@@ -85,7 +85,7 @@ void HttpServer::afterRead(uvx::Connection* acl){
       res->addHeader("Access-Control-Allow-Methods","POST, GET, OPTIONS");
       res->addHeader("Access-Control-Max-Age","86400");
       res->addHeader("Connection","keep-alive");
-      res->addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept,token");
+      res->addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept, token");
       return ;
     }
     return handleRoute(move(parseReq), cl);

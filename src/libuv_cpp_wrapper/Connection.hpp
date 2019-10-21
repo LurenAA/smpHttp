@@ -9,7 +9,6 @@
 namespace uvx {
 class Connection;
 using ReadFunc_t = std::function<void(Connection*)>;
-// using Alloc_t = std::function<void (uv_handle_t*, size_t, uv_buf_t* buf)>;
 using WriteFunc_t = std::function<void()>;
 using StartRedFunc_t = std::function<void (uv_stream_t *, ssize_t , const uv_buf_t *)>;
 class Tcp;
