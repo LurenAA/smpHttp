@@ -20,55 +20,7 @@ using namespace hpr;
 using namespace radix;
 using namespace std::placeholders;
 
-void listenCallback(Tcp*  tcp) {
-  uv_tcp_t *client = new uv_tcp_t();
-  uv_tcp_init(tcp->getLoop(), client);
-  int flag2 = uv_accept(tcp->getHandle(), reinterpret_cast<uv_stream_t *>(client));
-  if (flag2 < 0)
-  {
-    cerr << "error: uv_accept " << uv_strerror(flag2) << endl;
-    uv_close(reinterpret_cast<uv_handle_t *>(client), [] (uv_handle_t *handle) {
-      delete handle;
-    });
-    delete client;
-  }
-  else
-  {
-    Connection *c = new HttpConnection(client, tcp);
-    shared_ptr<Connection> cli(c);
-    tcp->addConnection(cli);
-  cout << "log: add a visitor " << endl;
-    if (tcp->connectionCallback)
-      tcp->connectionCallback(reinterpret_cast<uv_stream_t *>(tcp->getHandle()), client);
-  }
-}
-
-void HttpServer::afterConnect(uv_stream_t* server, uv_tcp_t* tcp){
-  HttpConnection* cl = nullptr;
-  if(tcp->data)
-    cl = static_cast<HttpConnection*>(tcp->data);
-  else 
-    cout << "error: afterConnect no tcp->data" << endl;
-  auto afterReadbind = bind(&HttpServer::afterRead, this, _1);
-  cl->readFunc = afterReadbind;
-  cl->startRead();
-};
-
 void HttpServer::afterRead(uvx::Connection* acl){
-  // Connection* cl = nullptr;
-  // if(stream->data)
-  //   cl = static_cast<Connection*>(stream->data);
-  // else 
-  //   cout << "warn: error afterRead no stream->data" << endl;
-  // if(nread < 0) {
-  //   cout << "warn:" << __FILE__ << ": " 
-  //     << __LINE__ << " :nread < 0" << endl;
-  //   cl->close();
-  //   return ;
-  // } else if(nread == 0) {
-  //   cout << "warn:" << __FILE__ << ": " 
-  //     << __LINE__ << " :nread == 0" << endl;
-  // } 
   HttpConnection* cl = dynamic_cast<HttpConnection*>(acl);
   #ifdef DEBUG_FLAG
     cout << "datagram: " << "\r\n" 
@@ -125,19 +77,6 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
       func_1(parseReq, parseRes);
     }
   }
-}
-
-HttpServer::HttpServer() :
-  loop(), tcpServer(loop)
-{
-  auto afterConnectbind = bind(&HttpServer::afterConnect, this, _1, _2);
-  tcpServer.connectionCallback = afterConnectbind;
-  tcpServer.setListenCallback(listenCallback);
-}
-
-void HttpServer::run() {
-  tcpServer.listen();
-  loop.run();
 }
 
 void HttpServer::add_route(std::string s, routeHandleFunc func){
@@ -244,4 +183,32 @@ void HttpServer::deal_with_error(std::shared_ptr<HttpRequest> req,
   std::shared_ptr<HttpResponse> res,const std::string& s)
 {
   res->addMessage(s);
+}
+
+void HttpServer::theConnectionCallback(Connection* cl) {
+  auto afterReadbind = bind(&HttpServer::afterRead, this, _1);
+  cl->readFunc = afterReadbind;
+  cl->startRead();
+}
+
+void HttpServer::theListenCallback() {
+  uv_tcp_t *client = new uv_tcp_t();
+  uv_tcp_init(getLoop(), client);
+  int flag2 = uv_accept(getHandle(), reinterpret_cast<uv_stream_t *>(client));
+  if (flag2 < 0)
+  {
+    cerr << "error: uv_accept " << uv_strerror(flag2) << endl;
+    uv_close(reinterpret_cast<uv_handle_t *>(client), [] (uv_handle_t *handle) {
+      delete handle;
+    });
+    delete client;
+  }
+  else
+  {
+    Connection *c = new HttpConnection(client, this);
+    shared_ptr<Connection> cli(c);
+    addConnection(cli);
+  cout << "log: add a visitor " << endl;
+    callConnectionCallback(c);
+  }
 }

@@ -13,7 +13,7 @@ enum LoopState{
 class Loop{
 friend class Tcp;
 public:
-  Loop();
+  Loop(uv_loop_t* l = uv_default_loop());
   ~Loop();
   Loop(const Loop&) = delete;
   Loop& operator=(const Loop&) = delete;

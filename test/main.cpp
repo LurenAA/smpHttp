@@ -129,10 +129,12 @@ void handle_base(std::shared_ptr<smpHttp::HttpRequest> req
       res->addHeader("token", token);
     }
     catch (TokenFormatError &tfe) {
+      res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
       res->addHeader("token", "error");
       cout << "error: " << tfe.what() << endl;
     }
     catch (InvalidTokenError &tfe) {
+      res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
       json header, payload;
       std::tie(header, payload) = JWT::Decode(req->getHeader("token"));
       std::cout << "Payload: " << payload << std::endl;

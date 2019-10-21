@@ -6,8 +6,8 @@
 using namespace std;
 using namespace uvx;
 
-Loop::Loop() 
-  :state(STOPPED), loop(uv_default_loop())
+Loop::Loop(uv_loop_t* l ) 
+  :state(STOPPED), loop(l)
 {}
 
 void Loop::setLoop(uv_loop_t* aloop){
