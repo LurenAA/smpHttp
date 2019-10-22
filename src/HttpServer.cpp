@@ -184,30 +184,22 @@ void HttpServer::deal_with_error(std::shared_ptr<HttpRequest> req,
   res->addMessage(s);
 }
 
-void HttpServer::theConnectionCallback(Connection* cl) {
+Connection* HttpServer::theConnectionCallback(Tcp* server, uv_tcp_t* client) {
+  HttpConnection* cli = new HttpConnection(client, server);
   auto afterReadbind = bind(&HttpServer::afterRead, this, _1);
-  cl->readFunc = afterReadbind;
-  cl->startRead();
+  cli->setReadCallback(afterReadbind);
+  return cli;
 }
 
-void HttpServer::theListenCallback() {
-  uv_tcp_t *client = new uv_tcp_t();
-  uv_tcp_init(getLoop(), client);
-  int flag2 = uv_accept(getHandle(), reinterpret_cast<uv_stream_t *>(client));
-  if (flag2 < 0)
-  {
-    cerr << "error: uv_accept " << uv_strerror(flag2) << endl;
-    uv_close(reinterpret_cast<uv_handle_t *>(client), [] (uv_handle_t *handle) {
-      delete handle;
-    });
-    delete client;
-  }
-  else
-  {
-    Connection *c = new HttpConnection(client, this);
-    shared_ptr<Connection> cli(c);
-    addConnection(cli);
-  cout << "log: add a visitor " << endl;
-    callConnectionCallback(c);
-  }
+void HttpServer::theAfterConnectionCallback(Connection* c){
+  c->startRead();
+}
+
+HttpServer::HttpServer(std::string ip, int port) :
+  tcpServer(ip, port)
+{
+  auto afb = bind(&HttpServer::theAfterConnectionCallback, this, _1);
+  tcpServer.setAfterConnectionCallback(afb);
+  auto cfb = bind(&HttpServer::theConnectionCallback, this, _1, _2);
+  tcpServer.setConnectionCallback(cfb);
 }

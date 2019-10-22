@@ -8,12 +8,12 @@ namespace uvx {
 }
 
 namespace smpHttp {
-  using WriteFunc_t = std::function<void()>;
+  using WriteCallback = std::function<void()>;
   class HttpResponse : public Packet{
     public:
       HttpResponse() = default;
       HttpResponse(const HttpResponse&);
-      void setAfterWrite(WriteFunc_t);
+      void setAfterWrite(WriteCallback);
       HttpResponse(uvx::Connection* ); 
       void end();
       ~HttpResponse() override;

@@ -15,15 +15,15 @@ uv_tcp_t* Connection::getHandle() {
 }
 
 void Connection::startRead() {
-  if(!Connection::readFunc) {
-    cerr << "warning: need a readFunc when startRead" << endl;
+  if(!Connection::readCallback) {
+    cerr << "warning: need a readCallback when startRead" << endl;
     return ;
   }
   uv_read_start(reinterpret_cast<uv_stream_t*>(handle.get()),
     Connection::allocFunc, [] (uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
       cout << "log: " << __LINE__ <<" : " << __FILE__ << " read : " << nread << endl;
       Connection* con = static_cast<Connection*>(stream->data);
-      con->start_read(stream, nread, buf);
+      con->onStartRead(stream, nread, buf);
       delete [] buf->base;
   });
 }
@@ -36,7 +36,6 @@ Connection::Connection(uv_tcp_t* handle, Tcp* tcp)
   : Handle(handle), tcp(tcp)
 {
   req.data = this;
-  wfunc = nullptr;
 }
 
 void Connection::write(const char* str, int len) {
@@ -53,9 +52,7 @@ void Connection::write(const char* str, int len) {
       cerr << "log: close a connection" << endl;
       con->close();
     } 
-    if(con->wfunc) {
-      con->wfunc();
-    }
+    con->onWrite();
   });
 }
 
@@ -76,6 +73,28 @@ uv_write_t* Connection::getReq() {
   return &req;
 }
 
-void Connection::close_cb() {
+void Connection::onClose() {
   tcp->removeConnection(sharedMe());
+}
+
+ReadCallback Connection::setReadCallback(ReadCallback f) {
+  ReadCallback pf = readCallback;
+  readCallback = f;
+  return pf;
+}
+
+WriteCallback Connection::setWriteCallback(WriteCallback f) {
+  WriteCallback pf = writeCallback;
+  writeCallback = f;
+  return pf;
+}
+
+void Connection::onRead(Connection* c) {
+  if(readCallback)
+    readCallback(c);
+}
+
+void Connection::onWrite() {
+  if(writeCallback)
+    writeCallback();
 }

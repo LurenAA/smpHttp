@@ -14,13 +14,15 @@
 namespace smpHttp {
   class HttpResponse;
   class HttpRequest;
-  class HttpServer : public uvx::Tcp {
+  class HttpServer{
     public:
-      using uvx::Tcp::Tcp;
+      HttpServer(std::string ip = DEFAULT_IP, int port = DEFAULT_PORT);
       void add_route(std::string s, routeHandleFunc);
       void add_static_path(std::string s);
+      void run() { tcpServer.run();}
 
     private:
+      uvx::Tcp tcpServer;
       hpr::HttpParser parser;
       Route route;
 
@@ -29,9 +31,8 @@ namespace smpHttp {
 
       void handleRoute(std::shared_ptr<HttpRequest> parseRes, uvx::Connection* cl);
       void afterRead(uvx::Connection* cl);
-
-      void theConnectionCallback(uvx::Connection*) override;
-      void theListenCallback() override;
+      uvx::Connection* theConnectionCallback(uvx::Tcp* server, uv_tcp_t* client);
+      void theAfterConnectionCallback(uvx::Connection* c);
   };
 }
 #endif //__HTTPSERVER_H_ 

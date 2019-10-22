@@ -6,7 +6,7 @@ using namespace std;
 using namespace smpHttp;
 using namespace uvx;
 
-void HttpConnection::start_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
+void HttpConnection::onStartRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
   if(nread <= 0) {
     cout << "log: close a connection" << endl;
     close();
@@ -46,7 +46,7 @@ void HttpConnection::start_read(uv_stream_t *stream, ssize_t nread, const uv_buf
         remain += d - buf->base + 4;
       remain -= nread;
       if(remain <= 0) 
-        readFunc(this);
+        onRead(this);
     } 
   } else if (method == "GET") {
     remain = 0;//means it is not the first time entering the function
@@ -54,7 +54,7 @@ void HttpConnection::start_read(uv_stream_t *stream, ssize_t nread, const uv_buf
      && *(reserve_for_read.end() - 3) == '\n' && *(reserve_for_read.end() - 4) == '\r'
     )
     {
-      readFunc(this);
+      onRead(this);
     }
   }
 }

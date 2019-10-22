@@ -112,7 +112,6 @@ void handle_json_news(std::shared_ptr<smpHttp::HttpRequest> req
 void handle_base(std::shared_ptr<smpHttp::HttpRequest> req
   , std::shared_ptr<smpHttp::HttpResponse> res) 
 {
-  res->addHeader("Content-Type","application/json;charset=utf-8");
   res->addHeader("Access-Control-Allow-Origin", "*");
   res->addHeader("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE, PATCH");
   res->addHeader("Access-Control-Max-Age", "3600");

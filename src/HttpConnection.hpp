@@ -11,7 +11,7 @@ namespace smpHttp {
     ssize_t remain = INT_MIN; //  remain len to read
     std::string method = "";
     std::string reserve_for_read = "";
-    void start_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) override;
+    void onStartRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) override;
   };
 }
 

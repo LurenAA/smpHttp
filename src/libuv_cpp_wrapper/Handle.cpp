@@ -27,7 +27,7 @@ void Handle::close() {
   uv_close(handle.get(), [](uv_handle_t* handle) {
     cout << "log: close a handle" << endl;
     Handle* had = static_cast<Handle*>(handle->data);
-    had->close_cb();
+    had->onClose();
   });
 }
 

@@ -13,11 +13,10 @@ class Handle
     bool is_active();
     virtual ~Handle();
     virtual void close();
-    virtual void close_cb() {}
   protected:
+    virtual void onClose() {}
     virtual bool isClosing();
     std::shared_ptr<uv_handle_t> handle;
-    
 };
 
 }

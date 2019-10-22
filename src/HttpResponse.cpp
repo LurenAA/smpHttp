@@ -11,8 +11,8 @@ HttpResponse::HttpResponse(Connection* cl)
 {
 }
 
-void HttpResponse::setAfterWrite(WriteFunc_t f) {
-  cl->wfunc = f;
+void HttpResponse::setAfterWrite(WriteCallback f) {
+  cl->setWriteCallback(f);
 }
 
 void HttpResponse::end(){
