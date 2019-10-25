@@ -44,17 +44,19 @@ void HttpConnection::onStartRead(uv_stream_t *stream, ssize_t nread, const uv_bu
       char *d = strstr(buf->base, "\r\n\r\n");
       if(d)
         remain += d - buf->base + 4;
-      remain -= nread;
-      if(remain <= 0) 
-        onRead(this);
-    } 
-  } else if (method == "GET") {
+    }
+    remain -= nread;
+    if(remain <= 0) 
+      onRead(this); 
+  } else if (method == "GET" || method == "OPTIONS") {
     remain = 0;//means it is not the first time entering the function
     if(reserve_for_read.back() == '\n' && *(reserve_for_read.end() - 2) == '\r'
      && *(reserve_for_read.end() - 3) == '\n' && *(reserve_for_read.end() - 4) == '\r'
     )
     {
       onRead(this);
+    } else {
+      cout << R"(error in "get" or "options")" << endl;
     }
   }
 }

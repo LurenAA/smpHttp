@@ -131,10 +131,12 @@ void handle_base(std::shared_ptr<smpHttp::HttpRequest> req
       // res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
       res->addHeader("token", "11");
       cout << "error: " << tfe.what() << endl;
+      res->end();
     }
     catch(InvalidClaimError& tfe){ //expired
       res->addHeader("token", "12");
       cout << "error: " << tfe.what() << endl;
+      res->end();
     }
     catch (InvalidTokenError &tfe) {
       // res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
@@ -143,13 +145,20 @@ void handle_base(std::shared_ptr<smpHttp::HttpRequest> req
       std::cout << "Payload: " << payload << std::endl;
       cout << "error: " << tfe.what() << endl;
       res->addHeader("token", "13");
+      res->end();
     }
   } 
 }
 
 void handle_login(std::shared_ptr<smpHttp::HttpRequest> req
   , std::shared_ptr<smpHttp::HttpResponse> res) 
-{
+{ 
+  if(req->getMethod() != hpr::POST) {
+    res->setHttpStatus(smpHttp::HTTP_METHOD_NOT_ALLOWED);
+    res->addMessage("use post");
+    res->end();
+    return ;
+  }
   try{
     json j = json::parse(req->getData());
     std::string username(j["username"]),
@@ -181,6 +190,7 @@ void handle_login(std::shared_ptr<smpHttp::HttpRequest> req
     cout << "error: handle_login : " << e.what() << endl;
     // res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
     res->addMessage(e.what());
+    res->end();
     return ;
   } 
 }
