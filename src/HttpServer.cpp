@@ -17,7 +17,6 @@ using namespace std;
 using namespace uvx;
 using namespace smpHttp;
 using namespace hpr;
-using namespace radix;
 using namespace std::placeholders;
 
 void HttpServer::afterRead(uvx::Connection* acl){
@@ -52,39 +51,37 @@ void HttpServer::afterRead(uvx::Connection* acl){
 void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
   //route
   string target = parseReq->getRequestPath();
-  string static_path = route.route_static(target);
+  bool if_static_path = route.get_static_route(target);
   shared_ptr<HttpResponse> parseRes(make_shared<HttpResponse>(cl)); 
   /**
    * temporary handle ... to complete later
   **/ 
   if(target != "/") {
-    void* base_func = route.route("/");
-    if(base_func) {
-      routeHandleFunc func_2 = reinterpret_cast<routeHandleFunc>(base_func);
-      func_2(parseReq, parseRes);
-    }
-  } 
-  if(static_path.size()) {
+    vector<routeHandleFunc> funcs = route.get_route("/");
+    funcs[0](parseReq, parseRes);
+  }
+
+  if(if_static_path) {
     //access to static resource
-    parseReq->static_path =  static_path; 
+    parseReq->static_path =  target; 
     deal_with_static(parseReq,parseRes);
   } else {
-    void* func = route.route(target);
-    if(!func) {
-      deal_with_error(parseReq, parseRes, "error: no such route");
-    } else {
-      routeHandleFunc func_1 = reinterpret_cast<routeHandleFunc>(func);
-      func_1(parseReq, parseRes);
+    vector<routeHandleFunc> funcs = route.get_route(target);
+    for(auto x : funcs) {
+      x(parseReq,parseRes);
+    }
+    if(!funcs.size()) {
+      parseRes->addMessage("no such route");
     }
   }
 }
 
 void HttpServer::add_route(std::string s, routeHandleFunc func){
-  route.insert(s, func);
+  route.add_route(s, func);
 }
 
 void HttpServer::add_static_path(std::string s) {
-  route.add_static(s);
+  route.add_static_route(s);
 }
 
 void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req

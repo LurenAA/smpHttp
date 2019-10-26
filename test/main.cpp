@@ -9,8 +9,9 @@
 #include <execinfo.h>
 #include <exception>
 #include <ctime>
+#include <unistd.h>
 
-#define EXPIRE  1 * 60
+#define EXPIRE  30 * 60
 
 using json = nlohmann::json;
 using namespace std;
@@ -150,6 +151,44 @@ void handle_base(std::shared_ptr<smpHttp::HttpRequest> req
   } 
 }
 
+void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
+  , std::shared_ptr<smpHttp::HttpResponse> res) 
+{
+  if(req->getMethod() != hpr::POST) {
+    res->setHttpStatus(smpHttp::HTTP_METHOD_NOT_ALLOWED);
+    res->addMessage("use post");
+    res->end();
+    return ;
+  }
+  try {
+    auto mq = cli.getSession();
+    auto tb = mq.getSchema("lab").getTable("labmembers");
+    json j = json::parse(req->getData());
+    auto tryd = tb.select("name").where(std::string("studentsId=") + static_cast<std::string>(j["studentsId"])).execute();
+    bool has_one = tryd.count() != 0;
+    if(has_one) {
+      auto upd = tb.update().set("tel", Value(static_cast<std::string>(j["tel"]))).
+        set("address", Value(static_cast<std::string>(j["address"]))).
+        set("education", Value(static_cast<std::string>(j["education"]))).
+        set("name", Value(static_cast<std::string>(j["name"]))).
+        set("email",  Value(static_cast<std::string>(j["email"]))).
+        set("experience", Value(static_cast<std::string>(j["experience"]))).
+        set("photo", Value(static_cast<std::string>(j["photo"])))
+        where(std::string("studentsId=") + static_cast<std::string>(j["studentsId"])).
+        execute();
+      
+    } else {
+
+    }
+  } catch(exception& e) {
+    cout << "error: handle_member_change : " << e.what() << endl;
+    // res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
+    res->addMessage(e.what());
+    res->end();
+    return ;
+  } 
+}
+
 void handle_login(std::shared_ptr<smpHttp::HttpRequest> req
   , std::shared_ptr<smpHttp::HttpResponse> res) 
 { 
@@ -212,6 +251,7 @@ int main(int argc, const char* argv[]) {
   server.add_route("/login", handle_login);
   server.add_route("/", handle_base); //need to change
   server.add_static_path("/resources"); //add static route
+  server.add_route("/member_change", handle_member_change);
   server.run();
   cli.close();
 }

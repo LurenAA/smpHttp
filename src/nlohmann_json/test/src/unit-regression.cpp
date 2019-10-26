@@ -1802,24 +1802,6 @@ TEST_CASE("regression tests")
         json j = json::parse("[-9223372036854775808]");
         CHECK(j.dump() == "[-9223372036854775808]");
     }
-
-    SECTION("issue #1708 - minimum value of int64_t can be outputted")
-    {
-        constexpr auto smallest = (std::numeric_limits<int64_t>::min)();
-        json j = smallest;
-        CHECK(j.dump() == std::to_string(smallest));
-    }
-
-    SECTION("issue #1727 - Contains with non-const lvalue json_pointer picks the wrong overload")
-    {
-        json j = {{"root", {{"settings", {{"logging", true}}}}}};
-
-        auto jptr1 = "/root/settings/logging"_json_pointer;
-        auto jptr2 = json::json_pointer{"/root/settings/logging"};
-
-        CHECK(j.contains(jptr1));
-        CHECK(j.contains(jptr2));
-    }
 }
 
 #if not defined(JSON_NOEXCEPTION)
