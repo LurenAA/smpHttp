@@ -49,7 +49,7 @@ void Connection::write(const char* str, int len) {
   uv_write(&req, reinterpret_cast<uv_stream_t*>(handle.get()), &buf, 1, [](uv_write_t *req, int status){
     Connection* con = static_cast<Connection*>(req->data);
     if(status < 0) {
-      cerr << "log: close a connection" << endl;
+      cerr << "log: close a connection : " << uv_strerror(status) << endl;
       con->close();
     } 
     con->onWrite();

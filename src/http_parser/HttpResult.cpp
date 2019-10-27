@@ -50,3 +50,11 @@ std::string HttpResult::getHeader(const std::string& s) {
     return "";
   }
 }
+
+std::string HttpResult::getQuery(const std::string& s) {
+  try {
+    return queries.at(s);
+  } catch (std::out_of_range& e) {
+    return "";
+  }
+}

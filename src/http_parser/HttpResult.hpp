@@ -46,6 +46,7 @@ namespace hpr {
       const std::map<std::string, std::string>& getQueries() {return queries;}
       std::string getData() {return data;}
       std::string getHeader(const std::string&);
+      std::string getQuery(const std::string&);
     private:
       void setMethod(const std::string& str);
       void setMethod(std::string::const_iterator& iter, std::string::const_iterator& iend);

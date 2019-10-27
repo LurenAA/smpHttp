@@ -160,11 +160,13 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
     res->end();
     return ;
   }
+  res->addHeader("Content-Type","application/json;charset=utf-8");
   try {
     auto mq = cli.getSession();
     auto tb = mq.getSchema("lab").getTable("labmembers");
     json j = json::parse(req->getData());
-    auto tryd = tb.select("name").where(std::string("studentsId=") + static_cast<std::string>(j["studentsId"])).execute();
+    auto tryd = tb.select("name").where(std::string("studentsId='") + 
+      static_cast<std::string>(j["studentsId"]) + "'").execute();
     bool has_one = tryd.count() != 0;
     if(has_one) {
       auto upd = tb.update().set("tel", Value(static_cast<std::string>(j["tel"]))).
@@ -173,17 +175,33 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
         set("name", Value(static_cast<std::string>(j["name"]))).
         set("email",  Value(static_cast<std::string>(j["email"]))).
         set("experience", Value(static_cast<std::string>(j["experience"]))).
-        set("photo", Value(static_cast<std::string>(j["photo"])))
-        where(std::string("studentsId=") + static_cast<std::string>(j["studentsId"])).
+        set("photo", Value(static_cast<std::string>(j["photo"]))).
+        where(std::string("studentsId='") + static_cast<std::string>(j["studentsId"]) + "'").
         execute();
-      
+      json jres;
+      jres["status"] = "update";
+      res->addMessage(jres.dump());
     } else {
-
+      auto ind = tb.insert("tel","address","education","name","email","experience","photo","studentsId", "sort").
+        values(static_cast<std::string>(j["tel"]),
+        static_cast<std::string>(j["address"]),
+        static_cast<std::string>(j["education"]),
+        static_cast<std::string>(j["name"]),
+        static_cast<std::string>(j["email"]),
+        static_cast<std::string>(j["experience"]),
+        static_cast<std::string>(j["photo"]),
+        static_cast<std::string>(j["studentsId"]), 0).
+        execute(); 
+      json jres;
+      jres["status"] = "insert";
+      res->addMessage(jres.dump());
     }
   } catch(exception& e) {
     cout << "error: handle_member_change : " << e.what() << endl;
-    // res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
-    res->addMessage(e.what());
+    json jres;
+    jres["status"] = "failed";
+    jres["reason"] = e.what();
+    res->addMessage(jres.dump());
     res->end();
     return ;
   } 
@@ -234,6 +252,63 @@ void handle_login(std::shared_ptr<smpHttp::HttpRequest> req
   } 
 }
 
+void get_members(std::shared_ptr<smpHttp::HttpRequest> req
+  , std::shared_ptr<smpHttp::HttpResponse> res) {
+  if(req->getMethod() != hpr::GET) {
+    res->setHttpStatus(smpHttp::HTTP_METHOD_NOT_ALLOWED);
+    res->addMessage("use get");
+    res->end();
+    return ;
+  }
+  res->addHeader("Content-Type","application/json;charset=utf-8");
+  auto mq = cli.getSession();
+  auto tb = mq.getSchema("lab").getTable("labmembers");
+  json j = {};
+  j["members"] = json::array();
+  try {
+    auto tb_size = tb.count();
+    j["members_total_size"] = tb_size;
+    size_t req_page_size = req->getQuery("page_size").size() ? atoi(req->getQuery("page_size").c_str()) : 0;
+    size_t req_page_num =  req->getQuery("page_num").size() ? atoi(req->getQuery("page_num").c_str()) : 0; 
+    size_t start_n;
+    if(!req_page_size || !req_page_num) { 
+      start_n = 0;
+      req_page_size = tb_size;
+    } else {
+      start_n = req_page_size * (req_page_num - 1) > tb_size ? tb_size : req_page_size * (req_page_num - 1);
+      if(start_n == tb_size) {
+        res->addMessage("out of range");
+        res->end();
+        return ;
+      }
+    }
+    auto ress = tb.select("tel","address","education","name","email","experience","photo","studentsId").
+      orderBy("studentsId").
+      limit(req_page_size*req_page_num == 0 ? tb_size : req_page_size*req_page_num).
+      execute();
+    vector<Row> rows = ress.fetchAll();
+    for(auto i = rows.begin() + start_n; i < rows.end(); ++i) {
+      json j_p = {};
+      j_p["tel"] = smpHttp::Util::utf16Toutf8(i->get(0));
+      j_p["address"] = smpHttp::Util::utf16Toutf8(i->get(1));
+      j_p["education"] = smpHttp::Util::utf16Toutf8(i->get(2));
+      j_p["name"] = smpHttp::Util::utf16Toutf8(i->get(3));
+      j_p["email"] = smpHttp::Util::utf16Toutf8(i->get(4));
+      j_p["experience"] = smpHttp::Util::utf16Toutf8(i->get(5));
+      j_p["photo"] = smpHttp::Util::utf16Toutf8(i->get(6));
+      j_p["studentsId"] = smpHttp::Util::utf16Toutf8(i->get(7));
+      j["members"].push_back(j_p);
+    }
+    res->addMessage(j.dump());
+    return ;
+  } catch(exception& e) {
+    cout << "error: get_members : " << e.what() << endl;
+    res->addMessage(e.what());
+    res->end();
+    return ;
+  } 
+}
+
 void err_func(){
   int nptrs;
   #define SIZE 100
@@ -250,6 +325,7 @@ int main(int argc, const char* argv[]) {
   server.add_route("/json_news", handle_json_news);
   server.add_route("/login", handle_login);
   server.add_route("/", handle_base); //need to change
+  server.add_route("/get_members", get_members); 
   server.add_static_path("/resources"); //add static route
   server.add_route("/member_change", handle_member_change);
   server.run();
