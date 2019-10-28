@@ -32,3 +32,12 @@ HttpResponse::HttpResponse(const HttpResponse& s) :
   Packet(), cl(s.cl), is_first(s.is_first)
 {
 }
+
+void HttpResponseDeleter::operator() (HttpResponse* hrq) const
+{
+  if(!hrq->is_end) {
+    auto messageSize = hrq->getMessageSize();
+
+  }
+  delete hrq;
+}

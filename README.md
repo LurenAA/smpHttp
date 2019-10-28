@@ -10,13 +10,13 @@
 + 返回json请求
 + jwt
 + Cors
++ 仿照[webcc](https://github.com/sprinfall/webcc/blob/master/webcc/router.h) 的方式做路由，代替radix_tree
 
 ###  🎯 to do:
 + 路由匹配$等变量值(/url/$abc/col?a=10)
 + 复杂静态路径的处理(/root/file/*.jpg或者文件不存在)
 + keep-alive
 + Accept-Ranges: bytes
-+ 仿照[webcc](https://github.com/sprinfall/webcc/blob/master/webcc/router.h) 的方式做路由，代替radix_tree
 + 检查数据报格式是否正确
 + 使用base64来传输图片文件
 + 定时处理没响应的连接

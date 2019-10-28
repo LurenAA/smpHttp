@@ -26,7 +26,9 @@ public:
   WriteCallback setWriteCallback(WriteCallback);
   void onRead(Connection*);
   void onWrite();
-
+  bool is_writable() {return uv_is_writable(reinterpret_cast<const uv_stream_t*>(handle.get()));}
+  int send_buf_size() const ;
+  
 private:
   Tcp* tcp;
   uv_write_t req;

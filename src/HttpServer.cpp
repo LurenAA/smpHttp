@@ -57,14 +57,7 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
   //route
   string target = parseReq->getRequestPath();
   bool if_static_path = route.get_static_route(target);
-  shared_ptr<HttpResponse> parseRes(new HttpResponse(cl), HttpResponseDeleter()); 
-  /**
-   * temporary handle ... to complete later
-  **/ 
-  if(target != "/") {
-    vector<routeHandleFunc> funcs = route.get_route("/");
-    funcs[0](parseReq, parseRes);
-  }
+  shared_ptr<HttpResponse> parseRes = newHttpResponse(cl);
 
   if(if_static_path) {
     //access to static resource

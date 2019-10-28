@@ -46,6 +46,17 @@ void Connection::write(const char* str, int len) {
   setReserve(str, len);
   buf.base = const_cast<char*>(reserve.c_str());
   buf.len = reserve.size();
+  if(buf.len > INT_MAX) {
+    cout << "error: Connection::write -> buf.len > INT_MAX" << endl;
+    return ;
+  }
+  cout << "send_buf_size : " << send_buf_size() << " : " << buf.len << endl;
+  int sta = uv_send_buffer_size(handle.get(),reinterpret_cast<int*>(&buf.len));
+  if(sta < 0) {
+    cout << "error : Connection::send_buf_size() -> uv_send_buffer_size : " <<
+      uv_strerror(sta) << endl;
+    return ;
+  }
   uv_write(&req, reinterpret_cast<uv_stream_t*>(handle.get()), &buf, 1, [](uv_write_t *req, int status){
     Connection* con = static_cast<Connection*>(req->data);
     if(status < 0) {
@@ -97,4 +108,15 @@ void Connection::onRead(Connection* c) {
 void Connection::onWrite() {
   if(writeCallback)
     writeCallback();
+}
+
+int Connection::send_buf_size() const {
+  int size = 0,
+    sta = uv_send_buffer_size(handle.get(),&size);
+  if(sta < 0) {
+    cout << "error : Connection::send_buf_size() -> uv_send_buffer_size : " <<
+      uv_strerror(sta) << endl;
+    return -1;
+  }
+  return size;
 }

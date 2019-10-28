@@ -11,7 +11,12 @@ namespace uvx {
 
 namespace smpHttp {
   using WriteCallback = std::function<void()>;
+  class HttpResponse;
+  struct HttpResponseDeleter { //必须放在这里，不然是imcomplete type，无法声明operator（）为友元
+    void operator() (HttpResponse* hrq) const;
+  };
   class HttpResponse : public Packet{
+    friend void HttpResponseDeleter::operator() (HttpResponse* ) const; //给删除器友元
     public:
       HttpResponse() = delete;
       HttpResponse(const HttpResponse&);
@@ -22,21 +27,13 @@ namespace smpHttp {
       void setNotFirst() {is_first = false;}
       bool isFirst() {return is_first;}
     private:
-      bool is_end = false;
+      bool is_end = false; //是否已经发送过
       uvx::Connection* cl;
-      bool is_first = true;  //if it is firstly enter the callback
-  };
-  struct HttpResponseDeleter {
-    void operator() (HttpResponse* hrq) const 
-    {
-      std::cout << "before delete" << std::endl;
-      delete hrq;
-      std::cout << "end delete" << std::endl;
-    }
+      bool is_first = true;  //是否是第一次进入回调函数
   };
   template<typename... A>
   std::shared_ptr<HttpResponse> newHttpResponse(A... args) {
-    return std::shared_ptr<HttpResponse> (args..., HttpResponseDeleter());
+    return std::shared_ptr<HttpResponse> (new HttpResponse(args...), HttpResponseDeleter());
   }
 }
 
