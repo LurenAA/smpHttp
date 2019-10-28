@@ -35,13 +35,11 @@ namespace hpr {
     friend class HttpParser;
     public:
       HttpResult() = default;
-      // HttpResult(const HttpResult&);
-      HttpResult(HttpResult*);
       virtual ~HttpResult() {}
       Method getMethod() {return method;}
       const std::string getRequestTarget() {return requestTarget;}
       double getHttpVersion() {return httpVersion;}
-      const std::string getRequestPath() {return requestPath;}
+      const std::string getRequestPath() const {return requestPath;}
       const std::map<std::string, std::string>& getHeaders() {return headers;}
       const std::map<std::string, std::string>& getQueries() {return queries;}
       std::string getData() {return data;}

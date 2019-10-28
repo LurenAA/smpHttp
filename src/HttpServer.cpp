@@ -28,7 +28,12 @@ void HttpServer::afterRead(uvx::Connection* acl){
 
   try {
     HttpResult* r = parser.handleDatagram(cl->getDatagram());
-    shared_ptr<HttpRequest> parseReq(make_shared<HttpRequest>(r ,cl));
+    if(!r) {
+      cout << "error : " << __func__ << 
+      " r is empty " << endl;
+      cl->close();  
+    }
+    shared_ptr<HttpRequest> parseReq(new HttpRequest(*r ,cl));
     //to complete
     if(parseReq->getMethod() == hpr::OPTIONS) {
       shared_ptr<HttpResponse> res(make_shared<HttpResponse>(cl)); 
@@ -40,7 +45,7 @@ void HttpServer::afterRead(uvx::Connection* acl){
       res->addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept, token");
       return ;
     }
-    return handleRoute(move(parseReq), cl);
+    return handleRoute(parseReq, cl);
   } catch (std::exception& e){
     cl->close();
     cout<< "warn:" << __FILE__ << ": " 
@@ -52,7 +57,7 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
   //route
   string target = parseReq->getRequestPath();
   bool if_static_path = route.get_static_route(target);
-  shared_ptr<HttpResponse> parseRes(make_shared<HttpResponse>(cl)); 
+  shared_ptr<HttpResponse> parseRes(new HttpResponse(cl), HttpResponseDeleter()); 
   /**
    * temporary handle ... to complete later
   **/ 

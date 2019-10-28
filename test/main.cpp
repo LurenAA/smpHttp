@@ -56,16 +56,19 @@ void handle_json_lab(std::shared_ptr<smpHttp::HttpRequest> req
     j["membersData"] = json::object();
     json teachersData= json::array(),
       studentsData = json::array();
-    auto sqlres_member_date = mq.sql("Select * FROM labmembers").execute();
+    // auto sqlres_member_date = mq.sql("Select 'id','photo','name','education','experience','sort' FROM labmembers").execute();
+    auto tb = mq.getSchema("lab").getTable("labmembers");
+    auto sqlres_member_date = tb.select("id", "photo", "name","education","experience","sort").execute();
     Row member_row;
     while(member_row = sqlres_member_date.fetchOne()){
       json tj = json::object();
-      tj["id"] = static_cast<int>(member_row.get(0));
+      tj["id"] = smpHttp::Util::utf16Toutf8(member_row.get(0));
       tj["photo"] = smpHttp::Util::utf16Toutf8(member_row.get(1));
       tj["name"] = smpHttp::Util::utf16Toutf8(member_row.get(2));
       tj["education"] = smpHttp::Util::utf16Toutf8(member_row.get(3));
       tj["experience"] = smpHttp::Util::utf16Toutf8(member_row.get(4));
-      if(static_cast<int>(member_row.get(5))) 
+   
+      if(!member_row.get(5).isNull() && static_cast<int>(member_row.get(5))) 
         teachersData.push_back(tj);
       else 
         studentsData.push_back(tj);
@@ -75,7 +78,7 @@ void handle_json_lab(std::shared_ptr<smpHttp::HttpRequest> req
     std::string jso = j.dump();
     res->addMessage(jso);
   } catch(exception& e) {
-    cout << "error: " << __LINE__ << " : " << __func__ << e.what() << endl;
+    cout << "error: " << __LINE__ << " : " << __func__ << " : "<< e.what() << endl;
   }
 }
 
@@ -118,7 +121,7 @@ void handle_base(std::shared_ptr<smpHttp::HttpRequest> req
   res->addHeader("Access-Control-Max-Age", "3600");
   res->addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept, token");
   res->addHeader("Access-Control-Expose-Headers", "token");
-  if(req->getHeader("token").size()) {
+  if(req->getHeader("token").size() && req->getMethod() == hpr::POST) {
     ExpValidator exp1;
     try{
       HS256Validator signer("secret");
@@ -165,8 +168,8 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
     auto mq = cli.getSession();
     auto tb = mq.getSchema("lab").getTable("labmembers");
     json j = json::parse(req->getData());
-    auto tryd = tb.select("name").where(std::string("studentsId='") + 
-      static_cast<std::string>(j["studentsId"]) + "'").execute();
+    auto tryd = tb.select("name").where(std::string("id='") + 
+      static_cast<std::string>(j["id"]) + "'").execute();
     bool has_one = tryd.count() != 0;
     if(has_one) {
       auto upd = tb.update().set("tel", Value(static_cast<std::string>(j["tel"]))).
@@ -176,13 +179,13 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
         set("email",  Value(static_cast<std::string>(j["email"]))).
         set("experience", Value(static_cast<std::string>(j["experience"]))).
         set("photo", Value(static_cast<std::string>(j["photo"]))).
-        where(std::string("studentsId='") + static_cast<std::string>(j["studentsId"]) + "'").
+        where(std::string("id='") + static_cast<std::string>(j["id"]) + "'").
         execute();
       json jres;
       jres["status"] = "update";
       res->addMessage(jres.dump());
     } else {
-      auto ind = tb.insert("tel","address","education","name","email","experience","photo","studentsId", "sort").
+      auto ind = tb.insert("tel","address","education","name","email","experience","photo","id", "sort").
         values(static_cast<std::string>(j["tel"]),
         static_cast<std::string>(j["address"]),
         static_cast<std::string>(j["education"]),
@@ -190,7 +193,7 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
         static_cast<std::string>(j["email"]),
         static_cast<std::string>(j["experience"]),
         static_cast<std::string>(j["photo"]),
-        static_cast<std::string>(j["studentsId"]), 0).
+        static_cast<std::string>(j["id"]), 0).
         execute(); 
       json jres;
       jres["status"] = "insert";
@@ -282,8 +285,8 @@ void get_members(std::shared_ptr<smpHttp::HttpRequest> req
         return ;
       }
     }
-    auto ress = tb.select("tel","address","education","name","email","experience","photo","studentsId").
-      orderBy("studentsId").
+    auto ress = tb.select("tel","address","education","name","email","experience","photo","id").
+      orderBy("id").
       limit(req_page_size*req_page_num == 0 ? tb_size : req_page_size*req_page_num).
       execute();
     vector<Row> rows = ress.fetchAll();
@@ -296,7 +299,7 @@ void get_members(std::shared_ptr<smpHttp::HttpRequest> req
       j_p["email"] = smpHttp::Util::utf16Toutf8(i->get(4));
       j_p["experience"] = smpHttp::Util::utf16Toutf8(i->get(5));
       j_p["photo"] = smpHttp::Util::utf16Toutf8(i->get(6));
-      j_p["studentsId"] = smpHttp::Util::utf16Toutf8(i->get(7));
+      j_p["id"] = smpHttp::Util::utf16Toutf8(i->get(7));
       j["members"].push_back(j_p);
     }
     res->addMessage(j.dump());

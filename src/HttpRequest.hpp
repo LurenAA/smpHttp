@@ -4,6 +4,7 @@
 #include <string>
 #include "IfstreamCon.hpp"
 #include "Connection.hpp"
+#include <iostream>
 
 namespace smpHttp {
   class HttpServer;
@@ -13,8 +14,9 @@ namespace smpHttp {
       HttpRequest() = default;
       ~HttpRequest();
       HttpRequest(const HttpRequest& s);
-      HttpRequest(hpr::HttpResult* s, uvx::Connection* c)
-        : hpr::HttpResult(s),static_path(s->getRequestPath()), connection(c) {}
+      HttpRequest(HttpRequest&& s);
+      HttpRequest(const hpr::HttpResult& s, uvx::Connection* c)
+        : hpr::HttpResult(s),static_path(s.getRequestPath()), connection(c) {}
       const std::string& getStaticPath() {return static_path;}
       std::shared_ptr<IfstreamCon> fstream = nullptr;
       void close() {connection->close();}

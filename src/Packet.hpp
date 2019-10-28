@@ -94,6 +94,7 @@ namespace smpHttp {
       void setLastChunked(bool b);
       void setLastChunked() {is_last_chunked = true;}
       const TransMode getMode() {return mode;}
+      size_t getMessageSize() const {return message.size();}
 
     private:
       std::map<std::string, std::string> headers;
