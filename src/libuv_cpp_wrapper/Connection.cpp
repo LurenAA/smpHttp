@@ -31,53 +31,53 @@ void Connection::allocFunc(uv_handle_t* handle, size_t suggested_size, uv_buf_t*
 Connection::Connection(uv_tcp_t* handle, Tcp* tcp) 
   : Handle(handle), tcp(tcp)
 {
-  req.data = this;
 }
 
-void Connection::write(const char* str, int len) {
-  if(len <= 0) {
-    cerr << "warning: do not write a empty str" << endl;
-    return ;
-  } 
-  if(len > INT_MAX ) {
-    
-  } else {
-    setReserve(str, len);
-    buf.base = const_cast<char*>(reserve.c_str());
-    buf.len = reserve.size();
-    // cout << "pre : " << get_send_buf_size() << " : " << buf.len << endl;
-    set_send_buf_size(buf.len);
-    // cout<< "after : " << get_send_buf_size() << endl;
-    uv_write(&req, reinterpret_cast<uv_stream_t*>(handle.get()), &buf, 1, [](uv_write_t *req, int status){
-      Connection* con = static_cast<Connection*>(req->data);
-      if(status < 0) {
-        cerr << "log: close a connection : " << uv_strerror(status) << endl;
-        con->close();
-      } 
-      con->onWrite();
-    });
+void Connection::write(std::string str) {
+  string::size_type len = str.size();
+  ReqEntity* req_entity = new ReqEntity();
+  req_entity->cl = sharedMe();
+  if(len > INT_MAX) {
+    req_entity->reserve = str.substr(0, INT_MAX);
+    req_entity->rest_string = str.substr(INT_MAX);
+    set_send_buf_size(INT_MAX);
   }
+  else {
+    req_entity->reserve = str;
+    set_send_buf_size(len);
+  }
+  req_entity->init();
+  uv_write(&req_entity->req, reinterpret_cast<uv_stream_t*>(handle.get()), &req_entity->buf, 1, [](uv_write_t *req, int status){
+    ReqEntity* req_entity = static_cast<ReqEntity*>(req->data);
+    auto con = req_entity->cl;
+    if(status < 0) {
+      cerr << "log: close a connection : " << uv_strerror(status) << endl;
+      con->close();
+      return ;
+    }
+    if(req_entity->rest_string.size()) {
+      con->write(req_entity->rest_string);
+    } else {
+      con->onWrite();
+    }
+    delete req_entity;
+  });
 }
 
 std::shared_ptr<Connection> Connection::sharedMe(){
   return shared_from_this();
 }
 
-void Connection::setReserve(const char * str, size_t len) {
-  reserve.clear();
-  reserve.assign(str, len);
-}
-
-const uv_buf_t* Connection::getBuf() {
-  return &buf;
-}
-
-uv_write_t* Connection::getReq() {
-  return &req;
-}
-
 void Connection::onClose() {
   tcp->removeConnection(sharedMe());
+}
+
+void Connection::write(const char* str, std::string::size_type len) {
+  if(len <= 0) {
+    cerr << "warning: do not write a empty str" << endl;
+    return ;
+  } 
+  write(std::string(str, len));
 }
 
 ReadCallback Connection::setReadCallback(ReadCallback f) {

@@ -18,9 +18,8 @@ public:
 
   Connection(uv_tcp_t* handle, Tcp* tcp);
   void startRead();
-  void write(const char* str, int len);
-  const uv_buf_t* getBuf();
-  uv_write_t* getReq();
+  void write(const char* str, std::string::size_type len) ;
+  void write(std::string str);
   uv_tcp_t* getHandle();
   ReadCallback setReadCallback(ReadCallback);
   WriteCallback setWriteCallback(WriteCallback);
@@ -32,9 +31,6 @@ public:
   
 private:
   Tcp* tcp;
-  uv_write_t req;
-  uv_buf_t buf;
-  std::string reserve; // reserve for buf 
   std::shared_ptr<Connection> sharedMe();
   
   ReadCallback readCallback = nullptr;
@@ -42,9 +38,29 @@ private:
   virtual void onStartRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf){};
   void onClose() override;
 
-  void setReserve(const char *, size_t);
   static void allocFunc(uv_handle_t*, size_t, uv_buf_t*);
 };
+
+struct ReqEntity {
+  uv_write_t req;
+  std::string reserve = "";
+  uv_buf_t buf;
+  std::shared_ptr<Connection> cl;
+  std::string rest_string = "";
+  void init() {
+    buf.base = const_cast<char*>(reserve.c_str());
+    buf.len = reserve.size();
+    req.data = this;
+  }
+  void setReserve(const char * str, size_t len) {
+    reserve.clear();
+    reserve.assign(str, len);
+  }
+  void setReserve(const std::string &s) {
+    setReserve(s.c_str(), s.size());
+  }
+};
+
 }
 
 #endif //CONNECTION_HPP_
