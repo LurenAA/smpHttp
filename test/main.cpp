@@ -329,7 +329,7 @@ int main(int argc, const char* argv[]) {
   server.add_route("^/login$", handle_login);
   server.add_route("^/.*", handle_base); //need to change
   server.add_route("^/get_members", get_members); 
-  server.add_static_path("^/resources.*"); //add static route
+  server.add_static_path(R"(^/resources.*)"); //add static route
   server.add_route("^/member_change$", handle_member_change);
   server.run();
   cli.close();

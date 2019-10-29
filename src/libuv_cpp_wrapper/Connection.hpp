@@ -27,7 +27,8 @@ public:
   void onRead(Connection*);
   void onWrite();
   bool is_writable() {return uv_is_writable(reinterpret_cast<const uv_stream_t*>(handle.get()));}
-  int send_buf_size() const ;
+  int get_send_buf_size() const ;
+  void set_send_buf_size(int s);
   
 private:
   Tcp* tcp;
@@ -42,7 +43,7 @@ private:
   void onClose() override;
 
   void setReserve(const char *, size_t);
-  static uv_alloc_cb allocFunc;
+  static void allocFunc(uv_handle_t*, size_t, uv_buf_t*);
 };
 }
 

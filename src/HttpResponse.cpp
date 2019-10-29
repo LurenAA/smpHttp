@@ -37,7 +37,7 @@ void HttpResponseDeleter::operator() (HttpResponse* hrq) const
 {
   if(!hrq->is_end) {
     auto messageSize = hrq->getMessageSize();
-
+    
   }
   delete hrq;
 }

@@ -29,24 +29,19 @@ std::vector<routeHandleFunc> HttpRouter::get_route(const std::string&s ) {
 }
 
 bool HttpRouter::get_static_route(const std::string& s) {
-  auto fid = find_if(static_routes.cbegin(), static_routes.cend(), 
-  [&](const std::string& is) {
-    auto b = s.cbegin();
-    for(auto x : is) {
-      if(x != *b++) 
-        return false;
-    }
-    return true;
-  });
-  if(fid == static_routes.end()) 
-    return false;
-  else return true;
+  for(auto x: static_routes)  {
+    reg.assign(x);
+    bool isTrue = regex_match(s, reg);
+    if(isTrue)
+      return true;
+  }
+  return false;
 }
 
 void HttpRouter::add_static_route(std::string s ) {
-  if(s.back() != '/')
-    s += '/';
-  if(s.front() != '/')
-    s += '/' ;
+  // if(s.back() != '/')
+  //   s += '/';
+  // if(s.front() != '/')
+  //   s += '/' ;
   static_routes.insert(s);
 }
