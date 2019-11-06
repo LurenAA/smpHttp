@@ -12,15 +12,11 @@ namespace smpHttp {
     friend class HttpServer;
     public:
       HttpRequest() = default;
-      ~HttpRequest();
-      HttpRequest(const HttpRequest& s);
       HttpRequest(const hpr::HttpResult& s, std::shared_ptr<uvx::Connection> c)
-        : hpr::HttpResult(s),static_path(s.getRequestPath()), connection(c) {}
-      const std::string& getStaticPath() {return static_path;}
+        : hpr::HttpResult(s), connection(c) {}
       std::shared_ptr<IfstreamCon> fstream = nullptr;
       void close() {connection->close();}
     private:
-      std::string static_path = "";
       std::shared_ptr<uvx::Connection> connection;
   };
 }

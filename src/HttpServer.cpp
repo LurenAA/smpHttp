@@ -54,22 +54,18 @@ void HttpServer::afterRead(std::shared_ptr<uvx::Connection> cl){
 };
 
 void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, shared_ptr<Connection> cl) {
-  //route
-  string target = parseReq->getRequestPath();
-  bool if_static_path = route.get_static_route(target);
+  bool if_static_path = route.get_static_route(parseReq->getRequestPath());
   shared_ptr<HttpResponse> parseRes = newHttpResponse(cl);
 
   if(if_static_path) {
-    //access to static resource
-    parseReq->static_path =  target; 
     deal_with_static(parseReq,parseRes);
   } else {
-    vector<routeHandleFunc> funcs = route.get_route(target);
+    vector<routeHandleFunc> funcs = route.get_route(parseReq->getRequestPath());
     parseRes->setAfterWrite(bind([](shared_ptr<Connection> cl){
       cl->close();
     }, cl));
     for(auto x : funcs) {
-      x(parseReq,parseRes); //队列机制todo
+      x(parseReq,parseRes); 
     }
     if(!funcs.size()) {
       parseRes->addMessage("no such route");
@@ -93,21 +89,20 @@ void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
   if(!req->fstream){
     //never use it before
     shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
-    newF->open(Util::getRootPath() + req->getStaticPath());
+    newF->open(Util::getRootPath() + req->getRequestPath());
 
     if(!newF->is_open()) {
       //to do with error
-      std::string s = "errno:" +  req->getStaticPath() 
+      std::string s = "errno:" +  req->getRequestPath() 
       + " does not exist " +  __FILE__ + " " + to_string(__LINE__);
       cout << s << endl;
       res->addMessage(s);
       res->setAfterWrite(nullptr);
       return ;
     }
-    // fstreamMap.insert({req->getStaticPath(), newF});
     req->fstream = newF;
     //check the type
-    res->setContentType(req->getStaticPath());
+    res->setContentType(req->getRequestPath());
   }
 
 
@@ -115,7 +110,7 @@ void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
     shared_ptr<IfstreamCon> fstrm = req->fstream;
     if(!fstrm->is_open()) {
       res->setAfterWrite(nullptr);
-      cout << "log: close " << req->getStaticPath()  << endl ;
+      cout << "log: close " << req->getRequestPath()  << endl ;
       //to do time wheel
       res->close();
       return ;
