@@ -18,14 +18,18 @@ void HttpResponse::setAfterWrite(WriteCallback f) {
 void HttpResponse::end(){
   if(is_end)
     return ;
-  string res = get();
-  cl->write(res.c_str(), res.size());
+  // auto old_func = cl->getWriteCallback();
+  // auto new_func = bind([](decltype(old_func) f, Connection* cl) {
+  //   f();
+  //   cl->close();
+  // }, old_func, cl);
+  // setAfterWrite(new_func);
+  cl->write(get());
   is_end = true;
 }
 
 HttpResponse::~HttpResponse(){
-  if(cl->is_active()) 
-    end();
+  
 }
 
 HttpResponse::HttpResponse(const HttpResponse& s) :
@@ -35,9 +39,26 @@ HttpResponse::HttpResponse(const HttpResponse& s) :
 
 void HttpResponseDeleter::operator() (HttpResponse* hrq) const
 {
-  if(!hrq->is_end) {
-    auto messageSize = hrq->getMessageSize();
-    
+  if(!hrq->is_end) { 
+    auto pref = hrq->cl->getWriteCallback();
+    auto func = bind([](HttpResponse* hrq1, decltype(pref) pfunc) {
+      cout << hrq1->cl->shared_from_this().use_count() << endl;
+      if(pfunc) 
+        pfunc();
+      delete hrq1; 
+    }, hrq, pref);
+    hrq->cl->setWriteCallback(func);
+    cout << hrq->cl->shared_from_this().use_count() << endl;
+    if(hrq->cl->is_active()) 
+      hrq->end();
+  } else {
+    auto pref = hrq->cl->getWriteCallback();
+    if(pref)
+      pref();
+    delete hrq;
   }
-  delete hrq;
+}
+
+void HttpResponse::close() {
+  cl->close();
 }

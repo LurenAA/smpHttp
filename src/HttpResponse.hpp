@@ -26,6 +26,7 @@ namespace smpHttp {
       ~HttpResponse() override;
       void setNotFirst() {is_first = false;}
       bool isFirst() {return is_first;}
+      void close(); 
     private:
       bool is_end = false; //是否已经发送过
       uvx::Connection* cl;

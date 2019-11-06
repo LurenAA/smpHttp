@@ -34,42 +34,54 @@ Connection::Connection(uv_tcp_t* handle, Tcp* tcp)
 }
 
 void Connection::write(std::string str) {
+#define INT_MAX_ 20000 //INT_MAX
   string::size_type len = str.size();
   ReqEntity* req_entity = new ReqEntity();
-  req_entity->cl = sharedMe();
-  if(len > INT_MAX) {
-    req_entity->reserve = str.substr(0, INT_MAX);
-    req_entity->rest_string = str.substr(INT_MAX);
-    set_send_buf_size(INT_MAX);
+  req_entity->cl = shared_from_this(); cout << req_entity->cl.use_count() << endl;
+  if(len > INT_MAX_) {
+    req_entity->reserve = str.substr(0, INT_MAX_);
+    req_entity->rest_string = str.substr(INT_MAX_);
+    int fl = get_send_buf_size();
+    if(fl < INT_MAX_ && fl != -1)
+      set_send_buf_size(INT_MAX_);
+    else if(fl == -1){
+      cerr << "error: close a connection " << endl;
+      close();
+      return ;
+    }
   }
   else {
     req_entity->reserve = str;
-    set_send_buf_size(len);
+    int fl = get_send_buf_size();
+    if(fl < static_cast<int>(len) && fl > 0)
+      set_send_buf_size(len);
+    else if(fl == -1){
+      cerr << "error: close a connection " << endl;
+      close();
+      return ;
+    }
   }
   req_entity->init();
   uv_write(&req_entity->req, reinterpret_cast<uv_stream_t*>(handle.get()), &req_entity->buf, 1, [](uv_write_t *req, int status){
     ReqEntity* req_entity = static_cast<ReqEntity*>(req->data);
-    auto con = req_entity->cl;
+    cout << req_entity->cl.use_count() << endl;
     if(status < 0) {
       cerr << "log: close a connection : " << uv_strerror(status) << endl;
-      con->close();
+      req_entity->cl->close();
       return ;
     }
     if(req_entity->rest_string.size()) {
-      con->write(req_entity->rest_string);
+      req_entity->cl->write(req_entity->rest_string);
     } else {
-      con->onWrite();
+      req_entity->cl->onWrite();
     }
     delete req_entity;
   });
-}
-
-std::shared_ptr<Connection> Connection::sharedMe(){
-  return shared_from_this();
+#undef INT_MAX_
 }
 
 void Connection::onClose() {
-  tcp->removeConnection(sharedMe());
+  tcp->removeConnection(shared_from_this());
 }
 
 void Connection::write(const char* str, std::string::size_type len) {

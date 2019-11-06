@@ -5,6 +5,7 @@
 #include "Handle.hpp"
 #include <functional>
 #include <string>
+#include <cstring>
 
 namespace uvx {
 class Connection;
@@ -23,6 +24,7 @@ public:
   uv_tcp_t* getHandle();
   ReadCallback setReadCallback(ReadCallback);
   WriteCallback setWriteCallback(WriteCallback);
+  WriteCallback getWriteCallback() const {return writeCallback;}
   void onRead(Connection*);
   void onWrite();
   bool is_writable() {return uv_is_writable(reinterpret_cast<const uv_stream_t*>(handle.get()));}
@@ -31,7 +33,6 @@ public:
   
 private:
   Tcp* tcp;
-  std::shared_ptr<Connection> sharedMe();
   
   ReadCallback readCallback = nullptr;
   WriteCallback writeCallback = nullptr;
@@ -48,6 +49,7 @@ struct ReqEntity {
   std::shared_ptr<Connection> cl;
   std::string rest_string = "";
   void init() {
+    ::memset(&req, 0, sizeof(req));
     buf.base = const_cast<char*>(reserve.c_str());
     buf.len = reserve.size();
     req.data = this;

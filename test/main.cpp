@@ -263,6 +263,8 @@ void get_members(std::shared_ptr<smpHttp::HttpRequest> req
     res->end();
     return ;
   }
+  // res->addHeader("Connection","keep-alive");
+  // res->addHeader("Keep-Alive", "timeout=200, max=1000");
   res->addHeader("Content-Type","application/json;charset=utf-8");
   auto mq = cli.getSession();
   auto tb = mq.getSchema("lab").getTable("labmembers");

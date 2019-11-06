@@ -63,10 +63,14 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
     //access to static resource
     parseReq->static_path =  target; 
     deal_with_static(parseReq,parseRes);
+    cout << parseRes.use_count() << endl;
   } else {
     vector<routeHandleFunc> funcs = route.get_route(target);
+    parseRes->setAfterWrite(bind([](Connection* cl){
+      cl->close();
+    }, cl));
     for(auto x : funcs) {
-      x(parseReq,parseRes);
+      x(parseReq,parseRes); //队列机制todo
     }
     if(!funcs.size()) {
       parseRes->addMessage("no such route");
@@ -83,9 +87,11 @@ void HttpServer::add_static_path(std::string s) {
 }
 
 void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
-    , std::shared_ptr<HttpResponse> res)
+    , std::shared_ptr<HttpResponse>& res)
 {
 #define CHUNK_SIZE 50000
+  res->setAfterWrite(nullptr);
+cout << res.use_count() << endl;
   if(!req->fstream){
     //never use it before
     shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
@@ -113,6 +119,7 @@ void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
       res->setAfterWrite(nullptr);
       cout << "log: close " << req->getStaticPath()  << endl ;
       //to do time wheel
+      res->close();
       return ;
     }
     string s;
@@ -154,12 +161,12 @@ void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
       if_set_next_func = true;
     }
     
-    shared_ptr<HttpResponse> rres(new HttpResponse(*res));
+    shared_ptr<HttpResponse> rres = newHttpResponse(*res);
     if(if_set_next_func) {
       if(res->getMode() == CHUNKED || res->getMode() == CHUNKED_FIRST) 
         rres->setMode(CHUNKED);
-      auto wfunc = bind(&HttpServer::deal_with_static, this, req, rres);
-      res->setAfterWrite(wfunc);    
+      // auto wfunc = bind(&HttpServer::deal_with_static, this, req, rres);  cout << rres.use_count() << endl; 
+      res->setAfterWrite(bind(&HttpServer::deal_with_static, this, req, rres));    cout << rres.use_count() << endl; 
     } else{
       /**
        * close the connection next loop
@@ -168,8 +175,7 @@ void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
       auto wfunc = bind(&HttpServer::deal_with_static, this, req, rres);
       res->setAfterWrite(wfunc);  
     }
-
-    // cout << res->get() << endl;
+cout << res.use_count() << endl;
   } 
 #undef CHUNK_SIZE
 }

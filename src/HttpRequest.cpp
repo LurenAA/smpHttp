@@ -10,7 +10,7 @@ HttpRequest::HttpRequest(const HttpRequest& s)
 }
 
 HttpRequest::~HttpRequest(){
-  connection->close();
+  // connection->close();
 }
 
 HttpRequest::HttpRequest(HttpRequest&& s) :

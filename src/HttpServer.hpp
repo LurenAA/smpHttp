@@ -26,7 +26,7 @@ namespace smpHttp {
       hpr::HttpParser parser;
       HttpRouter route;
 
-      void deal_with_static(std::shared_ptr<HttpRequest>,std::shared_ptr<HttpResponse>);
+      void deal_with_static(std::shared_ptr<HttpRequest>,std::shared_ptr<HttpResponse>&);
       void deal_with_error(std::shared_ptr<HttpRequest>,std::shared_ptr<HttpResponse>,const std::string&);
 
       void handleRoute(std::shared_ptr<HttpRequest> parseRes, uvx::Connection* cl);
