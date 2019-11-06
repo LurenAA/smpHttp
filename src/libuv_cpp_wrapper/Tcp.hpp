@@ -15,8 +15,8 @@
  * maybe I`d better use the name TcpServer instead of Tcp
  **/ 
 namespace uvx {
-using ConnectionCallback = std::function<Connection*(Tcp*, uv_tcp_t*)>;
-using AfterConnectionCallback = std::function<void(Connection* c)>;
+using ConnectionCallback = std::function<std::shared_ptr<Connection>(Tcp*, uv_tcp_t*)>;
+using AfterConnectionCallback = std::function<void(std::shared_ptr<Connection> cl)>;
 class Loop;
 class Tcp : public Handle
 {
@@ -44,8 +44,8 @@ private:
    * which is derived from Handle
    */
   bool listen();
-  Connection* onConnection(uv_tcp_t*);
-  void onAfterConnection(Connection* c);
+  std::shared_ptr<Connection> onConnection(uv_tcp_t*);
+  void onAfterConnection(std::shared_ptr<Connection> c);
   
   ConnectionCallback connectionCallback = nullptr;
   AfterConnectionCallback afterConnectionCallback = nullptr;

@@ -13,7 +13,7 @@ void HttpConnection::onStartRead(uv_stream_t *stream, ssize_t nread, const uv_bu
     }
     cout << "log: close a connection" << endl;
     close();
-    return ;
+    return;
   }
   if(!method.size() && remain == INT_MIN) { 
     //firstly enter
@@ -50,14 +50,14 @@ void HttpConnection::onStartRead(uv_stream_t *stream, ssize_t nread, const uv_bu
     }
     remain -= nread;
     if(remain <= 0) 
-      onRead(this); 
+      onRead(shared_from_this()); 
   } else if (method == "GET" || method == "OPTIONS") {
     remain = 0;//means it is not the first time entering the function
     if(reserve_for_read.back() == '\n' && *(reserve_for_read.end() - 2) == '\r'
      && *(reserve_for_read.end() - 3) == '\n' && *(reserve_for_read.end() - 4) == '\r'
     )
     {
-      onRead(this);
+      onRead(shared_from_this());
     } else {
       cout << R"(error in "get" or "options")" << endl;
     }

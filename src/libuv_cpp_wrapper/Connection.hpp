@@ -9,7 +9,7 @@
 
 namespace uvx {
 class Connection;
-using ReadCallback = std::function<void(Connection*)>;
+using ReadCallback = std::function<void(std::shared_ptr<Connection>)>;
 using WriteCallback = std::function<void()>;
 using StartRedFunc_t = std::function<void (uv_stream_t *, ssize_t , const uv_buf_t *)>;
 class Tcp;
@@ -25,7 +25,7 @@ public:
   ReadCallback setReadCallback(ReadCallback);
   WriteCallback setWriteCallback(WriteCallback);
   WriteCallback getWriteCallback() const {return writeCallback;}
-  void onRead(Connection*);
+  void onRead(std::shared_ptr<uvx::Connection>);
   void onWrite();
   bool is_writable() {return uv_is_writable(reinterpret_cast<const uv_stream_t*>(handle.get()));}
   int get_send_buf_size() const ;

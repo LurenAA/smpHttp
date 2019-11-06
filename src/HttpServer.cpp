@@ -19,15 +19,15 @@ using namespace smpHttp;
 using namespace hpr;
 using namespace std::placeholders;
 
-void HttpServer::afterRead(uvx::Connection* acl){
-  HttpConnection* cl = dynamic_cast<HttpConnection*>(acl);
+void HttpServer::afterRead(std::shared_ptr<uvx::Connection> cl){
+  HttpConnection* hcl = dynamic_cast<HttpConnection*>(cl.get());
   #ifdef DEBUG_FLAG
     cout << "datagram: " << "\r\n" 
-    << cl->getDatagram() << endl;
+    << hcl->getDatagram() << endl;
   #endif
 
   try {
-    HttpResult* r = parser.handleDatagram(cl->getDatagram());
+    HttpResult* r = parser.handleDatagram(hcl->getDatagram());
     if(!r) {
       cout << "error : " << __func__ << 
       " r is empty " << endl;
@@ -53,7 +53,7 @@ void HttpServer::afterRead(uvx::Connection* acl){
   } 
 };
 
-void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
+void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, shared_ptr<Connection> cl) {
   //route
   string target = parseReq->getRequestPath();
   bool if_static_path = route.get_static_route(target);
@@ -63,10 +63,9 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, Connection* cl) {
     //access to static resource
     parseReq->static_path =  target; 
     deal_with_static(parseReq,parseRes);
-    cout << parseRes.use_count() << endl;
   } else {
     vector<routeHandleFunc> funcs = route.get_route(target);
-    parseRes->setAfterWrite(bind([](Connection* cl){
+    parseRes->setAfterWrite(bind([](shared_ptr<Connection> cl){
       cl->close();
     }, cl));
     for(auto x : funcs) {
@@ -91,7 +90,6 @@ void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
 {
 #define CHUNK_SIZE 50000
   res->setAfterWrite(nullptr);
-cout << res.use_count() << endl;
   if(!req->fstream){
     //never use it before
     shared_ptr<IfstreamCon> newF(make_shared<IfstreamCon>());
@@ -165,8 +163,7 @@ cout << res.use_count() << endl;
     if(if_set_next_func) {
       if(res->getMode() == CHUNKED || res->getMode() == CHUNKED_FIRST) 
         rres->setMode(CHUNKED);
-      // auto wfunc = bind(&HttpServer::deal_with_static, this, req, rres);  cout << rres.use_count() << endl; 
-      res->setAfterWrite(bind(&HttpServer::deal_with_static, this, req, rres));    cout << rres.use_count() << endl; 
+      res->setAfterWrite(bind(&HttpServer::deal_with_static, this, req, rres));    
     } else{
       /**
        * close the connection next loop
@@ -175,7 +172,6 @@ cout << res.use_count() << endl;
       auto wfunc = bind(&HttpServer::deal_with_static, this, req, rres);
       res->setAfterWrite(wfunc);  
     }
-cout << res.use_count() << endl;
   } 
 #undef CHUNK_SIZE
 }
@@ -186,14 +182,14 @@ void HttpServer::deal_with_error(std::shared_ptr<HttpRequest> req,
   res->addMessage(s);
 }
 
-Connection* HttpServer::theConnectionCallback(Tcp* server, uv_tcp_t* client) {
-  HttpConnection* cli = new HttpConnection(client, server);
+std::shared_ptr<uvx::Connection> HttpServer::theConnectionCallback(Tcp* server, uv_tcp_t* client) {
+  shared_ptr<HttpConnection> cli(new HttpConnection(client, server));
   auto afterReadbind = bind(&HttpServer::afterRead, this, _1);
   cli->setReadCallback(afterReadbind);
   return cli;
 }
 
-void HttpServer::theAfterConnectionCallback(Connection* c){
+void HttpServer::theAfterConnectionCallback(shared_ptr<Connection> c){
   c->startRead();
 }
 

@@ -89,14 +89,13 @@ void Tcp::onListen(){ //private是针对类的，而不是对象
   }
   else
   {
-    Connection *c = onConnection(client);
-    if(!c) {
+    shared_ptr<Connection> cli = onConnection(client);
+    if(!cli) {
       cout << "error: onConnection return error" << endl;
       error_flag = true;
     } else {
-      shared_ptr<Connection> cli(c);
       addConnection(cli);
-      onAfterConnection(c);
+      onAfterConnection(cli);
     }
   }
   if(error_flag){
@@ -106,7 +105,7 @@ void Tcp::onListen(){ //private是针对类的，而不是对象
   }
 }
 
-Connection* Tcp::onConnection(uv_tcp_t* client) {
+std::shared_ptr<Connection> Tcp::onConnection(uv_tcp_t* client) {
   if(connectionCallback) {
     return connectionCallback(this, client);
   } else {
@@ -120,7 +119,7 @@ AfterConnectionCallback Tcp::setAfterConnectionCallback(AfterConnectionCallback 
   return pf;
 }
 
-void Tcp::onAfterConnection(Connection* c) {
+void Tcp::onAfterConnection(std::shared_ptr<Connection> c) {
   if(afterConnectionCallback)
     afterConnectionCallback(c);
 }

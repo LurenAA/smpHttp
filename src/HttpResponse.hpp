@@ -4,10 +4,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-
-namespace uvx {
-  class Connection;
-}
+#include <Connection.hpp>
 
 namespace smpHttp {
   using WriteCallback = std::function<void()>;
@@ -21,7 +18,7 @@ namespace smpHttp {
       HttpResponse() = delete;
       HttpResponse(const HttpResponse&);
       void setAfterWrite(WriteCallback);
-      HttpResponse(uvx::Connection* ); 
+      HttpResponse(std::shared_ptr<uvx::Connection>); 
       void end();
       ~HttpResponse() override;
       void setNotFirst() {is_first = false;}
@@ -29,7 +26,7 @@ namespace smpHttp {
       void close(); 
     private:
       bool is_end = false; //是否已经发送过
-      uvx::Connection* cl;
+      std::shared_ptr<uvx::Connection> cl;
       bool is_first = true;  //是否是第一次进入回调函数
   };
   template<typename... A>
