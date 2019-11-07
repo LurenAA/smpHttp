@@ -33,7 +33,6 @@ public:
   uv_stream_t* getHandle() {return reinterpret_cast<uv_stream_t *>(handle.get());}
   Loop& _Loop();
   void onListen();
-  
 
 private:
   Loop loop;

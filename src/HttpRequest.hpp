@@ -5,6 +5,7 @@
 #include "IfstreamCon.hpp"
 #include "Connection.hpp"
 #include <iostream>
+#include "Loop.hpp"
 
 namespace smpHttp {
   class HttpServer;
@@ -12,12 +13,13 @@ namespace smpHttp {
     friend class HttpServer;
     public:
       HttpRequest() = default;
-      HttpRequest(const hpr::HttpResult& s, std::shared_ptr<uvx::Connection> c)
-        : hpr::HttpResult(s), connection(c) {}
+      HttpRequest(const hpr::HttpResult& s, std::shared_ptr<uvx::Connection> c,uvx::Loop& lp)
+        : hpr::HttpResult(s), connection(c), loop(lp) {}
       std::shared_ptr<IfstreamCon> fstream = nullptr;
       void close() {connection->close();}
     private:
       std::shared_ptr<uvx::Connection> connection;
+      uvx::Loop& loop;
   };
 }
 #endif //__HTTP_REQUREST_HPP_

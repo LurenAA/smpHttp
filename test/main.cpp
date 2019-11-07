@@ -23,7 +23,7 @@ Client cli(SessionOption::USER, "root",
   SessionOption::DB,   "lab",
   SessionOption::SSL_MODE, SSLMode::DISABLED,
   ClientOption::POOLING, true,
-  ClientOption::POOL_MAX_SIZE, 10,
+  ClientOption::POOL_MAX_SIZE, 100,
   ClientOption::POOL_QUEUE_TIMEOUT, 1000,
   ClientOption::POOL_MAX_IDLE_TIME, 500);
 
@@ -56,7 +56,6 @@ void handle_json_lab(std::shared_ptr<smpHttp::HttpRequest> req
     j["membersData"] = json::object();
     json teachersData= json::array(),
       studentsData = json::array();
-    // auto sqlres_member_date = mq.sql("Select 'id','photo','name','education','experience','sort' FROM labmembers").execute();
     auto tb = mq.getSchema("lab").getTable("labmembers");
     auto sqlres_member_date = tb.select("id", "photo", "name","education","experience","sort").execute();
     Row member_row;
@@ -171,6 +170,9 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
     auto tryd = tb.select("name").where(std::string("id='") + 
       static_cast<std::string>(j["id"]) + "'").execute();
     bool has_one = tryd.count() != 0;
+    uv_fs_t* req = new uv_fs_t();
+    std::string save_path = "./resources/pic" + static_cast<std::string>(j["id"]);
+    // uv_fs_open(uv_default_loop(), req, save_path.c_str(), )
     if(has_one) {
       auto upd = tb.update().set("tel", Value(static_cast<std::string>(j["tel"]))).
         set("address", Value(static_cast<std::string>(j["address"]))).
@@ -239,6 +241,7 @@ void handle_login(std::shared_ptr<smpHttp::HttpRequest> req
     rj["status"] = true;
     rj["name"] = smpHttp::Util::utf16Toutf8(r.get(0));
     rj["sort"] = (bool)r.get(1);
+    rj["expire"] = time(nullptr) * 1000 + EXPIRE * 1000;
     time_t tim = time(nullptr);
     tim += EXPIRE;
     HS256Validator signer("secret");
@@ -263,8 +266,6 @@ void get_members(std::shared_ptr<smpHttp::HttpRequest> req
     res->end();
     return ;
   }
-  // res->addHeader("Connection","keep-alive");
-  // res->addHeader("Keep-Alive", "timeout=200, max=1000");
   res->addHeader("Content-Type","application/json;charset=utf-8");
   auto mq = cli.getSession();
   auto tb = mq.getSchema("lab").getTable("labmembers");
@@ -314,6 +315,94 @@ void get_members(std::shared_ptr<smpHttp::HttpRequest> req
   } 
 }
 
+void change_assets(std::shared_ptr<smpHttp::HttpRequest> req
+  , std::shared_ptr<smpHttp::HttpResponse> res) {
+  if(req->getMethod() != hpr::POST) {
+    res->setHttpStatus(smpHttp::HTTP_METHOD_NOT_ALLOWED);
+    res->addMessage("use post to change_assets");
+    res->end();
+    return ;
+  }
+  res->addHeader("Content-Type","application/json;charset=utf-8");
+  try {
+    auto mq = cli.getSession();
+    auto tb = mq.getSchema("lab").getTable("labassets");
+    json j = json::parse(req->getData());
+    bool has_one = static_cast<std::string>(j["id"]).size() != 0;
+    if(has_one) {
+      auto upd = tb.update().set("item", Value(static_cast<std::string>(j["item"]))).
+        set("remark", Value(static_cast<std::string>(j["remark"]))).
+        set("marker", Value(static_cast<std::string>(j["marker"]))).
+        set("date", Value(static_cast<std::string>(j["date"]))).
+        set("money",  Value(static_cast<double>(j["money"]))).
+        where(std::string("id=") + to_string(static_cast<int>(j["id"]))).
+        execute();
+      json jres;
+      jres["status"] = "update";
+      res->addMessage(jres.dump());
+    } else {
+      auto ind = tb.insert("item","remark","marker","date","money").
+        values(static_cast<std::string>(j["item"]),
+        static_cast<std::string>(j["remark"]),
+        static_cast<std::string>(j["marker"]),
+        static_cast<std::string>(j["date"]),
+        static_cast<double>(j["money"])).
+        execute(); 
+      json jres;
+      jres["status"] = "insert";
+      res->addMessage(jres.dump());
+    }
+  } catch(exception& e) {
+    cout << "error: handle_assets_change : " << e.what() << endl;
+    json jres;
+    jres["status"] = "failed";
+    jres["reason"] = e.what();
+    res->addMessage(jres.dump());
+    res->end();
+    return ;
+  } 
+}
+
+void get_assets(std::shared_ptr<smpHttp::HttpRequest> req
+  , std::shared_ptr<smpHttp::HttpResponse> res) {
+  if(req->getMethod() != hpr::GET) {
+    res->setHttpStatus(smpHttp::HTTP_METHOD_NOT_ALLOWED);
+    res->addMessage("use get");
+    res->end();
+    return ;
+  }
+  res->addHeader("Content-Type","application/json;charset=utf-8");
+  try {
+    auto mq = cli.getSession();
+    auto tb = mq.getSchema("lab").getTable("labassets");
+    json j = {};
+    auto ress = tb.select("id","item","remark","marker","date","money").
+      orderBy("id").
+      execute();  
+    vector<Row> rows = ress.fetchAll();
+    for(auto i = rows.begin(); i < rows.end(); ++i) {
+      json j_p = {};
+      j_p["id"] = static_cast<int>(i->get(0));
+      j_p["item"] = smpHttp::Util::utf16Toutf8(i->get(1));
+      j_p["remark"] = smpHttp::Util::utf16Toutf8(i->get(2));
+      j_p["marker"] = smpHttp::Util::utf16Toutf8(i->get(3));
+      j_p["date"] = smpHttp::Util::utf16Toutf8(i->get(4));
+      j_p["money"] = static_cast<double>(i->get(5));
+      j["assets"].push_back(j_p);
+    }
+    res->addMessage(j.dump());
+    return ;
+  }catch(exception& e) {
+    cout << "error: handle_assets_get: " << e.what() << endl;
+    json jres;
+    jres["status"] = "failed";
+    jres["reason"] = e.what();
+    res->addMessage(jres.dump());
+    res->end();
+    return ;
+  } 
+}
+
 void err_func(){
   int nptrs;
   #define SIZE 100
@@ -333,6 +422,8 @@ int main(int argc, const char* argv[]) {
   server.add_route("^/get_members", get_members); 
   server.add_static_path(R"(^/resources.*)"); //add static route
   server.add_route("^/member_change$", handle_member_change);
+  server.add_route("^/assets_change$", change_assets);
+  server.add_route("^/get_assets$",get_assets);
   server.run();
   cli.close();
 }

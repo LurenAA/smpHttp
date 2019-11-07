@@ -24,6 +24,7 @@ namespace smpHttp {
       void setNotFirst() {is_first = false;}
       bool isFirst() {return is_first;}
       void close(); 
+      bool isEnd() {return is_end;}
     private:
       bool is_end = false; //是否已经发送过
       std::shared_ptr<uvx::Connection> cl;

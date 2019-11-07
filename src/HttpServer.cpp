@@ -33,10 +33,13 @@ void HttpServer::afterRead(std::shared_ptr<uvx::Connection> cl){
       " r is empty " << endl;
       cl->close();  
     }
-    shared_ptr<HttpRequest> parseReq(new HttpRequest(*r ,cl));
+    shared_ptr<HttpRequest> parseReq(new HttpRequest(*r ,cl, cl->_loop()));
     //to complete
     if(parseReq->getMethod() == hpr::OPTIONS) {
-      shared_ptr<HttpResponse> res(make_shared<HttpResponse>(cl)); 
+      shared_ptr<HttpResponse> res = newHttpResponse(cl);
+      res->setAfterWrite(bind([](shared_ptr<Connection> cl){
+        cl->close();
+      }, cl));
       res->addHeader("Access-Control-Allow-Origin", parseReq->getHeader("Origin"));
       res->addHeader("Access-Control-Allow-Methods","POST, GET, OPTIONS");
       res->addHeader("Access-Control-Max-Age","86400");
@@ -66,6 +69,8 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, shared_ptr<Connec
     }, cl));
     for(auto x : funcs) {
       x(parseReq,parseRes); 
+      if(parseRes->isEnd())
+        break;
     }
     if(!funcs.size()) {
       parseRes->addMessage("no such route");

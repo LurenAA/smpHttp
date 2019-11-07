@@ -6,6 +6,7 @@
 #include <functional>
 #include <string>
 #include <cstring>
+#include "Loop.hpp"
 
 namespace uvx {
 class Connection;
@@ -30,7 +31,8 @@ public:
   bool is_writable() {return uv_is_writable(reinterpret_cast<const uv_stream_t*>(handle.get()));}
   int get_send_buf_size() const ;
   void set_send_buf_size(int s);
-  
+  uvx::Loop& _loop();
+
 private:
   Tcp* tcp;
   

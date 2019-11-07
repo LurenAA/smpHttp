@@ -34,7 +34,7 @@ Connection::Connection(uv_tcp_t* handle, Tcp* tcp)
 }
 
 void Connection::write(std::string str) {
-#define INT_MAX_ 20000 //INT_MAX
+#define INT_MAX_ 300000 //INT_MAX
   string::size_type len = str.size();
   ReqEntity* req_entity = new ReqEntity();
   req_entity->cl = shared_from_this();
@@ -60,6 +60,7 @@ void Connection::write(std::string str) {
       close();
       return ;
     }
+    
   }
   req_entity->init();
   uv_write(&req_entity->req, reinterpret_cast<uv_stream_t*>(handle.get()), &req_entity->buf, 1, [](uv_write_t *req, int status){
@@ -139,3 +140,5 @@ void Connection::set_send_buf_size(int size) {
     return ;
   }
 }
+
+uvx::Loop& Connection::_loop() {return tcp->_Loop();}
