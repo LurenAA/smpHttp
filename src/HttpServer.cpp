@@ -103,6 +103,7 @@ void HttpServer::deal_with_static(std::shared_ptr<HttpRequest> req
       cout << s << endl;
       res->addMessage(s);
       res->setAfterWrite(nullptr);
+      res->close();
       return ;
     }
     req->fstream = newF;

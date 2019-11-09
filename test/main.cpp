@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #define EXPIRE  30 * 60
+#define save_pic_path "http://47.103.210.8:8080/resources/pic"
 
 using json = nlohmann::json;
 using namespace std;
@@ -172,7 +173,18 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
     bool has_one = tryd.count() != 0;
     uv_fs_t* req = new uv_fs_t();
     std::string save_path = "./resources/pic" + static_cast<std::string>(j["id"]);
-    // uv_fs_open(uv_default_loop(), req, save_path.c_str(), )
+    req->data = new char[static_cast<std::string>(j["photo"]).size() + 1]();
+    memcpy(req->data, static_cast<std::string>(j["photo"]).c_str(), static_cast<std::string>(j["photo"]).size());
+    int fd = uv_fs_open(uv_default_loop(), req, save_path.c_str(), UV_FS_O_RDWR | UV_FS_O_CREAT | UV_FS_O_TRUNC
+      , S_IRUSR | S_IRGRP | S_IROTH |S_IWGRP| S_IWUSR|S_IWOTH, NULL);
+    uv_buf_t* buf = new uv_buf_t();
+    buf->base = static_cast<char*>(req->data);
+    buf->len = strlen(buf->base);
+    uv_fs_req_cleanup(req);
+    uv_fs_write(uv_default_loop(), req, fd, buf, 1, 0, NULL);
+    uv_fs_req_cleanup(req);
+    uv_fs_close(uv_default_loop(), req,fd,  NULL);
+    delete [] static_cast<char *>(req->data); delete req; delete buf;
     if(has_one) {
       auto upd = tb.update().set("tel", Value(static_cast<std::string>(j["tel"]))).
         set("address", Value(static_cast<std::string>(j["address"]))).
@@ -180,7 +192,7 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
         set("name", Value(static_cast<std::string>(j["name"]))).
         set("email",  Value(static_cast<std::string>(j["email"]))).
         set("experience", Value(static_cast<std::string>(j["experience"]))).
-        set("photo", Value(static_cast<std::string>(j["photo"]))).
+        set("photo", Value(save_pic_path + static_cast<std::string>(j["id"]))).
         where(std::string("id='") + static_cast<std::string>(j["id"]) + "'").
         execute();
       json jres;
@@ -195,7 +207,7 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
         static_cast<std::string>(j["email"]),
         static_cast<std::string>(j["experience"]),
         static_cast<std::string>(j["photo"]),
-        static_cast<std::string>(j["id"]), 0).
+        save_pic_path + static_cast<std::string>(j["id"]), 0).
         execute(); 
       json jres;
       jres["status"] = "insert";
@@ -328,7 +340,7 @@ void change_assets(std::shared_ptr<smpHttp::HttpRequest> req
     auto mq = cli.getSession();
     auto tb = mq.getSchema("lab").getTable("labassets");
     json j = json::parse(req->getData());
-    bool has_one = static_cast<std::string>(j["id"]).size() != 0;
+    bool has_one = static_cast<int>(j["id"]) > 0;
     if(has_one) {
       auto upd = tb.update().set("item", Value(static_cast<std::string>(j["item"]))).
         set("remark", Value(static_cast<std::string>(j["remark"]))).
