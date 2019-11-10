@@ -104,12 +104,13 @@ void handle_json_news(std::shared_ptr<smpHttp::HttpRequest> req
       tj["newAuthor"] = smpHttp::Util::utf16Toutf8(member_row.get(3));
       tj["newDate"] = smpHttp::Util::utf16Toutf8(member_row.get(4));
       tj["newImage"] = smpHttp::Util::utf16Toutf8(member_row.get(5));
+      tj["isHot"] = static_cast<int>(member_row.get(6));
       resj["news"].push_back(tj);
     }
     std::string jso = resj.dump();
     res->addMessage(jso);
   } catch(exception& e) {
-    cout << "error: " << __LINE__ << " : " << __func__ << e.what() << endl;
+    cout << "error: " << __LINE__ << " : " << __func__ << " "<< e.what() << endl;
   }
 }
 
@@ -168,50 +169,57 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
     auto mq = cli.getSession();
     auto tb = mq.getSchema("lab").getTable("labmembers");
     json j = json::parse(req->getData());
-    auto tryd = tb.select("name").where(std::string("id='") + 
-      static_cast<std::string>(j["id"]) + "'").execute();
-    bool has_one = tryd.count() != 0;
-    uv_fs_t* req = new uv_fs_t();
-    std::string save_path = "./resources/pic" + static_cast<std::string>(j["id"]);
-    req->data = new char[static_cast<std::string>(j["photo"]).size() + 1]();
-    memcpy(req->data, static_cast<std::string>(j["photo"]).c_str(), static_cast<std::string>(j["photo"]).size());
-    int fd = uv_fs_open(uv_default_loop(), req, save_path.c_str(), UV_FS_O_RDWR | UV_FS_O_CREAT | UV_FS_O_TRUNC
-      , S_IRUSR | S_IRGRP | S_IROTH |S_IWGRP| S_IWUSR|S_IWOTH, NULL);
-    uv_buf_t* buf = new uv_buf_t();
-    buf->base = static_cast<char*>(req->data);
-    buf->len = strlen(buf->base);
-    uv_fs_req_cleanup(req);
-    uv_fs_write(uv_default_loop(), req, fd, buf, 1, 0, NULL);
-    uv_fs_req_cleanup(req);
-    uv_fs_close(uv_default_loop(), req,fd,  NULL);
-    delete [] static_cast<char *>(req->data); delete req; delete buf;
-    if(has_one) {
-      auto upd = tb.update().set("tel", Value(static_cast<std::string>(j["tel"]))).
-        set("address", Value(static_cast<std::string>(j["address"]))).
-        set("education", Value(static_cast<std::string>(j["education"]))).
-        set("name", Value(static_cast<std::string>(j["name"]))).
-        set("email",  Value(static_cast<std::string>(j["email"]))).
-        set("experience", Value(static_cast<std::string>(j["experience"]))).
-        set("photo", Value(save_pic_path + static_cast<std::string>(j["id"]))).
-        where(std::string("id='") + static_cast<std::string>(j["id"]) + "'").
-        execute();
+    if(j["type"] == "delete") {
       json jres;
-      jres["status"] = "update";
+      auto res_remove = tb.remove().where(std::string("id='") + static_cast<std::string>(j["id"]) + "'").execute();
+      if(res_remove.getAffectedItemsCount() < 0) {
+        throw runtime_error("delete nothing");
+      }
+      jres["status"] = "delete";
       res->addMessage(jres.dump());
     } else {
-      auto ind = tb.insert("tel","address","education","name","email","experience","photo","id", "sort").
-        values(static_cast<std::string>(j["tel"]),
-        static_cast<std::string>(j["address"]),
-        static_cast<std::string>(j["education"]),
-        static_cast<std::string>(j["name"]),
-        static_cast<std::string>(j["email"]),
-        static_cast<std::string>(j["experience"]),
-        static_cast<std::string>(j["photo"]),
-        save_pic_path + static_cast<std::string>(j["id"]), 0).
-        execute(); 
-      json jres;
-      jres["status"] = "insert";
-      res->addMessage(jres.dump());
+      uv_fs_t* req = new uv_fs_t();
+      std::string save_path = "./resources/pic" + static_cast<std::string>(j["id"]);
+      req->data = new char[static_cast<std::string>(j["photo"]).size() + 1]();
+      memcpy(req->data, static_cast<std::string>(j["photo"]).c_str(), static_cast<std::string>(j["photo"]).size());
+      int fd = uv_fs_open(uv_default_loop(), req, save_path.c_str(), UV_FS_O_RDWR | UV_FS_O_CREAT | UV_FS_O_TRUNC
+        , S_IRUSR | S_IRGRP | S_IROTH |S_IWGRP| S_IWUSR|S_IWOTH, NULL);
+      uv_buf_t* buf = new uv_buf_t();
+      buf->base = static_cast<char*>(req->data);
+      buf->len = strlen(buf->base);
+      uv_fs_req_cleanup(req);
+      uv_fs_write(uv_default_loop(), req, fd, buf, 1, 0, NULL);
+      uv_fs_req_cleanup(req);
+      uv_fs_close(uv_default_loop(), req,fd,  NULL);
+      delete [] static_cast<char *>(req->data); delete req; delete buf;
+      if(j["type"] == "update") {
+        auto upd = tb.update().set("tel", Value(static_cast<std::string>(j["tel"]))).
+          set("address", Value(static_cast<std::string>(j["address"]))).
+          set("education", Value(static_cast<std::string>(j["education"]))).
+          set("name", Value(static_cast<std::string>(j["name"]))).
+          set("email",  Value(static_cast<std::string>(j["email"]))).
+          set("experience", Value(static_cast<std::string>(j["experience"]))).
+          set("photo", Value(save_pic_path + static_cast<std::string>(j["id"]))).
+          where(std::string("id='") + static_cast<std::string>(j["id"]) + "'").
+          execute();
+        json jres;
+        jres["status"] = "update";
+        res->addMessage(jres.dump());
+      } else if(j["type"] == "insert") {
+        auto ind = tb.insert("tel","address","education","name","email","experience","photo","id", "sort").
+          values(static_cast<std::string>(j["tel"]),
+          static_cast<std::string>(j["address"]),
+          static_cast<std::string>(j["education"]),
+          static_cast<std::string>(j["name"]),
+          static_cast<std::string>(j["email"]),
+          static_cast<std::string>(j["experience"]),
+          static_cast<std::string>(j["photo"]),
+          save_pic_path + static_cast<std::string>(j["id"]), 0).
+          execute(); 
+        json jres;
+        jres["status"] = "insert";
+        res->addMessage(jres.dump());
+      }
     }
   } catch(exception& e) {
     cout << "error: handle_member_change : " << e.what() << endl;
@@ -284,41 +292,62 @@ void get_members(std::shared_ptr<smpHttp::HttpRequest> req
   json j = {};
   j["members"] = json::array();
   try {
-    auto tb_size = tb.count();
-    j["members_total_size"] = tb_size;
-    size_t req_page_size = req->getQuery("page_size").size() ? atoi(req->getQuery("page_size").c_str()) : 0;
-    size_t req_page_num =  req->getQuery("page_num").size() ? atoi(req->getQuery("page_num").c_str()) : 0; 
-    size_t start_n;
-    if(!req_page_size || !req_page_num) { 
-      start_n = 0;
-      req_page_size = tb_size;
-    } else {
-      start_n = req_page_size * (req_page_num - 1) > tb_size ? tb_size : req_page_size * (req_page_num - 1);
-      if(start_n == tb_size) {
-        res->addMessage("out of range");
-        res->end();
-        return ;
+    if(req->getQuery("id").size()) {
+      auto ress = tb.select("tel","address","education","name","email","experience","photo","id").
+        where("id='" + req->getQuery("id") +"'").
+        execute();
+      vector<Row> rows = ress.fetchAll();
+      for(auto i = rows.begin(); i < rows.end(); ++i) {
+        json j_p = {};
+        j_p["tel"] = smpHttp::Util::utf16Toutf8(i->get(0));
+        j_p["address"] = smpHttp::Util::utf16Toutf8(i->get(1));
+        j_p["education"] = smpHttp::Util::utf16Toutf8(i->get(2));
+        j_p["name"] = smpHttp::Util::utf16Toutf8(i->get(3));
+        j_p["email"] = smpHttp::Util::utf16Toutf8(i->get(4));
+        j_p["experience"] = smpHttp::Util::utf16Toutf8(i->get(5));
+        j_p["photo"] = smpHttp::Util::utf16Toutf8(i->get(6));
+        j_p["id"] = smpHttp::Util::utf16Toutf8(i->get(7));
+        j["members"].push_back(j_p);
       }
+      res->addMessage(j.dump());
+      return ;
+    } else {
+      auto tb_size = tb.count();
+      j["members_total_size"] = tb_size;
+      size_t req_page_size = req->getQuery("page_size").size() ? atoi(req->getQuery("page_size").c_str()) : 0;
+      size_t req_page_num =  req->getQuery("page_num").size() ? atoi(req->getQuery("page_num").c_str()) : 0; 
+      size_t start_n;
+      if(!req_page_size || !req_page_num) { 
+        start_n = 0;
+        req_page_size = tb_size;
+      } else {
+        start_n = req_page_size * (req_page_num - 1) > tb_size ? tb_size : req_page_size * (req_page_num - 1);
+        if(start_n == tb_size) {
+          res->addMessage("out of range");
+          res->end();
+          return ;
+        }
+      }
+      auto ress = tb.select("tel","address","education","name","email","experience","photo","id").
+        orderBy("id").
+        limit(req_page_size*req_page_num == 0 ? tb_size : req_page_size*req_page_num).
+        execute();
+      vector<Row> rows = ress.fetchAll();
+      for(auto i = rows.begin() + start_n; i < rows.end(); ++i) {
+        json j_p = {};
+        j_p["tel"] = smpHttp::Util::utf16Toutf8(i->get(0));
+        j_p["address"] = smpHttp::Util::utf16Toutf8(i->get(1));
+        j_p["education"] = smpHttp::Util::utf16Toutf8(i->get(2));
+        j_p["name"] = smpHttp::Util::utf16Toutf8(i->get(3));
+        j_p["email"] = smpHttp::Util::utf16Toutf8(i->get(4));
+        j_p["experience"] = smpHttp::Util::utf16Toutf8(i->get(5));
+        j_p["photo"] = smpHttp::Util::utf16Toutf8(i->get(6));
+        j_p["id"] = smpHttp::Util::utf16Toutf8(i->get(7));
+        j["members"].push_back(j_p);
+      }
+      res->addMessage(j.dump());
+      return ;
     }
-    auto ress = tb.select("tel","address","education","name","email","experience","photo","id").
-      orderBy("id").
-      limit(req_page_size*req_page_num == 0 ? tb_size : req_page_size*req_page_num).
-      execute();
-    vector<Row> rows = ress.fetchAll();
-    for(auto i = rows.begin() + start_n; i < rows.end(); ++i) {
-      json j_p = {};
-      j_p["tel"] = smpHttp::Util::utf16Toutf8(i->get(0));
-      j_p["address"] = smpHttp::Util::utf16Toutf8(i->get(1));
-      j_p["education"] = smpHttp::Util::utf16Toutf8(i->get(2));
-      j_p["name"] = smpHttp::Util::utf16Toutf8(i->get(3));
-      j_p["email"] = smpHttp::Util::utf16Toutf8(i->get(4));
-      j_p["experience"] = smpHttp::Util::utf16Toutf8(i->get(5));
-      j_p["photo"] = smpHttp::Util::utf16Toutf8(i->get(6));
-      j_p["id"] = smpHttp::Util::utf16Toutf8(i->get(7));
-      j["members"].push_back(j_p);
-    }
-    res->addMessage(j.dump());
-    return ;
   } catch(exception& e) {
     cout << "error: get_members : " << e.what() << endl;
     res->addMessage(e.what());
@@ -340,29 +369,39 @@ void change_assets(std::shared_ptr<smpHttp::HttpRequest> req
     auto mq = cli.getSession();
     auto tb = mq.getSchema("lab").getTable("labassets");
     json j = json::parse(req->getData());
-    bool has_one = static_cast<int>(j["id"]) > 0;
-    if(has_one) {
-      auto upd = tb.update().set("item", Value(static_cast<std::string>(j["item"]))).
-        set("remark", Value(static_cast<std::string>(j["remark"]))).
-        set("marker", Value(static_cast<std::string>(j["marker"]))).
-        set("date", Value(static_cast<std::string>(j["date"]))).
-        set("money",  Value(static_cast<double>(j["money"]))).
-        where(std::string("id=") + to_string(static_cast<int>(j["id"]))).
-        execute();
+    // bool has_one = static_cast<int>(j["id"]) > 0;
+    if(j["type"] == "delete") {
       json jres;
-      jres["status"] = "update";
+      auto res_remove = tb.remove().where(std::string("id=") + to_string(static_cast<int>(j["id"]))).execute();
+      if(res_remove.getAffectedItemsCount() < 0) {
+        throw runtime_error("delete nothing");
+      }
+      jres["status"] = "delete";
       res->addMessage(jres.dump());
     } else {
-      auto ind = tb.insert("item","remark","marker","date","money").
-        values(static_cast<std::string>(j["item"]),
-        static_cast<std::string>(j["remark"]),
-        static_cast<std::string>(j["marker"]),
-        static_cast<std::string>(j["date"]),
-        static_cast<double>(j["money"])).
-        execute(); 
-      json jres;
-      jres["status"] = "insert";
-      res->addMessage(jres.dump());
+      if(j["type"] == "update") {
+        auto upd = tb.update().set("item", Value(static_cast<std::string>(j["item"]))).
+          set("remark", Value(static_cast<std::string>(j["remark"]))).
+          set("marker", Value(static_cast<std::string>(j["marker"]))).
+          set("date", Value(static_cast<std::string>(j["date"]))).
+          set("money",  Value(static_cast<double>(j["money"]))).
+          where(std::string("id=") + to_string(static_cast<int>(j["id"]))).
+          execute();
+        json jres;
+        jres["status"] = "update";
+        res->addMessage(jres.dump());
+      } else if(j["type"] == "insert"){
+        auto ind = tb.insert("item","remark","marker","date","money").
+          values(static_cast<std::string>(j["item"]),
+          static_cast<std::string>(j["remark"]),
+          static_cast<std::string>(j["marker"]),
+          static_cast<std::string>(j["date"]),
+          static_cast<double>(j["money"])).
+          execute(); 
+        json jres;
+        jres["status"] = "insert";
+        res->addMessage(jres.dump());
+      }
     }
   } catch(exception& e) {
     cout << "error: handle_assets_change : " << e.what() << endl;
@@ -388,9 +427,16 @@ void get_assets(std::shared_ptr<smpHttp::HttpRequest> req
     auto mq = cli.getSession();
     auto tb = mq.getSchema("lab").getTable("labassets");
     json j = {};
-    auto ress = tb.select("id","item","remark","marker","date","money").
-      orderBy("id").
-      execute();  
+    RowResult ress;
+    if(req->getQuery("id").size()) {
+      ress = tb.select("id","item","remark","marker","date","money").
+        where("id=" + req->getQuery("id")).
+        execute();  
+    } else {
+      ress = tb.select("id","item","remark","marker","date","money").
+        orderBy("id").
+        execute();  
+    }
     vector<Row> rows = ress.fetchAll();
     for(auto i = rows.begin(); i < rows.end(); ++i) {
       json j_p = {};
@@ -403,7 +449,6 @@ void get_assets(std::shared_ptr<smpHttp::HttpRequest> req
       j["assets"].push_back(j_p);
     }
     res->addMessage(j.dump());
-    return ;
   }catch(exception& e) {
     cout << "error: handle_assets_get: " << e.what() << endl;
     json jres;
@@ -435,7 +480,7 @@ int main(int argc, const char* argv[]) {
   server.add_static_path(R"(^/resources.*)"); //add static route
   server.add_route("^/member_change$", handle_member_change);
   server.add_route("^/assets_change$", change_assets);
-  server.add_route("^/get_assets$",get_assets);
+  server.add_route("^/get_assets",get_assets);
   server.run();
   cli.close();
 }
