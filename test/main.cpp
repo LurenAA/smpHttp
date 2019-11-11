@@ -10,9 +10,11 @@
 #include <exception>
 #include <ctime>
 #include <unistd.h>
+#include <algorithm>
+#include "Base64Decoder.hpp"
 
 #define EXPIRE  30 * 60
-#define save_pic_path "http://47.103.210.8:8080/resources/pic"
+#define save_pic_path "http://47.103.210.8:8080/resources/pic"//"http://192.168.204.132:8080/resources/pic"
 
 using json = nlohmann::json;
 using namespace std;
@@ -179,19 +181,22 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
       res->addMessage(jres.dump());
     } else {
       uv_fs_t* req = new uv_fs_t();
-      std::string save_path = "./resources/pic" + static_cast<std::string>(j["id"]);
-      req->data = new char[static_cast<std::string>(j["photo"]).size() + 1]();
-      memcpy(req->data, static_cast<std::string>(j["photo"]).c_str(), static_cast<std::string>(j["photo"]).size());
+      const std::string& str_photo = static_cast<std::string>(j["photo"]);
+      auto suffix = str_photo.find_first_of('/');
+      auto suffix_end = str_photo.find_first_of(";");
+      std::string save_path = "./resources/pic" + static_cast<std::string>(j["id"]) + "." + str_photo.substr(suffix + 1, suffix_end - suffix - 1);
+      const char* ss = str_photo.c_str() + str_photo.find_first_of(',') + 1;
+      std::string decode_res = smpHttp::Base64Decoder::base64_decode(ss);
       int fd = uv_fs_open(uv_default_loop(), req, save_path.c_str(), UV_FS_O_RDWR | UV_FS_O_CREAT | UV_FS_O_TRUNC
         , S_IRUSR | S_IRGRP | S_IROTH |S_IWGRP| S_IWUSR|S_IWOTH, NULL);
       uv_buf_t* buf = new uv_buf_t();
-      buf->base = static_cast<char*>(req->data);
-      buf->len = strlen(buf->base);
+      buf->base = (char*)decode_res.c_str();
+      buf->len = decode_res.size();
       uv_fs_req_cleanup(req);
       uv_fs_write(uv_default_loop(), req, fd, buf, 1, 0, NULL);
       uv_fs_req_cleanup(req);
       uv_fs_close(uv_default_loop(), req,fd,  NULL);
-      delete [] static_cast<char *>(req->data); delete req; delete buf;
+      delete req; delete buf;
       if(j["type"] == "update") {
         auto upd = tb.update().set("tel", Value(static_cast<std::string>(j["tel"]))).
           set("address", Value(static_cast<std::string>(j["address"]))).
@@ -199,7 +204,7 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
           set("name", Value(static_cast<std::string>(j["name"]))).
           set("email",  Value(static_cast<std::string>(j["email"]))).
           set("experience", Value(static_cast<std::string>(j["experience"]))).
-          set("photo", Value(save_pic_path + static_cast<std::string>(j["id"]))).
+          set("photo", Value(save_pic_path + static_cast<std::string>(j["id"])+"." + str_photo.substr(suffix + 1, suffix_end - suffix - 1))).
           where(std::string("id='") + static_cast<std::string>(j["id"]) + "'").
           execute();
         json jres;
@@ -213,8 +218,8 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
           static_cast<std::string>(j["name"]),
           static_cast<std::string>(j["email"]),
           static_cast<std::string>(j["experience"]),
-          static_cast<std::string>(j["photo"]),
-          save_pic_path + static_cast<std::string>(j["id"]), 0).
+          save_pic_path + static_cast<std::string>(j["id"]) + "." + str_photo.substr(suffix + 1, suffix_end - suffix - 1),
+          static_cast<std::string>(j["id"]), 0).
           execute(); 
         json jres;
         jres["status"] = "insert";
