@@ -14,6 +14,8 @@ int main() {
   server.add_route("^/member_change$", handle_member_change);
   server.add_route("^/assets_change$", change_assets);
   server.add_route("^/get_assets",get_assets);
+  server.add_route("^/get_articles",get_articles);
+  server.add_route("^/change_articles", change_articles);
   server.run();
   cli.close();
   return 0;
