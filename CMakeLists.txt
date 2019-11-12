@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(smpHttp VERSION 0.1.0)
 
-include(CTest)
-enable_testing()
-
 list(APPEND dics /home/ele/libuv/include/ 
 ${PROJECT_SOURCE_DIR}/src/libuv_cpp_wrapper/
 ${PROJECT_SOURCE_DIR}/src/

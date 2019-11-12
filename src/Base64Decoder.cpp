@@ -43,3 +43,8 @@ std::string Base64Decoder::base64_decode(const char* s) {
   }
   return res;
 }
+
+std::string* Base64Decoder::base64_decode(const char* s, bool return_malloc) {
+  std::string* str_new = new string(base64_decode(s));
+  return str_new;
+}
