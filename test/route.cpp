@@ -222,13 +222,14 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
           set("email",  Value(static_cast<std::string>(j["email"]))).
           set("experience", Value(static_cast<std::string>(j["experience"]))).
           set("photo", Value(save_pic_path + save_path)).
+          set("isTeacher", Value(static_cast<int>(j["isTeacher"]))).
           where(std::string("id=") + to_string(static_cast<int>(j["id"])) ).
           execute();
         json jres;
         jres["status"] = "update";
         res->addMessage(jres.dump());
       } else if(j["type"] == "insert") {
-        auto ind = tb.insert("tel","address","education","name","email","experience","photo","id", "sort").
+        auto ind = tb.insert("tel","address","education","name","email","experience","photo","id", "sort","isTeacher").
           values(static_cast<std::string>(j["tel"]),
           static_cast<std::string>(j["address"]),
           static_cast<std::string>(j["education"]),
@@ -236,7 +237,7 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
           static_cast<std::string>(j["email"]),
           static_cast<std::string>(j["experience"]),
           save_pic_path + save_path,
-          static_cast<int>(j["id"]), 0).
+          static_cast<int>(j["id"]), 0,static_cast<int>(j["isTeacher"])).
           execute(); 
         json jres;
         jres["status"] = "insert";
@@ -270,7 +271,7 @@ void handle_login(std::shared_ptr<smpHttp::HttpRequest> req
     auto mq = cli.getSession();
     auto tb = mq.getSchema("lab").getTable("labmembers");
     std::string condition = "username='"+username+"' AND "+"password='"+password + "'";
-    auto sqlres = tb.select("name","sort").where(std::move(condition)).limit(1).execute();
+    auto sqlres = tb.select("name","sort", "id").where(std::move(condition)).limit(1).execute();
     res->addHeader("Content-Type","application/json;charset=utf-8");
     json rj = json::object();
     if(sqlres.count() == 0) {
@@ -283,6 +284,7 @@ void handle_login(std::shared_ptr<smpHttp::HttpRequest> req
     rj["status"] = true;
     rj["name"] = smpHttp::Util::utf16Toutf8(r.get(0));
     rj["sort"] = (bool)r.get(1);
+    rj["id"] = static_cast<int>(r.get(2));
     rj["expire"] = time(nullptr) * 1000 + EXPIRE * 1000;
     time_t tim = time(nullptr);
     tim += EXPIRE;
@@ -315,7 +317,7 @@ void get_members(std::shared_ptr<smpHttp::HttpRequest> req
   j["members"] = json::array();
   try {
     if(req->getQuery("id").size()) {
-      auto ress = tb.select("tel","address","education","name","email","experience","photo","id").
+      auto ress = tb.select("tel","address","education","name","email","experience","photo","id","isTeacher").
         where("id=" + req->getQuery("id") ).
         execute();
       vector<Row> rows = ress.fetchAll();
@@ -329,6 +331,7 @@ void get_members(std::shared_ptr<smpHttp::HttpRequest> req
         j_p["experience"] = smpHttp::Util::utf16Toutf8(i->get(5));
         j_p["photo"] = smpHttp::Util::utf16Toutf8(i->get(6));
         j_p["id"] = static_cast<int>(i->get(7));
+        j_p["isTeacher"] = static_cast<int>(i->get(8));
         j["members"].push_back(j_p);
       }
       res->addMessage(j.dump());
@@ -350,7 +353,7 @@ void get_members(std::shared_ptr<smpHttp::HttpRequest> req
           return ;
         }
       }
-      auto ress = tb.select("tel","address","education","name","email","experience","photo","id").
+      auto ress = tb.select("tel","address","education","name","email","experience","photo","id","isTeacher").
         orderBy("id").
         limit(req_page_size*req_page_num == 0 ? tb_size : req_page_size*req_page_num).
         execute();
@@ -365,6 +368,7 @@ void get_members(std::shared_ptr<smpHttp::HttpRequest> req
         j_p["experience"] = smpHttp::Util::utf16Toutf8(i->get(5));
         j_p["photo"] = smpHttp::Util::utf16Toutf8(i->get(6));
         j_p["id"] = static_cast<int>(i->get(7));
+        j_p["isTeacher"] = static_cast<int>(i->get(8));
         j["members"].push_back(j_p);
       }
       res->addMessage(j.dump());
