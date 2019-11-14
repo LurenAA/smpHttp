@@ -10,6 +10,6 @@ CPackSourceConfig.cmake
 CTestTestfile.cmake
 DartConfiguration.tcl
 Makefile
-smpHttp*
+smpHttp_*
 core*
 log*
