@@ -61,6 +61,12 @@ void HttpServer::handleRoute(shared_ptr<HttpRequest> parseReq, shared_ptr<Connec
   shared_ptr<HttpResponse> parseRes = newHttpResponse(cl);
 
   if(if_static_path) {
+    parseRes->addHeader("Access-Control-Allow-Origin", parseReq->getHeader("Origin"));
+    parseRes->addHeader("Access-Control-Allow-Methods","POST, GET, OPTIONS");
+    parseRes->addHeader("Access-Control-Max-Age","86400");
+    parseRes->addHeader("Connection","keep-alive");
+    parseRes->addHeader("Access-Control-Expose-Headers", "token");
+    parseRes->addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept, token");
     deal_with_static(parseReq,parseRes);
   } else {
     vector<routeHandleFunc> funcs = route.get_route(parseReq->getRequestPath());
