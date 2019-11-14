@@ -187,6 +187,7 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
           if(fd < 0) {
             uv_fs_req_cleanup(req);
             delete req;
+            return ;
           }
           std::string* decode_res = static_cast<std::string*>(req->data);
           uv_buf_t* buf = new uv_buf_t();
