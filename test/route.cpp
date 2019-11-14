@@ -561,17 +561,22 @@ void change_articles(std::shared_ptr<smpHttp::HttpRequest> req
           set("isHot", Value(static_cast<int>(j["isHot"]))).
           set("isDraft", Value(static_cast<int>(j["isDraft"]))).
           set("content", Value(save_article_path + save_path)).
-          where(std::string("id=") + to_string(static_cast<int>(j["id"])) ).
+          set("author", Value(static_cast<std::string>(j["author"]))).
+          set("date",Value(static_cast<std::string>(j["date"]))).
+          where(std::string("id=") + to_string(static_cast<int>(j["id"]))).
           execute();
         json jres;
         jres["status"] = "update";
         res->addMessage(jres.dump());
       } else if(j["type"] == "insert") {
-        auto ind = tb.insert("title","content","isHot","isDraft").
+        auto ind = tb.insert("title","content","isHot","isDraft","author","date").
           values(static_cast<std::string>(j["title"]),
           save_article_path + save_path,
           static_cast<int>(j["isHot"]),
-          static_cast<int>(j["isDraft"])).
+          static_cast<int>(j["isDraft"]),
+          static_cast<std::string>(j["author"]),
+          static_cast<std::string>(j["date"])
+          ).
           execute(); 
         json jres;
         jres["status"] = "insert";
@@ -604,21 +609,21 @@ void get_articles(std::shared_ptr<smpHttp::HttpRequest> req
     json j = {};
     RowResult ress;
     if(req->getQuery("id").size()) {
-      ress = tb.select("id","title","content","isHot","isDraft").
+      ress = tb.select("id","title","content","isHot","isDraft","author","date").
         where("id=" + req->getQuery("id")).
         execute();  
     } else if(req->getQuery("isHot").size()){
-      ress = tb.select("id","title","content","isHot","isDraft").
+      ress = tb.select("id","title","content","isHot","isDraft","author","date").
         where("isHot="+req->getQuery("isHot")).
         orderBy("id").
         execute();  
     } else if(req->getQuery("isDraft").size()){
-      ress = tb.select("id","title","content","isHot","isDraft").
+      ress = tb.select("id","title","content","isHot","isDraft","author","date").
         where("isDraft="+req->getQuery("isDraft")).
         orderBy("id").
         execute();  
     } else {
-      ress = tb.select("id","title","content","isHot","isDraft").
+      ress = tb.select("id","title","content","isHot","isDraft","author","date").
         orderBy("id").
         execute();  
     }
@@ -630,6 +635,8 @@ void get_articles(std::shared_ptr<smpHttp::HttpRequest> req
       j_p["content"] = smpHttp::Util::utf16Toutf8(i->get(2));
       j_p["isHot"] = static_cast<int>(i->get(3));
       j_p["isDraft"] = static_cast<bool>(i->get(4));
+      j_p["author"] = static_cast<std::string>(i->get(5));
+      j_p["date"] = static_cast<std::string>(i->get(6));
       j["articles"].push_back(j_p);
     }
     res->addMessage(j.dump());
