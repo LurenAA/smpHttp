@@ -521,7 +521,14 @@ void change_articles(std::shared_ptr<smpHttp::HttpRequest> req
       res->addMessage(jres.dump());
     } else {
       uv_fs_t* req = new uv_fs_t();
-      std::string save_path = "resources/article_" + static_cast<std::string>(j["title"]) + to_string(random());
+      int id;
+      if(j["type"] == "update") {
+        id = static_cast<int>(j["id"]);
+      } else if(j["type"] == "insert"){
+        auto res_id = mq.sql("select max(id) from labarticles").execute();
+        id = static_cast<int>(res_id.fetchOne().get(0)) + 1;
+      }
+      std::string save_path = "resources/article_" + to_string(id);
       std::string* decode_res = new std::string(static_cast<std::string>(j["content"]));
       req->data = decode_res;
       uv_fs_open(uv_default_loop(), req, save_path.c_str(), UV_FS_O_RDWR | UV_FS_O_CREAT | UV_FS_O_TRUNC
