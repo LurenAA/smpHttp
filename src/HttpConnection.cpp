@@ -26,7 +26,7 @@ void HttpConnection::onStartRead(uv_stream_t *stream, ssize_t nread, const uv_bu
       }
       method = string(buf->base, method_end);
     }
-    reserve_for_read += string(buf->base, nread);
+    reserve_for_read += std::string(buf->base, nread);
     if(method == "POST") {
       if(remain == INT_MIN) {
         char* l = strstr(buf->base, "Content-Length:");

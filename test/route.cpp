@@ -48,11 +48,11 @@ void handle_json_lab(std::shared_ptr<smpHttp::HttpRequest> req
     json teachersData= json::array(),
       studentsData = json::array();
     auto tb = mq.getSchema("lab").getTable("labmembers");
-    auto sqlres_member_date = tb.select("id", "photo", "name","education","experience","sort").execute();
+    auto sqlres_member_date = tb.select("id", "photo", "name","education","experience","isTeacher").execute();
     Row member_row;
     while(member_row = sqlres_member_date.fetchOne()){
       json tj = json::object();
-      tj["id"] = smpHttp::Util::utf16Toutf8(member_row.get(0));
+      tj["id"] = static_cast<int>(member_row.get(0));
       tj["photo"] = smpHttp::Util::utf16Toutf8(member_row.get(1));
       tj["name"] = smpHttp::Util::utf16Toutf8(member_row.get(2));
       tj["education"] = smpHttp::Util::utf16Toutf8(member_row.get(3));
@@ -530,6 +530,7 @@ void change_articles(std::shared_ptr<smpHttp::HttpRequest> req
           if(fd < 0) {
             uv_fs_req_cleanup(req);
             delete req;
+            return ;
           }
           std::string* decode_res = static_cast<std::string*>(req->data);
           uv_buf_t* buf = new uv_buf_t();
