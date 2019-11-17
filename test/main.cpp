@@ -16,6 +16,7 @@ int main() {
   server.add_route("^/get_assets",get_assets);
   server.add_route("^/get_articles",get_articles);
   server.add_route("^/change_articles", change_articles);
+  server.add_route("^/get_assets_inf",get_assets_inf);
   server.run();
   cli.close();
   return 0;

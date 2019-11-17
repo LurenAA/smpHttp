@@ -37,5 +37,6 @@ Route_Type change_assets;
 Route_Type get_assets;
 Route_Type change_articles;
 Route_Type get_articles;
+Route_Type get_assets_inf;
 
 #endif

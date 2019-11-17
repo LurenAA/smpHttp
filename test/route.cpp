@@ -1,8 +1,17 @@
 #include "route.hpp"
 
 #define EXPIRE  30 * 60
-#define save_pic_path "http://47.103.210.8:8080"//"http://192.168.204.132:8080"
+#define save_pic_path "http://47.103.210.8:8080/"//"http://192.168.204.132:8080/"
 #define save_article_path "http://47.103.210.8:8080/"//"http://192.168.204.132:8080/"
+#define handle_update_insert upd = tb.update().set("tel", Value(static_cast<std::string>(j["tel"]))). \
+          set("address", Value(static_cast<std::string>(j["address"]))). \
+          set("education", Value(static_cast<std::string>(j["education"]))). \
+          set("name", Value(static_cast<std::string>(j["name"]))).  \
+          set("email",  Value(static_cast<std::string>(j["email"]))). \
+          set("experience", Value(static_cast<std::string>(j["experience"]))). \
+          set("photo", Value(save_pic_path + save_path)). \
+          set("isTeacher", Value(static_cast<int>(j["isTeacher"]))).
+
 
 using json = nlohmann::json;
 using namespace std;
@@ -216,21 +225,33 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
           });
         });
       if(j["type"] == "update") {
-        auto upd = tb.update().set("tel", Value(static_cast<std::string>(j["tel"]))).
-          set("address", Value(static_cast<std::string>(j["address"]))).
-          set("education", Value(static_cast<std::string>(j["education"]))).
-          set("name", Value(static_cast<std::string>(j["name"]))).
-          set("email",  Value(static_cast<std::string>(j["email"]))).
-          set("experience", Value(static_cast<std::string>(j["experience"]))).
-          set("photo", Value(save_pic_path + save_path)).
-          set("isTeacher", Value(static_cast<int>(j["isTeacher"]))).
+        Result upd;
+        if(!j["password"].is_null() && j["username"].is_null()) {
+          handle_update_insert
+          set("password", Value(static_cast<std::string>(j["password"]))).
           where(std::string("id=") + to_string(static_cast<int>(j["id"])) ).
           execute();
+        } else if(!j["password"].is_null() && !j["username"].is_null()) {
+          handle_update_insert
+          set("password", Value(static_cast<std::string>(j["password"]))).
+          set("username", Value(static_cast<std::string>(j["username"]))).
+          where(std::string("id=") + to_string(static_cast<int>(j["id"])) ).
+          execute();
+        } else if (j["password"].is_null() && !j["username"].is_null()) {
+          handle_update_insert
+          set("username", Value(static_cast<std::string>(j["username"]))).
+          where(std::string("id=") + to_string(static_cast<int>(j["id"])) ).
+          execute();
+        } else {
+          handle_update_insert
+          where(std::string("id=") + to_string(static_cast<int>(j["id"])) ).
+          execute();
+        }
         json jres;
         jres["status"] = "update";
         res->addMessage(jres.dump());
       } else if(j["type"] == "insert") {
-        auto ind = tb.insert("tel","address","education","name","email","experience","photo","id", "sort","isTeacher").
+        auto ind = tb.insert("tel","address","education","name","email","experience","photo","id", "sort","isTeacher","username","password").
           values(static_cast<std::string>(j["tel"]),
           static_cast<std::string>(j["address"]),
           static_cast<std::string>(j["education"]),
@@ -238,7 +259,8 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
           static_cast<std::string>(j["email"]),
           static_cast<std::string>(j["experience"]),
           save_pic_path + save_path,
-          static_cast<int>(j["id"]), 0,static_cast<int>(j["isTeacher"])).
+          static_cast<int>(j["id"]), 0,static_cast<int>(j["isTeacher"]),
+          to_string(static_cast<int>(j["id"])),"123456").
           execute(); 
         json jres;
         jres["status"] = "insert";
@@ -318,7 +340,7 @@ void get_members(std::shared_ptr<smpHttp::HttpRequest> req
   j["members"] = json::array();
   try {
     if(req->getQuery("id").size()) {
-      auto ress = tb.select("tel","address","education","name","email","experience","photo","id","isTeacher").
+      auto ress = tb.select("tel","address","education","name","email","experience","photo","id","isTeacher","username").
         where("id=" + req->getQuery("id") ).
         execute();
       vector<Row> rows = ress.fetchAll();
@@ -333,6 +355,7 @@ void get_members(std::shared_ptr<smpHttp::HttpRequest> req
         j_p["photo"] = smpHttp::Util::utf16Toutf8(i->get(6));
         j_p["id"] = static_cast<int>(i->get(7));
         j_p["isTeacher"] = static_cast<int>(i->get(8));
+        j_p["username"] = smpHttp::Util::utf16Toutf8(i->get(9));
         j["members"].push_back(j_p);
       }
       res->addMessage(j.dump());
@@ -651,6 +674,36 @@ void get_articles(std::shared_ptr<smpHttp::HttpRequest> req
     res->addMessage(j.dump());
   }catch(exception& e) {
     cout << "error: get_articles: " << e.what() << endl;
+    json jres;
+    jres["status"] = "failed";
+    jres["reason"] = e.what();
+    res->addMessage(jres.dump());
+    res->end();
+    return ;
+  } 
+}
+
+void get_assets_inf(std::shared_ptr<smpHttp::HttpRequest> req
+  , std::shared_ptr<smpHttp::HttpResponse> res) {
+  if(req->getMethod() != hpr::GET) {
+    res->setHttpStatus(smpHttp::HTTP_METHOD_NOT_ALLOWED);
+    res->addMessage("use get");
+    res->end();
+    return ;
+  }
+  res->addHeader("Content-Type","application/json;charset=utf-8");
+  try {
+    auto mq = cli.getSession();
+    auto tb = mq.sql("select item, COUNT(*) AS number, SUM(money) AS money from labassets GROUP BY item").execute();
+    Row r;
+    json j = {};
+    while(r = tb.fetchOne()) {
+      j["numbers"][smpHttp::Util::utf16Toutf8(r.get(0))] = static_cast<int>(r.get(1));
+      j["moneys"][smpHttp::Util::utf16Toutf8(r.get(0))] = static_cast<double>(r.get(2));
+    }
+    res->addMessage(j.dump());
+  }catch(exception& e) {
+    cout << "error: get_assets_inf: " << e.what() << endl;
     json jres;
     jres["status"] = "failed";
     jres["reason"] = e.what();
