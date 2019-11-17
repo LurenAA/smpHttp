@@ -9,7 +9,7 @@
           set("name", Value(static_cast<std::string>(j["name"]))).  \
           set("email",  Value(static_cast<std::string>(j["email"]))). \
           set("experience", Value(static_cast<std::string>(j["experience"]))). \
-          set("photo", Value(save_pic_path + save_path)). \
+          set("photo", Value(photo_field)). \
           set("isTeacher", Value(static_cast<int>(j["isTeacher"]))).
 
 
@@ -184,46 +184,52 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
     } else {
       uv_fs_t* req = new uv_fs_t();
       const std::string& str_photo = static_cast<std::string>(j["photo"]);
-      auto suffix = str_photo.find_first_of('/');
-      auto suffix_end = str_photo.find_first_of(";");
-      std::string save_path = "resources/pic" + to_string(static_cast<int>(j["id"])) + "." + str_photo.substr(suffix + 1, suffix_end - suffix - 1);
-      const char* ss = str_photo.c_str() + str_photo.find_first_of(',') + 1;
-      std::string* decode_res = smpHttp::Base64Decoder::base64_decode(ss, 1);
-      req->data = decode_res;
-      uv_fs_open(uv_default_loop(), req, save_path.c_str(), UV_FS_O_RDWR | UV_FS_O_CREAT | UV_FS_O_TRUNC
-        , S_IRUSR | S_IRGRP | S_IROTH |S_IWGRP| S_IWUSR|S_IWOTH, [](uv_fs_t* req){
-          int fd = req->result;
-          if(fd < 0) {
-            uv_fs_req_cleanup(req);
-            delete req;
-            return ;
-          }
-          std::string* decode_res = static_cast<std::string*>(req->data);
-          uv_buf_t* buf = new uv_buf_t();
-          buf->base = const_cast<char*>(decode_res->c_str());
-          buf->len = decode_res->size();
-          uv_fs_req_cleanup(req);
-          buf_and_data* a = new buf_and_data({
-            buf,
-            decode_res,
-            fd
-          });
-          req->data = a;
-          uv_fs_write(uv_default_loop(), req, fd, buf, 1, 0, [](uv_fs_t* req){
-            if(req->result < 0) {
-              cout << "write error: " << uv_strerror(req->result) << endl; 
-            }
-            buf_and_data* a = static_cast<buf_and_data*>(req->data);
-            delete a->str;
-            delete a->buf;
-            uv_fs_req_cleanup(req);
-            uv_fs_close(uv_default_loop(), req, a->fd,  [](uv_fs_t* req){
+      std::string photo_field;
+      if(smpHttp::Util::isBase64(str_photo)) {
+        auto suffix = str_photo.find_first_of('/');
+        auto suffix_end = str_photo.find_first_of(";");
+        std::string save_path = "resources/pic" + to_string(static_cast<int>(j["id"])) + "." + str_photo.substr(suffix + 1, suffix_end - suffix - 1);
+        photo_field = save_pic_path + save_path;
+        const char* ss = str_photo.c_str() + str_photo.find_first_of(',') + 1;
+        std::string* decode_res = smpHttp::Base64Decoder::base64_decode(ss, 1);
+        req->data = decode_res;
+        uv_fs_open(uv_default_loop(), req, save_path.c_str(), UV_FS_O_RDWR | UV_FS_O_CREAT | UV_FS_O_TRUNC
+          , S_IRUSR | S_IRGRP | S_IROTH |S_IWGRP| S_IWUSR|S_IWOTH, [](uv_fs_t* req){
+            int fd = req->result;
+            if(fd < 0) {
               uv_fs_req_cleanup(req);
               delete req;
+              return ;
+            }
+            std::string* decode_res = static_cast<std::string*>(req->data);
+            uv_buf_t* buf = new uv_buf_t();
+            buf->base = const_cast<char*>(decode_res->c_str());
+            buf->len = decode_res->size();
+            uv_fs_req_cleanup(req);
+            buf_and_data* a = new buf_and_data({
+              buf,
+              decode_res,
+              fd
             });
-            delete a;
+            req->data = a;
+            uv_fs_write(uv_default_loop(), req, fd, buf, 1, 0, [](uv_fs_t* req){
+              if(req->result < 0) {
+                cout << "write error: " << uv_strerror(req->result) << endl; 
+              }
+              buf_and_data* a = static_cast<buf_and_data*>(req->data);
+              delete a->str;
+              delete a->buf;
+              uv_fs_req_cleanup(req);
+              uv_fs_close(uv_default_loop(), req, a->fd,  [](uv_fs_t* req){
+                uv_fs_req_cleanup(req);
+                delete req;
+              });
+              delete a;
+            });
           });
-        });
+      } else {
+        photo_field = str_photo;
+      }
       if(j["type"] == "update") {
         Result upd;
         if(!j["password"].is_null() && j["username"].is_null()) {
@@ -258,7 +264,7 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
           static_cast<std::string>(j["name"]),
           static_cast<std::string>(j["email"]),
           static_cast<std::string>(j["experience"]),
-          save_pic_path + save_path,
+          photo_field,
           static_cast<int>(j["id"]), 0,static_cast<int>(j["isTeacher"]),
           to_string(static_cast<int>(j["id"])),"123456").
           execute(); 

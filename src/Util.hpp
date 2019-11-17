@@ -17,6 +17,7 @@ namespace smpHttp {
       static std::string join(const std::vector<std::string>& vec, char j);
       static std::vector<std::string> split(const std::string& str, char j);
       static std::string utf16Toutf8(const mysqlx::Value& v);
+      static bool isBase64(const std::string& s);
     private:
       static std::shared_ptr<std::map<std::string, std::string>> mimes;
   };

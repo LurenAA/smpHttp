@@ -279,3 +279,17 @@ std::string Util::utf16Toutf8(const mysqlx::Value& v) {
   mysqlx::string s = v;
   return std::wstring_convert< std::codecvt_utf8_utf16<char16_t>, char16_t >{}.to_bytes(s.c_str());
 }
+
+bool Util::isBase64(const std::string& s) {
+  static const std::string beg_str("data:");
+  for(int i = 0; i < 5; ++i) {
+    if(beg_str[i] != beg_str[i]) {
+      return false;
+    }
+  }
+  auto x = s.find("base64");
+  if(x == string::npos) {
+    return false;
+  }
+  return true;
+}
