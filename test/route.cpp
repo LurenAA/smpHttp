@@ -10,8 +10,9 @@
           set("email",  Value(static_cast<std::string>(j["email"]))). \
           set("experience", Value(static_cast<std::string>(j["experience"]))). \
           set("photo", Value(photo_field)). \
-          set("isTeacher", Value(static_cast<int>(j["isTeacher"]))).
-
+          set("isTeacher", Value(static_cast<int>(j["isTeacher"]))). \
+          
+// std::string save_path_out = "http://localhost:8080/";
 
 using json = nlohmann::json;
 using namespace std;
@@ -232,20 +233,9 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
       }
       if(j["type"] == "update") {
         Result upd;
-        if(!j["password"].is_null() && j["username"].is_null()) {
+        if(!j["password"].is_null() && j["password"] != "") {
           handle_update_insert
           set("password", Value(static_cast<std::string>(j["password"]))).
-          where(std::string("id=") + to_string(static_cast<int>(j["id"])) ).
-          execute();
-        } else if(!j["password"].is_null() && !j["username"].is_null()) {
-          handle_update_insert
-          set("password", Value(static_cast<std::string>(j["password"]))).
-          set("username", Value(static_cast<std::string>(j["username"]))).
-          where(std::string("id=") + to_string(static_cast<int>(j["id"])) ).
-          execute();
-        } else if (j["password"].is_null() && !j["username"].is_null()) {
-          handle_update_insert
-          set("username", Value(static_cast<std::string>(j["username"]))).
           where(std::string("id=") + to_string(static_cast<int>(j["id"])) ).
           execute();
         } else {
@@ -266,7 +256,7 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
           static_cast<std::string>(j["experience"]),
           photo_field,
           static_cast<int>(j["id"]), 0,static_cast<int>(j["isTeacher"]),
-          to_string(static_cast<int>(j["id"])),"123456").
+          to_string(static_cast<int>(j["id"])),"e10adc3949ba59abbe56e057f20f883e").
           execute(); 
         json jres;
         jres["status"] = "insert";
