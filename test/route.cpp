@@ -1,8 +1,7 @@
 #include "route.hpp"
 
 #define EXPIRE  30 * 60
-#define save_pic_path "http://47.103.210.8:8080/"//"http://192.168.204.132:8080/"
-#define save_article_path "http://47.103.210.8:8080/"//"http://192.168.204.132:8080/"
+
 #define handle_update_insert upd = tb.update().set("tel", Value(static_cast<std::string>(j["tel"]))). \
           set("address", Value(static_cast<std::string>(j["address"]))). \
           set("education", Value(static_cast<std::string>(j["education"]))). \
@@ -12,11 +11,13 @@
           set("photo", Value(photo_field)). \
           set("isTeacher", Value(static_cast<int>(j["isTeacher"]))). \
           
-// std::string save_path_out = "http://localhost:8080/";
+std::string host="";
+int port = 8080;
 
 using json = nlohmann::json;
 using namespace std;
 using namespace ::mysqlx;
+using namespace smpHttp;
 mysqlx::Client cli(mysqlx::SessionOption::USER, "root",
   mysqlx::SessionOption::PWD,  "root",
   mysqlx::SessionOption::HOST, "47.103.210.8",
@@ -190,7 +191,7 @@ void handle_member_change(std::shared_ptr<smpHttp::HttpRequest> req
         auto suffix = str_photo.find_first_of('/');
         auto suffix_end = str_photo.find_first_of(";");
         std::string save_path = "resources/pic" + to_string(static_cast<int>(j["id"])) + "." + str_photo.substr(suffix + 1, suffix_end - suffix - 1);
-        photo_field = save_pic_path + save_path;
+        photo_field = host.size() ? Util::getStaticDirnameUrl(host, port) + save_path : basename(save_path.c_str());
         const char* ss = str_photo.c_str() + str_photo.find_first_of(',') + 1;
         std::string* decode_res = smpHttp::Base64Decoder::base64_decode(ss, 1);
         req->data = decode_res;
@@ -548,6 +549,7 @@ void change_articles(std::shared_ptr<smpHttp::HttpRequest> req
         id = static_cast<int>(res_id.fetchOne().get(0)) + 1;
       }
       std::string save_path = "resources/article_" + to_string(id);
+      std::string article_field = host.size() ? Util::getStaticDirnameUrl(host, port) + save_path : basename(save_path.c_str());
       std::string* decode_res = new std::string(static_cast<std::string>(j["content"]));
       req->data = decode_res;
       uv_fs_open(uv_default_loop(), req, save_path.c_str(), UV_FS_O_RDWR | UV_FS_O_CREAT | UV_FS_O_TRUNC
@@ -588,7 +590,7 @@ void change_articles(std::shared_ptr<smpHttp::HttpRequest> req
         auto upd = tb.update().set("title", Value(static_cast<std::string>(j["title"]))).
           set("isHot", Value(static_cast<int>(j["isHot"]))).
           set("isDraft", Value(static_cast<int>(j["isDraft"]))).
-          set("content", Value(save_article_path + save_path)).
+          set("content", Value(article_field)).
           set("author", Value(static_cast<std::string>(j["author"]))).
           set("date",Value(static_cast<std::string>(j["date"]))).
           where(std::string("id=") + to_string(static_cast<int>(j["id"]))).
@@ -599,7 +601,7 @@ void change_articles(std::shared_ptr<smpHttp::HttpRequest> req
       } else if(j["type"] == "insert") {
         auto ind = tb.insert("title","content","isHot","isDraft","author","date").
           values(static_cast<std::string>(j["title"]),
-          save_article_path + save_path,
+          article_field,
           static_cast<int>(j["isHot"]),
           static_cast<int>(j["isDraft"]),
           static_cast<std::string>(j["author"]),

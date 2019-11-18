@@ -18,20 +18,6 @@ Tcp::Tcp(std::string ip, int port, uv_loop_t* l,  int backlog)
 : Handle(new uv_tcp_t()), loop(l), ip(ip), port(port), backlog(backlog)
 {
   ::uv_tcp_init(loop.loop, reinterpret_cast<uv_tcp_t *>(handle.get()));
-  struct sockaddr_in addr;
-  int flag = uv_ip4_addr(ip.c_str(), port, &addr);
-  if (flag < 0)
-  {
-    error_exit_helper(loop, "uv_ip4_addr", flag);
-    return;
-  }
-  flag = uv_tcp_bind(reinterpret_cast<uv_tcp_t *>(handle.get()),
-                     reinterpret_cast<const sockaddr *>(&addr), 0);
-  if (flag < 0)
-  {
-    error_exit_helper(loop, "uv_tcp_bind", flag);
-    return;
-  }
 }
 
 bool Tcp::listen()
@@ -73,6 +59,20 @@ ConnectionCallback Tcp::setConnectionCallback(ConnectionCallback f) {
 } 
 
 void Tcp::run() {
+  struct sockaddr_in addr;
+  int flag = uv_ip4_addr(ip.c_str(), port, &addr);
+  if (flag < 0)
+  {
+    error_exit_helper(loop, "uv_ip4_addr", flag);
+    return;
+  }
+  flag = uv_tcp_bind(reinterpret_cast<uv_tcp_t *>(handle.get()),
+                     reinterpret_cast<const sockaddr *>(&addr), 0);
+  if (flag < 0)
+  {
+    error_exit_helper(loop, "uv_tcp_bind", flag);
+    return;
+  }
   listen();
   loop.run();
 }

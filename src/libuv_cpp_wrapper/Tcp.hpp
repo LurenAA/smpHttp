@@ -26,6 +26,7 @@ public:
   Tcp& operator=(const Tcp&) = delete;
   void run();
 
+  void setPort(int aport) {port = aport;}
   void addConnection(std::shared_ptr<Connection>&);
   void removeConnection(const std::shared_ptr<Connection>&);
   ConnectionCallback setConnectionCallback(ConnectionCallback);

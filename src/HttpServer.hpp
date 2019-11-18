@@ -20,6 +20,7 @@ namespace smpHttp {
       void add_route(std::string s, routeHandleFunc);
       void add_static_path(std::string s);
       void run() { tcpServer.run();}
+      void setPort(int aport) {tcpServer.setPort(aport);}
 
     private:
       uvx::Tcp tcpServer;

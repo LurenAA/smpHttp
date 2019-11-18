@@ -1,6 +1,7 @@
 #ifndef _ROUTE_HPP__
 #define _ROUTE_HPP__
 #include <iostream>
+#include <getopt.h>
 #include <string>
 #include "smpHttp.hpp"
 #include <nlohmann/json.hpp>
@@ -23,6 +24,12 @@ typedef struct {
 
 extern 
 mysqlx::Client cli;
+
+extern 
+std::string host;
+
+extern 
+int port;
 
 using Route_Type = void (std::shared_ptr<smpHttp::HttpRequest> req
   , std::shared_ptr<smpHttp::HttpResponse> res);

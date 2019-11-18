@@ -293,3 +293,18 @@ bool Util::isBase64(const std::string& s) {
   }
   return true;
 }
+
+std::string Util::getStaticDirnameUrl(const std::string& host, int port) {
+  std::string res = "";
+  auto hasPre = host.find("http://", 0, sizeof("http://"));
+  if(hasPre == string::npos) {
+    res = "http://";
+  }
+  return res += host + ":" + to_string(port) + '/';
+}
+
+bool Util::checkIsHostOrIp(const std::string& s) {
+  bool res_bool = false;
+
+  return false;
+}
