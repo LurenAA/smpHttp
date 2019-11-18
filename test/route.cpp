@@ -639,21 +639,25 @@ void get_articles(std::shared_ptr<smpHttp::HttpRequest> req
     json j = {};
     RowResult ress;
     if(req->getQuery("id").size()) {
-      ress = tb.select("id","title","content","isHot","isDraft","author","date").
+      ress = tb.select("id","title","content","isHot","isDraft","author","date_format(date, '%Y-%m-%d')").
         where("id=" + req->getQuery("id")).
         execute();  
     } else if(req->getQuery("isHot").size()){
-      ress = tb.select("id","title","content","isHot","isDraft","author","date").
+      ress = tb.select("id","title","content","isHot","isDraft","author","date_format(date, '%Y-%m-%d')").
         where("isHot="+req->getQuery("isHot")).
         orderBy("id").
         execute();  
     } else if(req->getQuery("isDraft").size()){
-      ress = tb.select("id","title","content","isHot","isDraft","author","date").
+      ress = tb.select("id","title","content","isHot","isDraft","author","date_format(date, '%Y-%m-%d')").
         where("isDraft="+req->getQuery("isDraft")).
         orderBy("id").
         execute();  
+    } else if(req->getQuery("orderByTime").size()){
+      ress = tb.select("id","title","content","isHot","isDraft","author","date_format(date, '%Y-%m-%d')").
+        orderBy("date").
+        execute();
     } else {
-      ress = tb.select("id","title","content","isHot","isDraft","author","date").
+      ress = tb.select("id","title","content","isHot","isDraft","author","date_format(date, '%Y-%m-%d')").
         orderBy("id").
         execute();  
     }
@@ -665,7 +669,7 @@ void get_articles(std::shared_ptr<smpHttp::HttpRequest> req
       j_p["content"] = smpHttp::Util::utf16Toutf8(i->get(2));
       j_p["isHot"] = static_cast<int>(i->get(3));
       j_p["isDraft"] = static_cast<bool>(i->get(4));
-      j_p["author"] = static_cast<std::string>(i->get(5));
+      j_p["author"] = smpHttp::Util::utf16Toutf8(i->get(5));
       j_p["date"] = static_cast<std::string>(i->get(6));
       j["articles"].push_back(j_p);
     }
