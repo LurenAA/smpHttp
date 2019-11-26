@@ -20,6 +20,7 @@ namespace smpHttp {
       static bool isBase64(const std::string& s);
       static std::string getStaticDirnameUrl(const std::string& host, int port);
       static bool checkIsHostOrIp(const std::string& s);
+      static void showUvError(int _errno) const;
     private:
       static std::shared_ptr<std::map<std::string, std::string>> mimes;
   };

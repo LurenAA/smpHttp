@@ -7,6 +7,7 @@ ${PROJECT_SOURCE_DIR}/src/
 ${PROJECT_SOURCE_DIR}/src/http_parser/
 /usr/local/mysql/connector-c++-8.0/include/
 ${PROJECT_SOURCE_DIR}/src/mysql_con/
+/home/ele/libuv/src
 )
 
 include_directories(${dics})
@@ -21,7 +22,7 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") 
 SET(CMAKE_BUILD_TYPE "Debug")
 # SET(CMAKE_BUILD_TYPE "Release")
-SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
+SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g3 -ggdb")
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(src/nlohmann_json)
 
