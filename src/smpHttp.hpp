@@ -6,4 +6,6 @@
 #include "HttpRequest.hpp"
 #include "Util.hpp"
 
+#define wq_next() rwq->next();
+
 #endif //__SMP_HTTP__HPP_

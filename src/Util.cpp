@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <codecvt>
 #include <locale>
+#include "uv.h"
 
 using namespace std;
 using namespace smpHttp;
@@ -201,6 +202,8 @@ using namespace smpHttp;
 #define CASE(x,y, t) \
   t->insert({#x, y}); \
 
+#define MAX_ERRNO_STR_BUF 50
+
 shared_ptr<map<string, string>> initialUtilMimes() {
   shared_ptr<map<string, string>>  res = make_shared<map<string, string>>();
   MIME_INIT(CASE, res)
@@ -305,10 +308,12 @@ std::string Util::getStaticDirnameUrl(const std::string& host, int port) {
 
 bool Util::checkIsHostOrIp(const std::string& s) {
   bool res_bool = false;
-
+  //to do
   return false;
 }
 
 void Util::showUvError(int _errno) {
-  
+  char* str = new char[MAX_ERRNO_STR_BUF];
+  cout << uv_strerror_r(_errno, str, MAX_ERRNO_STR_BUF);
+  delete [] str;
 }

@@ -82,13 +82,15 @@ void handle_json_lab(std::shared_ptr<smpHttp::HttpRequest> req, std::shared_ptr<
         std::string jso = j.dump();
         res->addMessage(jso);
       } catch(exception& e) {
-        cout << "error: " << __LINE__ << " : " << __func__ << " : "<< e.what() << endl;
+        std::cout << "error: " << __LINE__ << " : " << __func__ << " : "<< e.what() << endl;
       } }, [](uv_work_t *req, int status) {
       work_bind* wb = static_cast<work_bind*>(req->data);
       delete wb;
       delete req; });
   if(r < 0) {
-    
+    std::cout << "error: in handle_json_lab : "; 
+    Util::showUvError(r);
+    std::cout << endl;
   }
 }
 
@@ -96,12 +98,11 @@ void handle_json_news(std::shared_ptr<smpHttp::HttpRequest> req, std::shared_ptr
 {
   uv_work_t *work_req = new uv_work_t();
   work_req->data = new work_bind({res, cli});
-  ::uv_queue_work(uv_default_loop(), work_req, [](uv_work_t *req) {
+  int r = ::uv_queue_work(uv_default_loop(), work_req, [](uv_work_t *req) {
     try {
       work_bind* wb = static_cast<work_bind*>(req->data);
       Session mq = wb->cli.getSession();
       auto& res = wb->res;
-      Session mq = cli.getSession();
       res->addHeader("Content-Type","application/json;charset=utf-8");
       res->addHeader("Access-Control-Allow-Origin", "*");
       res->addHeader("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE, PATCH");
@@ -125,11 +126,16 @@ void handle_json_news(std::shared_ptr<smpHttp::HttpRequest> req, std::shared_ptr
       std::string jso = resj.dump();
       res->addMessage(jso);
     } catch(exception& e) {
-      cout << "error: " << __LINE__ << " : " << __func__ << " "<< e.what() << endl;
+      std::cout << "error: " << __LINE__ << " : " << __func__ << " "<< e.what() << endl;
     } }, [](uv_work_t *req, int status) {
     work_bind* wb = static_cast<work_bind*>(req->data);
     delete wb;
     delete req; });
+  if(r < 0) {
+    std::cout << "error: in handle_json_news : "; 
+    Util::showUvError(r);
+    std::cout << endl;
+  }
 }
 
 void handle_base(std::shared_ptr<smpHttp::HttpRequest> req, std::shared_ptr<smpHttp::HttpResponse> res)
@@ -155,13 +161,13 @@ void handle_base(std::shared_ptr<smpHttp::HttpRequest> req, std::shared_ptr<smpH
     {
       // res->setHttpStatus(smpHttp::HTTP_FORBIDDEN);
       res->addHeader("token", "11");
-      cout << "error: " << tfe.what() << endl;
+      std::cout << "error: " << tfe.what() << endl;
       res->end();
     }
     catch (InvalidClaimError &tfe)
     { //expired
       res->addHeader("token", "12");
-      cout << "error: " << tfe.what() << endl;
+      std::cout << "error: " << tfe.what() << endl;
       res->end();
     }
     catch (InvalidTokenError &tfe)
@@ -170,7 +176,7 @@ void handle_base(std::shared_ptr<smpHttp::HttpRequest> req, std::shared_ptr<smpH
       json header, payload;
       std::tie(header, payload) = JWT::Decode(req->getHeader("token"));
       std::cout << "Payload: " << payload << std::endl;
-      cout << "error: " << tfe.what() << endl;
+      std::cout << "error: " << tfe.what() << endl;
       res->addHeader("token", "13");
       res->end();
     }
