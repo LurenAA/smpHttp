@@ -38,6 +38,3 @@ add_executable(smpHttp ${srcs})
 target_LINK_LIbraries(smpHttp PRIVATE nlohmann_json::nlohmann_json ${links})
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/)
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)

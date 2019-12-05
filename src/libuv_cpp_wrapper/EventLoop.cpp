@@ -1,24 +1,26 @@
-#include "Loop.hpp"
+#include "EventLoop.hpp"
 #include <vector>
 #include <algorithm>
 #include <iostream>
 
 using namespace std;
-using namespace uvx;
+using namespace xx;
 
-Loop::Loop(uv_loop_t* l ) 
-  :state(STOPPED), loop(l)
-{}
+EventLoop::EventLoop(LoopMode m)
+  : _mode(m), _is_run(false)
+{
+  if(_mode == DEFAULT_LOOP) 
+    _loop = uv_default_loop();
+  else {
+    uv_loop_t* tmp_lp = new uv_loop_t();
+    ::uv_loop_init(tmp_lp);
 
-void Loop::setLoop(uv_loop_t* aloop){
-  if(state == RUNNING) {
-    cerr << "warning: cannot change a loop which is running" << endl;
-    return;
   }
-  if(state == STOPPED)
-    close();
-  uv_loop_init(aloop);
-  loop = aloop;
+}
+
+EventLoop* EventLoop::default_event_loop() {
+  static EventLoop dl(DEFAULT_LOOP);
+  return &dl;
 }
 
 int Loop::run(uv_run_mode mode){

@@ -18,10 +18,10 @@ namespace uvx {
 using ConnectionCallback = std::function<std::shared_ptr<Connection>(Tcp*, uv_tcp_t*)>;
 using AfterConnectionCallback = std::function<void(std::shared_ptr<Connection> cl)>;
 class Loop;
-class Tcp : public Handle
+class TcpAccepter
 {
 public:
-  Tcp(std::string ip = DEFAULT_IP, int port = DEFAULT_PORT,uv_loop_t* l = uv_default_loop(), int backlog = DEFAULT_BACKLOG);
+  TcpAccepter(std::string ip = DEFAULT_IP, int port = DEFAULT_PORT,uv_loop_t* l = uv_default_loop(), int backlog = DEFAULT_BACKLOG);
   Tcp(const Tcp&) = delete;
   Tcp& operator=(const Tcp&) = delete;
   void run();
@@ -40,9 +40,7 @@ private:
   std::string ip;
   int port;
   int backlog;
-  /* uv_handle_t handle(server)
-   * which is derived from Handle
-   */
+  uv_tcp_t server_;
   bool listen();
   std::shared_ptr<Connection> onConnection(uv_tcp_t*);
   void onAfterConnection(std::shared_ptr<Connection> c);

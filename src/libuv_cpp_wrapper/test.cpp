@@ -1,12 +1,13 @@
 #include <iostream>
-#include "EchoServer.hpp"
-
+#include "FileLog.hpp"
 using namespace std;
-using namespace uvx;
-using namespace echo;
+using namespace xx;
 
 int main(void) {
-  EchoServer echoServer;
-  echoServer.run();
-  return 0;
+  FileLog::init();
+  auto& r  = FileLog::getRoot();
+  r.debug("abc");
+  r.error("asd");
+  FileLog::shutdown();
+  return 0; 
 }
