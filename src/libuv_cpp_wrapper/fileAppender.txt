@@ -2,3 +2,9 @@
 [2019-12-05 15:56:57.302 - ERROR] (): asd
 [2019-12-05 16:01:05.235 - DEBUG] (): abc
 [2019-12-05 16:01:05.235 - ERROR] (): asd
+[2019-12-06 11:15:25.188 - DEBUG] (): invoke_log : /home/ele/smpHttp/src/libuv_cpp_wrapper/FileLog.cpp : k : 
+123123
+
+[2019-12-06 11:15:25.188 - ERROR] (): invoke_log : /home/ele/smpHttp/src/libuv_cpp_wrapper/FileLog.cpp : k : 
+zxczxc
+

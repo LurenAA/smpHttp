@@ -3,11 +3,33 @@
 #include <string>
 #include "log4cpp/Category.hh"
 #include "log4cpp/PropertyConfigurator.hh"
-
+#include <functional>
+/**
+ * 使用singleton模式，这样一来可以满足我要从文件初始化log4cpp的需求，
+ * 而来可以保证程序结束时自动销毁（如果我使用静态方法，那么最后我需要自己来执行shutdown函数）
+ **/
 namespace xx {
+  using LogFunc_cb = void(log4cpp::Category::*)(const std::string&);
   class FileLog : public log4cpp::Category{
     public:
-      static void init(const std::string& init_path = "./file_log.ini");
+      static FileLog& getInstance();
+      static const std::string& getInitPath();
+      static void setInitPath(const std::string&); 
+
+      void debug(const std::string&);
+      void error(const std::string&);
+      void warn(const std::string&);
+      void info(const std::string&);
+      
+      FileLog() = delete;
+      FileLog(const FileLog&) = delete;
+      FileLog& operator=(const FileLog&) = delete;
+      ~FileLog();
+    private: 
+      static void invoke_log(const std::string& s, LogFunc_cb f);
+      static FileLog* singleton;
+      static std::string init_path; 
+      static void init();
   };
 }
 
