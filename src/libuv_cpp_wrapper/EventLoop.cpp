@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cstring>
 #include <pthread.h>
+#include "Tools.hpp"
 
 using namespace std;
 using namespace xx;
@@ -40,7 +41,8 @@ void reinit_at_fork() {
   if(pthread_atfork(nullptr,nullptr, reset_init_mx) || 
     pthread_atfork(nullptr, nullptr, reset_init_once)) {
       FileLog& log = FileLog::getInstance();
-      std::string error_str = "pthread_atfork error in EventLoop: ";
+      Tools& tl = Tools::getInstance();
+      std::string error_str = "pthread_atfork error in EventLoop: " + tl.get_strerror_r(errno);
       log.error(error_str);
       terminate();
     }
@@ -50,16 +52,17 @@ void reinit_at_fork() {
  * 初始化eventloop
  **/ 
 EventLoop::EventLoop(LoopMode m)
-  : _mode(m), _is_run(false)
+  : _is_run(false), _mode(m)
 {
   if(pthread_once(&once, reinit_at_fork)) {
     auto& log = FileLog::getInstance();
-    log.error("pthread_once in EventLoop error");
+    Tools& tl = Tools::getInstance();
+    log.error("pthread_once in EventLoop error: " + tl.get_strerror_r(errno));
     terminate();
   }
   FileLog& file_log = FileLog::getInstance();
   int err;
-  if(_mode == DEFAULT_LOOP) 
+  if(_mode == DEFAULT_LOOP) {
     /**
      * default_loop非线程安全
      **/ 
@@ -67,14 +70,17 @@ EventLoop::EventLoop(LoopMode m)
     _loop = uv_default_loop();
     pthread_mutex_unlock(&mx);
     if(!_loop) {
-      file_log.error("EventLoop uv_default_loop() error");
+      Tools& tl = Tools::getInstance();
+      file_log.error("EventLoop uv_default_loop() error" + tl.get_strerror_r(errno));
       terminate();
     }
+  }
   else {
     uv_loop_t* tmp_lp = new uv_loop_t();
     err = ::uv_loop_init(tmp_lp);
     if(err < 0) {
-      file_log.error("EventLoop uv_loop_init() error");
+      Tools& tl = Tools::getInstance();
+      file_log.error("EventLoop uv_loop_init() error: " + tl.get_strerror_r(errno));
       terminate();
     }
   }
@@ -90,42 +96,69 @@ EventLoop* EventLoop::default_event_loop() {
 
 EventLoop::~EventLoop() {
   assert(!_is_run);
-  delete _loop;
+  if(_mode == NEW_LOOP)
+    delete _loop;
 }
 
-int Loop::run(uv_run_mode mode){
-  static vector<int> mode_lib({UV_RUN_DEFAULT, UV_RUN_ONCE, UV_RUN_NOWAIT});
-  // make sure the variable "mode" is a signifcant value 
-  if(find(mode_lib.cbegin(), mode_lib.cend(), mode) == mode_lib.cend())
-    mode = UV_RUN_DEFAULT;
-  state = RUNNING;
-  int res = uv_run(loop, mode);
-  state = STOPPED;
+/**
+ * uv_run
+ **/ 
+int EventLoop::run(uv_run_mode mode){
+  int res = uv_run(_loop, mode);
+  _id = pthread_self();
+  _is_run = true;
   return res;
 }
 
-void Loop::stop() {
-  if(state != RUNNING){
-    cerr << "warning: can not stop a loop which isn`t running" << endl;
-    return;
-  }
-  state = STOPPED;
-  uv_stop(loop);
+/**
+ * 判断该事件循环是否在该线程运行
+ **/ 
+bool EventLoop::is_run_in_this_thread() const {
+  if(!_is_run) 
+    return false;
+  pthread_t this_id = pthread_self();
+  return this_id == _id;
 }
 
-void Loop::close() {
-  if(state != STOPPED) {
-    cerr << "warning: cannot close a running loop" << endl;
+/**
+ * 结束事件循环
+ **/ 
+void EventLoop::stop() {
+  if(!_is_run || _id == ULONG_MAX) 
+    return ;
+  uv_stop(_loop);
+}
+
+/**
+ * 关闭loop
+ **/ 
+void EventLoop::close() {
+  FileLog& lg = FileLog::getInstance();
+  if(_is_run || is_active()) {
+    lg.warn("close a running loop");
     return ;
   }
-  int flag = uv_loop_close(loop);
-  if(flag == UV_EBUSY) {
-    cerr << "warning: cannot close a loop which is busy" << endl;
-    return;
+  int flag = uv_loop_close(_loop);
+  if(flag < 0) {
+    Tools& tl = Tools::getInstance();
+    if(flag == UV_EBUSY) {
+     lg.warn("warning: cannot close a loop which is busy");
+      return;
+    } else {
+      lg.error("uv_loop_close error : " + tl.get_uv_strerror_t(flag));
+      terminate();
+    }
   }
-  state = CLOSED;
+  _is_run = false;
 }
 
-uv_loop_t* Loop::getLoop() {
-  return this->loop;
+/**
+ * 判断是否active
+ **/ 
+bool EventLoop::is_active() const {
+  return uv_loop_alive(_loop);
+}
+
+uv_loop_t *EventLoop::handle() {
+  return _loop;
 }

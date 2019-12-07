@@ -1,8 +1,9 @@
-#ifndef __LOOP_HPP_
-#define __LOOP_HPP_
+#ifndef __EVENT_LOOP_HPP_
+#define __EVENT_LOOP_HPP_
 #include "uv.h"
 #include <memory>
 #include <atomic>
+#include <climits>
 
 namespace xx{
 
@@ -20,13 +21,16 @@ public:
 
   uv_loop_t *handle();
   int run(uv_run_mode mode = UV_RUN_DEFAULT);
+  bool is_run_in_this_thread() const;
   void stop();
   void close();
+  bool is_active() const;
 
   static 
   EventLoop* default_event_loop();
 private:
   
+  pthread_t _id = ULONG_MAX;
   std::atomic_bool _is_run;
   uv_loop_t *_loop;
   LoopMode _mode;
