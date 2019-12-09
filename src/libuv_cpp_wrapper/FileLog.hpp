@@ -4,6 +4,7 @@
 #include "log4cpp/Category.hh"
 #include "log4cpp/PropertyConfigurator.hh"
 #include <functional>
+#include <cassert>
 /**
  * 使用singleton模式，这样一来可以满足我要从文件初始化log4cpp的需求，
  * 而来可以保证程序结束时自动销毁（如果我使用静态方法，那么最后我需要自己来执行shutdown函数）
@@ -16,17 +17,17 @@ namespace xx {
       static const std::string& getInitPath();
       static void setInitPath(const std::string&); 
 
-      void debug(const std::string&);
-      void error(const std::string&);
-      void warn(const std::string&);
-      void info(const std::string&);
+      void debug(const std::string&, const std::string& _func, const std::string _file , int _line );
+      void error(const std::string&, const std::string& _func, const std::string _file , int _line );
+      void warn(const std::string&, const std::string& _func, const std::string _file , int _line );
+      void info(const std::string&, const std::string& _func, const std::string _file , int _line );
       
       FileLog() = delete;
       FileLog(const FileLog&) = delete;
       FileLog& operator=(const FileLog&) = delete;
       ~FileLog();
     private: 
-      static void invoke_log(const std::string& s, LogFunc_cb f);
+      static void invoke_log(const std::string& s, const std::string& _func , const std::string _file , int _line , LogFunc_cb f);
       static FileLog* singleton;
       static std::string init_path; 
       static void init();

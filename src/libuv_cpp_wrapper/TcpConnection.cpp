@@ -1,10 +1,12 @@
-// #include "Connection.hpp"
-// #include <iostream>
-// #include "Tcp.hpp"
-// #include <cstring>
+#include "TcpConnection.hpp"
+#include <iostream>
+#include "TcpAccepter.hpp"
+#include <cstring>
+#include "FileLog.hpp"
+#include "Tools.hpp"
 
-// using namespace std;
-// using namespace uvx;
+using namespace std;
+using namespace xx;
 
 // uv_tcp_t* Connection::getHandle() {
 //   return reinterpret_cast<uv_tcp_t*>(handle.get());
@@ -142,3 +144,28 @@
 // }
 
 // uvx::Loop& Connection::_loop() {return tcp->_Loop();}
+
+/**
+ * 初始化连接
+ **/ 
+TcpConnection::TcpConnection(TcpAccepter& tcp, EventLoop& lp) : 
+  Handle(TCP), _tcp_accepter(tcp), _lp(lp)
+{
+  int flag = ::uv_tcp_init(lp.handle(), handle());
+  if(flag < 0) {
+    auto& tl = Tools::getInstance();
+    auto& fl = FileLog::getInstance();
+    fl.error("TcpConnection -> uv_tcp_init error : " + tl.get_uv_strerror_t(flag)
+      , __func__, __FILE__, __LINE__);
+    terminate();
+  }
+}
+
+uv_tcp_t* TcpConnection::handle() {
+  return reinterpret_cast<uv_tcp_t*>(_handle);
+}
+
+void TcpConnection::close_cb() {
+  if(index != -1)
+    _tcp_accepter.remove_tcp_connection(index);
+}

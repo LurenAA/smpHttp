@@ -43,7 +43,7 @@ void reinit_at_fork() {
       FileLog& log = FileLog::getInstance();
       Tools& tl = Tools::getInstance();
       std::string error_str = "pthread_atfork error in EventLoop: " + tl.get_strerror_r(errno);
-      log.error(error_str);
+      log.error(error_str, __func__, __FILE__, __LINE__);
       terminate();
     }
 }
@@ -57,7 +57,7 @@ EventLoop::EventLoop(LoopMode m)
   if(pthread_once(&once, reinit_at_fork)) {
     auto& log = FileLog::getInstance();
     Tools& tl = Tools::getInstance();
-    log.error("pthread_once in EventLoop error: " + tl.get_strerror_r(errno));
+    log.error("pthread_once in EventLoop error: " + tl.get_strerror_r(errno), __func__, __FILE__, __LINE__);
     terminate();
   }
   FileLog& file_log = FileLog::getInstance();
@@ -71,7 +71,7 @@ EventLoop::EventLoop(LoopMode m)
     pthread_mutex_unlock(&mx);
     if(!_loop) {
       Tools& tl = Tools::getInstance();
-      file_log.error("EventLoop uv_default_loop() error" + tl.get_strerror_r(errno));
+      file_log.error("EventLoop uv_default_loop() error" + tl.get_strerror_r(errno), __func__, __FILE__, __LINE__);
       terminate();
     }
   }
@@ -80,7 +80,7 @@ EventLoop::EventLoop(LoopMode m)
     err = ::uv_loop_init(tmp_lp);
     if(err < 0) {
       Tools& tl = Tools::getInstance();
-      file_log.error("EventLoop uv_loop_init() error: " + tl.get_strerror_r(errno));
+      file_log.error("EventLoop uv_loop_init() error: " + tl.get_strerror_r(errno), __func__, __FILE__, __LINE__);
       terminate();
     }
   }
@@ -104,9 +104,9 @@ EventLoop::~EventLoop() {
  * uv_run
  **/ 
 int EventLoop::run(uv_run_mode mode){
-  int res = uv_run(_loop, mode);
   _id = pthread_self();
   _is_run = true;
+  int res = uv_run(_loop, mode);
   return res;
 }
 
@@ -135,17 +135,17 @@ void EventLoop::stop() {
 void EventLoop::close() {
   FileLog& lg = FileLog::getInstance();
   if(_is_run || is_active()) {
-    lg.warn("close a running loop");
+    lg.warn("close a running loop", __func__, __FILE__, __LINE__);
     return ;
   }
   int flag = uv_loop_close(_loop);
   if(flag < 0) {
     Tools& tl = Tools::getInstance();
     if(flag == UV_EBUSY) {
-     lg.warn("warning: cannot close a loop which is busy");
+     lg.warn("cannot close a loop which is busy", __func__, __FILE__, __LINE__);
       return;
     } else {
-      lg.error("uv_loop_close error : " + tl.get_uv_strerror_t(flag));
+      lg.error("uv_loop_close error : " + tl.get_uv_strerror_t(flag), __func__, __FILE__, __LINE__);
       terminate();
     }
   }

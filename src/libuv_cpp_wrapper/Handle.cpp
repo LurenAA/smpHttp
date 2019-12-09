@@ -28,10 +28,18 @@ void Handle::close() {
     return;
   uv_close(_handle, [](uv_handle_t* handle) {
     FileLog& log = FileLog::getInstance();
-    log.debug("handle close");
+    log.debug("handle close", __func__, __FILE__, __LINE__);
     Handle* had = static_cast<Handle*>(handle->data);
-    had->invokeCloseCb();
+    had->invokeInCloseCb();
+    had->close_cb();
   });
+}
+
+/**
+ * uv_close的内部的回调
+ **/ 
+void Handle::close_cb() {
+  
 }
 
 /**
@@ -70,16 +78,16 @@ _handle->data = static_cast<void*>(this);
 /**
  * 设置close_cb
  **/ 
-void Handle::setCloseCb(CloseCbType cb) {
-  close_cb = cb;
+void Handle::setInCloseCb(InCloseCbType cb) {
+  in_close_cb = cb;
 }
 
 /**
  * 在uv_close回调函数中执行close_cb
  **/ 
-void Handle::invokeCloseCb() {
-  if(close_cb)
-    close_cb(this);
+void Handle::invokeInCloseCb() {
+  if(in_close_cb)
+    in_close_cb(this);
 }
 
 /**

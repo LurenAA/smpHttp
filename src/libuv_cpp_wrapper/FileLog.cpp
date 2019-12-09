@@ -6,9 +6,9 @@
 
 #define METHOD_FUNCTION_HELPER(method) \
   void  \
-  FileLog::method(const std::string& str) { \
+  FileLog::method(const std::string& str, const std::string& _func , const std::string _file , int _line ) { \
   LogFunc_cb f = (void(Category::*)(const std::string&))&Category::method; \
-  invoke_log(str, f); \
+  invoke_log(str, _func, _file, _line,f); \
   }
   
 using namespace std;
@@ -98,13 +98,13 @@ FileLog::setInitPath(const std::string& s) {
  * error、debug、fatal、crit这些函数相同的部分提取出来
  * */
 void 
-FileLog::invoke_log(const std::string& s, LogFunc_cb f) {
+FileLog::invoke_log(const std::string& s, const std::string& _func , const std::string _file , int _line , LogFunc_cb f) {
   Category& root = Category::getRoot();
-  string str = __func__;
+  string str = _func;
   str += " : ";
-  str += __FILE__;
+  str += _file;
   str += " : ";
-  str += __LINE__;
+  str += to_string(_line);
   str += " : \n";
   str += s;
   (root.*f)(str);

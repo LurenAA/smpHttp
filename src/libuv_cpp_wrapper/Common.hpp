@@ -1,9 +1,11 @@
 #ifndef __COMMON_H_
 #define __COMMON_H_
 #include <functional>
-
+#include "uv.h"
 namespace xx {
 class Handle;
-using CloseCbType = std::function<void(Handle*)>;
+class TcpConnection;
+using InCloseCbType = std::function<void(Handle*)>;
+using AfterConnectionType = std::function<void(std::shared_ptr<TcpConnection>)>;
 }
 #endif

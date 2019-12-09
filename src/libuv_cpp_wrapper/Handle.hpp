@@ -41,12 +41,14 @@ class Handle
     uv_handle_t* handle();
     bool is_active() const;
     virtual bool is_closing() const;
-    void setCloseCb(CloseCbType);
+    void setInCloseCb(InCloseCbType);
 
-    virtual void invokeCloseCb();
+    virtual void invokeInCloseCb();
     virtual void close();
+    virtual void close_cb();  //内部侧的回调
+
   protected:
-    CloseCbType close_cb;
+    InCloseCbType in_close_cb;   //用户侧的回调
     HandleType _type;
     uv_handle_t* _handle;
 };
