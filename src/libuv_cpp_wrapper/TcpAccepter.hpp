@@ -23,7 +23,7 @@ int port;
 class TcpAccepter
 {
 public:
-  TcpAccepter(EventLoop&, AddressInfo a = AddressInfo{"0.0.0.0", 8080});
+  explicit TcpAccepter(EventLoop&, AddressInfo a = AddressInfo{"0.0.0.0", 8080});
   TcpAccepter(const TcpAccepter&) = delete;
   TcpAccepter& operator=(const TcpAccepter&) = delete;
   virtual ~TcpAccepter() {}
@@ -42,6 +42,7 @@ public:
   // Loop& _Loop();
   virtual void on_listen();
   virtual TcpConnection* tcp_connection_object();
+  EventLoop& getLp();
 
   void add_tcp_connection(std::shared_ptr<TcpConnection> c);
   void remove_tcp_connection(int index);

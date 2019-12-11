@@ -4,146 +4,148 @@
 #include <cstring>
 #include "FileLog.hpp"
 #include "Tools.hpp"
+#include "FileLog.hpp"
 
 using namespace std;
 using namespace xx;
 
-// uv_tcp_t* Connection::getHandle() {
-//   return reinterpret_cast<uv_tcp_t*>(handle.get());
-// }
 
-// void Connection::startRead() {
-//   if(!Connection::readCallback) {
-//     cerr << "warning: need a readCallback when startRead" << endl;
-//     return ;
-//   }
-//   uv_read_start(reinterpret_cast<uv_stream_t*>(handle.get()),
-//     Connection::allocFunc, [] (uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
-//       cout << "log: " << __LINE__ <<" : " << __FILE__ << " read : " << nread << endl;
-//       Connection* con = static_cast<Connection*>(stream->data);
-//       con->onStartRead(stream, nread, buf);
-//       delete [] buf->base;
-//   });
-// }
+/**
+ * 开始从流读取
+ **/ 
+void TcpConnection::read() {
+  ::uv_read_start(reinterpret_cast<uv_stream_t*>(_handle),
+    [](uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+      *buf = uv_buf_init(new char[suggested_size], suggested_size);
+    }, 
+    [] (uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
+      TcpConnection* con = static_cast<TcpConnection*>(stream->data);
+      FileLog& fl = FileLog::getInstance();
+      ostringstream s_stream;
+      if(nread < 0) {
+        if(nread == UV_EOF) {
+          s_stream.clear();
+          s_stream << "Tcpconnection " << con->getIndex() << " reach end of file"; 
+          fl.info(s_stream.str(), __func__, __FILE__, __LINE__);
+          con->invokeInReadCb(nread, buf, true);
+        }
+        else {
+          s_stream.clear();
+          s_stream << "TcpConnection " << con->getIndex() << " read error";
+          fl.info(s_stream.str(), __func__, __FILE__, __LINE__);
+          con->close();
+          return;
+        }
+      } else {
+        s_stream.clear();
+        s_stream << "Tcpconnection " << con->getIndex() << " read " << nread;
+        fl.info(s_stream.str(), __func__, __FILE__, __LINE__);
+        con->invokeInReadCb(nread, buf, false);
+      }
+      delete [] buf->base;
+      }
+    );
+}
 
-// void Connection::allocFunc(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
-//   *buf = uv_buf_init(new char[suggested_size], suggested_size);
-// }
+/**
+ * 获取回调函数
+ **/ 
+void TcpConnection::invokeInReadCb(ssize_t nread, const uv_buf_t *buf, bool isEof) {
+  if(in_read_cb) 
+    in_read_cb(shared_from_this(), nread, buf, isEof);
+}
 
-// Connection::Connection(uv_tcp_t* handle, Tcp* tcp) 
-//   : Handle(handle), tcp(tcp)
-// {
-// }
+/**
+ * 设置回调函数
+ **/ 
+void TcpConnection::setInReadCb(InReadCbType f) {
+  in_read_cb = f;
+}
 
-// void Connection::write(std::string str) {
-// #define INT_MAX_ 300000 //INT_MAX
-//   string::size_type len = str.size();
-//   ReqEntity* req_entity = new ReqEntity();
-//   req_entity->cl = shared_from_this();
-//   if(len > INT_MAX_) {
-//     req_entity->reserve = str.substr(0, INT_MAX_);
-//     req_entity->rest_string = str.substr(INT_MAX_);
-//     int fl = get_send_buf_size();
-//     if(fl < INT_MAX_ && fl != -1)
-//       set_send_buf_size(INT_MAX_);
-//     else if(fl == -1){
-//       cerr << "error: close a connection " << endl;
-//       close();
-//       return ;
-//     }
-//   }
-//   else {
-//     req_entity->reserve = str;
-//     int fl = get_send_buf_size();
-//     if(fl < static_cast<int>(len) && fl > 0)
-//       set_send_buf_size(len);
-//     else if(fl == -1){
-//       cerr << "error: close a connection " << endl;
-//       close();
-//       return ;
-//     }
-    
-//   }
-//   req_entity->init();
-//   uv_write(&req_entity->req, reinterpret_cast<uv_stream_t*>(handle.get()), &req_entity->buf, 1, [](uv_write_t *req, int status){
-//     ReqEntity* req_entity = static_cast<ReqEntity*>(req->data);
-//     if(status < 0) {
-//       cerr << "log: close a connection : " << uv_strerror(status) << endl;
-//       req_entity->cl->close();
-//       return ;
-//     }
-//     if(req_entity->rest_string.size()) {
-//       req_entity->cl->write(req_entity->rest_string);
-//     } else {
-//       req_entity->cl->onWrite();
-//     }
-//     delete req_entity;
-//   });
-// #undef INT_MAX_
-// }
+/**
+ * 写
+ **/ 
+void TcpConnection::write(std::string str) {
+  static const string::size_type max_buf_size = get_send_buf_size();
+  string::size_type len = str.size();
+  ReqEntity* req_entity = new ReqEntity(shared_from_this());
+  if(len > max_buf_size) {
+    req_entity->reserve = str.substr(0, max_buf_size);
+    req_entity->rest_string = str.substr(max_buf_size);
+  } else {
+    req_entity->reserve = str;
+  }
+  req_entity->init();
+  uv_write(&req_entity->req, reinterpret_cast<uv_stream_t*>(_handle), &req_entity->buf, 1, [](uv_write_t *req, int status){
+    ReqEntity* req_entity = static_cast<ReqEntity*>(req->data);
+    if(status < 0) {
+      auto& fl = FileLog::getInstance();
+      auto& tl = Tools::getInstance();
+      fl.debug("uv_write -> status < 0 : " + tl.get_uv_strerror_t(status), __func__, __FILE__, __LINE__);
+      req_entity->cl->close();
+      return ;
+    }
+    if(req_entity->rest_string.size()) {
+      req_entity->cl->write(req_entity->rest_string);
+    } else {
+      req_entity->cl->invokeAfterWriteCb();
+    }
+    delete req_entity;
+  });
+}
 
-// void Connection::onClose() {
-//   tcp->removeConnection(shared_from_this());
-// }
+void TcpConnection::write(const char* str, std::string::size_type len) {
+  if(len <= 0) {
+    auto& fl = FileLog::getInstance();
+    fl.error("write -> len <= 0",__func__, __FILE__, __LINE__);
+    return ;
+  } 
+  write(std::string(str, len));
+}
 
-// void Connection::write(const char* str, std::string::size_type len) {
-//   if(len <= 0) {
-//     cerr << "warning: do not write a empty str" << endl;
-//     return ;
-//   } 
-//   write(std::string(str, len));
-// }
+void TcpConnection::setAfterWriteCb(AfterWriteType f) {
+  after_write_cb = f;
+}
 
-// ReadCallback Connection::setReadCallback(ReadCallback f) {
-//   ReadCallback pf = readCallback;
-//   readCallback = f;
-//   return pf;
-// }
+void TcpConnection::invokeAfterWriteCb() {
+  if(after_write_cb) {
+    after_write_cb(shared_from_this());
+  }
+}
 
-// WriteCallback Connection::setWriteCallback(WriteCallback f) {
-//   WriteCallback pf = writeCallback;
-//   writeCallback = f;
-//   return pf;
-// }
+/**
+ * Gets or sets the size of the send buffer that the operating system uses for the socket.
+ **/ 
+int TcpConnection::get_send_buf_size() const {
+  int size = 0,
+    sta = uv_send_buffer_size(_handle, &size);
+  if(sta < 0) {
+    auto& fl = FileLog::getInstance();
+    auto& tl = Tools::getInstance();
+    fl.error("Connection::send_buf_size() -> uv_send_buffer_size : " + 
+      tl.get_uv_strerror_t(sta), __func__, __FILE__, __LINE__);
+    return -1;
+  }
+  return size;
+}
 
-// void Connection::onRead(std::shared_ptr<uvx::Connection> c) {
-//   if(readCallback)
-//     readCallback(c);
-// }
-
-// void Connection::onWrite() {
-//   if(writeCallback)
-//     writeCallback();
-// }
-
-// int Connection::get_send_buf_size() const {
-//   int size = 0,
-//     sta = uv_send_buffer_size(handle.get(),&size);
-//   if(sta < 0) {
-//     cout << "error : Connection::send_buf_size() -> uv_send_buffer_size : " <<
-//       uv_strerror(sta) << endl;
-//     return -1;
-//   }
-//   return size;
-// }
-
-// void Connection::set_send_buf_size(int size) {
-//   if(size < 0) {
-//     cout << "error: Connection::set_buf_size() size < 0" << 
-//     endl;
-//     return ;
-//   }
-//   size /= 2;
-//   size += 1;
-//   int sta = uv_send_buffer_size(handle.get(),&size);
-//   if(sta < 0) {
-//     cout << "error : Connection::set_buf_size() -> uv_send_buffer_size : " <<
-//       uv_strerror(sta) << endl;
-//     return ;
-//   }
-// }
-
-// uvx::Loop& Connection::_loop() {return tcp->_Loop();}
+int TcpConnection::set_send_buf_size(int size) {
+  auto& fl = FileLog::getInstance();
+  auto& tl = Tools::getInstance();
+  if(size < 0) {    
+    fl.error("error: Connection::set_buf_size() size < 0", __func__, __FILE__, __LINE__);
+    return -1;
+  }
+  size /= 2;
+  size += 1;
+  int sta = uv_send_buffer_size(_handle, &size);
+  if(sta < 0) {
+    fl.error("Connection::set_buf_size() -> uv_send_buffer_size : " + tl.get_uv_strerror_t(sta)
+      , __func__, __FILE__, __LINE__);
+    return -1;
+  }
+  return size * 2;
+}
 
 /**
  * 初始化连接
@@ -165,7 +167,18 @@ uv_tcp_t* TcpConnection::handle() {
   return reinterpret_cast<uv_tcp_t*>(_handle);
 }
 
+/**
+ * 关闭连接的回调函数
+ **/ 
 void TcpConnection::close_cb() {
   if(index != -1)
     _tcp_accepter.remove_tcp_connection(index);
+}
+
+EventLoop& TcpConnection::getLp() {
+  return _lp;
+}
+
+bool TcpConnection::is_writable() const {
+  return ::uv_is_writable(reinterpret_cast<uv_stream_t*>(_handle));
 }

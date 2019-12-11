@@ -25,29 +25,9 @@ TcpAccepter::TcpAccepter(EventLoop& lp, AddressInfo add) :
   _server.data = this;
 }
 
-// void Tcp::addConnection(std::shared_ptr<Connection> &newOne)
-// {
-//   connectionList.push_back(newOne);
-// }
-
-// void Tcp::removeConnection(const std::shared_ptr<Connection>& con) {
-//   auto deleteOne = find(connectionList.begin(), connectionList.end(), con);
-//   if(deleteOne == connectionList.end()) {
-//     cerr << "error: con is not in the connectionList" << endl;
-//     return ;
-//   }
-//   connectionList.erase(deleteOne);
-// }
-
-// Loop& Tcp::_Loop() {
-//   return loop;
-// }
-
-// ConnectionCallback Tcp::setConnectionCallback(ConnectionCallback f) {
-//   ConnectionCallback pre_fc = connectionCallback;
-//   connectionCallback = f;
-//   return pre_fc;
-// } 
+EventLoop& TcpAccepter::getLp() {
+  return _lp;
+}
 
 /**
  * 运行listen
@@ -120,25 +100,6 @@ void TcpAccepter::on_listen(){
 Error: 
   tp->close();
 }
-
-// std::shared_ptr<Connection> Tcp::onConnection(uv_tcp_t* client) {
-//   if(connectionCallback) {
-//     return connectionCallback(this, client);
-//   } else {
-//     return nullptr;
-//   }
-// }
-
-// AfterConnectionCallback Tcp::setAfterConnectionCallback(AfterConnectionCallback f) {
-//   auto pf = afterConnectionCallback;
-//   afterConnectionCallback = f;
-//   return pf;
-// }
-
-// void Tcp::onAfterConnection(std::shared_ptr<Connection> c) {
-//   if(afterConnectionCallback)
-//     afterConnectionCallback(c);
-// }
 
 /**
  * 获得地址信息

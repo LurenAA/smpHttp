@@ -14,7 +14,7 @@ public:
     DEFAULT_LOOP
   };
 
-  EventLoop(LoopMode m = DEFAULT_LOOP);
+  explicit EventLoop(LoopMode m = DEFAULT_LOOP);
   ~EventLoop();
   EventLoop(const EventLoop&) = delete;
   EventLoop& operator=(const EventLoop&) = delete;

@@ -35,7 +35,7 @@ class Handle
       #undef  DEFINE_TYPE
     };
 
-    Handle(HandleType);
+    explicit Handle(HandleType);
     virtual ~Handle();
 
     uv_handle_t* handle();
