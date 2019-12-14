@@ -154,8 +154,8 @@ void TcpAccepter::remove_tcp_connection(int index) {
   }
   assert((fx->second->getIndex() == fx->first));
   indexes[fx->first] = 0;
-  tcp_connection_map.erase(fx);
   fl.info("remove a connection : " + to_string(fx->first), __func__, __FILE__, __LINE__);
+  tcp_connection_map.erase(fx);
 }
 
 

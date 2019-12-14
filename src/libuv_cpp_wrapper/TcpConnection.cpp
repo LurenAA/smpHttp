@@ -28,13 +28,13 @@ void TcpConnection::read() {
           s_stream << "Tcpconnection " << con->getIndex() << " reach end of file"; 
           fl.info(s_stream.str(), __func__, __FILE__, __LINE__);
           con->invokeInReadCb(nread, buf, true);
+          con->close();
         }
         else {
           s_stream.clear();
           s_stream << "TcpConnection " << con->getIndex() << " read error";
           fl.info(s_stream.str(), __func__, __FILE__, __LINE__);
           con->close();
-          return;
         }
       } else {
         s_stream.clear();
