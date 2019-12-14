@@ -3,10 +3,13 @@
 #include <algorithm>
 #include <iostream>
 #include <cstring>
-
+#include <pthread.h>
 using namespace std;
-using namespace hpr;
+using namespace xx;
+static 
+pthread_mutex_t mx = PTHREAD_MUTEX_INITIALIZER;
 
+HttpParser* HttpParser::pr = nullptr;
 string trimString(string::const_iterator,string::const_iterator);
 
 HttpResult* HttpParser::handleDatagram(const std::string& datagram) {
@@ -140,4 +143,14 @@ void HttpParser::check(HttpResult* res){
     if(to_string(res->data.size()) != res->getHeader("Content-Length"))
       throw HttpParserError("Content-Length not equal to the data");
   }
+}
+
+HttpParser& HttpParser::getInstance(){
+  if(!pr) {
+    
+    if(!pr) {
+
+    }
+  }
+  return *pr;
 }

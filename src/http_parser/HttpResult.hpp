@@ -19,7 +19,7 @@
   if(!strcasecmp(#V, str.c_str())) \
     ME = V;  \
 
-namespace hpr {
+namespace xx {
   enum Method {
     GET = 1,
     HEAD,

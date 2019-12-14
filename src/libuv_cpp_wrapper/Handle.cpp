@@ -27,8 +27,8 @@ void Handle::close() {
   if(is_closing() | !_handle)
     return;
   uv_close(_handle, [](uv_handle_t* handle) {
-    FileLog& log = FileLog::getInstance();
-    log.info("handle close", __func__, __FILE__, __LINE__);
+    // FileLog& log = FileLog::getInstance();
+    // log.info("handle close", __func__, __FILE__, __LINE__);
     Handle* had = static_cast<Handle*>(handle->data);
     had->invokeInCloseCb();
     had->close_cb();

@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <vector>
 
-using namespace hpr;
+using namespace xx;
 using namespace std;
 
 void HttpResult::setMethod(const string& str) {

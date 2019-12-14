@@ -4,6 +4,7 @@
 #include <memory>
 #include <atomic>
 #include <climits>
+#include "Mutex.hpp"
 
 namespace xx{
 
@@ -34,6 +35,9 @@ private:
   std::atomic_bool _is_run;
   uv_loop_t *_loop;
   LoopMode _mode;
+
+  static 
+  Mutex mx;
 };
 } // namespace uvx
 

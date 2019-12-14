@@ -14,33 +14,19 @@
 using namespace std;
 using namespace xx;
 using namespace std::placeholders;
-static pthread_once_t init_once = PTHREAD_ONCE_INIT; //用于文件初始化
-static pthread_mutex_t mx = PTHREAD_MUTEX_INITIALIZER; //用于singleton
-
+Mutex FileLog::mx;
 /**
  * 读取日志配置的路径
  **/ 
 std::string FileLog::init_path = "./file_log.ini";
 FileLog* FileLog::singleton = nullptr;
 
-/**
- * 在fork时重新初始化init_once
- **/
-static void 
-reset_init_once() {
-  pthread_once_t child_once = PTHREAD_ONCE_INIT;
-  ::memcpy(&init_once, &child_once, sizeof(child_once));
-}
 
 /**
- * 初始化log4cpp函数
+ * 注册FileLog的初始化函数
  **/ 
-static void 
-_init() {
-  if(pthread_atfork(nullptr, nullptr, &reset_init_once)) {
-    cout << "fatal: pthread_atfork error" << endl;
-    terminate();
-  }
+void 
+FileLog::init() {
   try
   {
     if(FileLog::getInitPath().empty()) 
@@ -55,25 +41,16 @@ _init() {
 }
 
 /**
- * 注册FileLog的初始化函数
- **/ 
-void 
-FileLog::init() {
-  if(pthread_once(&init_once, _init))
-    terminate();
-}
-
-/**
  * 获取FileLog的单例
  **/ 
 FileLog& 
 FileLog::getInstance() {
   if(!FileLog::singleton) {
-    pthread_mutex_lock(&mx);
+    FileLog::mx.lock();
     if(!FileLog::singleton) {
       init();
     }
-    pthread_mutex_unlock(&mx);
+    FileLog::mx.unlock();
   }
   return *singleton;
 }

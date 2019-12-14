@@ -1,6 +1,7 @@
 #ifndef __TOOLS__H__
 #define __TOOLS__H__
 #include <string>
+#include "Mutex.hpp"
 
 namespace xx {
 class Tools {
@@ -17,6 +18,7 @@ class Tools {
   private:
   Tools() = default;
   static Tools* singleton;
+  static Mutex mx, mx_sr, mx_uv_sr;
 };
 }
 

@@ -10,6 +10,6 @@ using namespace std;
   "Accept-Language: en, mi \r\n\r\n"
 
 int main(int, char**) {
-  hpr::HttpParser parser;
+  xx::HttpParser parser;
   parser.handleDatagram(TEST_DATAGRAM);
 }

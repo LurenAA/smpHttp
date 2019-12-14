@@ -1,6 +1,6 @@
 #ifndef __HTTPSERVER_H_
 #define __HTTPSERVER_H_
-#include "uvx.hpp"
+#include "XXLibuv.hpp"
 #include "HttpParser.hpp"
 #include <fstream>
 #include <map>
@@ -9,22 +9,23 @@
 #include <set>
 #include "HttpRouter.hpp"
 
-namespace smpHttp {
+namespace xx {
   class HttpResponse;
   class HttpRequest;
   using routeHandleFunc = void(*)(std::shared_ptr<HttpRequest>
     , std::shared_ptr<HttpResponse>);
   class HttpServer{
     public:
-      HttpServer(std::string ip = DEFAULT_IP, int port = DEFAULT_PORT);
+      explicit HttpServer(AddressInfo a = AddressInfo{"0.0.0.0", 8080}, EventLoop& lp = EventLoop(DEFAULT_LOOP));
       void add_route(std::string s, routeHandleFunc);
       void add_static_path(std::string s);
       void run() { tcpServer.run();}
       void setPort(int aport) {tcpServer.setPort(aport);}
 
     private:
-      uvx::Tcp tcpServer;
-      hpr::HttpParser parser;
+      uvx::TcpAccepter& tcpServer;
+      xx::HttpParser parser;
+      
       HttpRouter route;
 
       void deal_with_static(std::shared_ptr<HttpRequest>,std::shared_ptr<HttpResponse>&);

@@ -3,6 +3,10 @@
 #include "FileLog.hpp"
 #include "TcpConnection.hpp"
 #include <string>
+#include "Mutex.hpp"
+#include <unistd.h>
+#include <sys/types.h>
+
 using namespace std;
 using namespace xx;
 
@@ -23,4 +27,20 @@ int main(void) {
   });
   lp.run();
   return 0; 
+
+  // xx::Mutex x;
+  // x.lock();
+  // pid_t k = fork();
+  // if(k == 0) {
+  //   cout << "child process" << endl;
+  //   // cout <<  x.try_lock() << endl;
+  // } else if(k > 0){
+  //   cout <<  "father process" << endl;
+  //   cout <<  x.try_lock() << endl;
+  //   sleep(4);
+  // } else {
+  //   cout << strerror(errno) << endl;
+  // }
+  // return 0;
 }
+

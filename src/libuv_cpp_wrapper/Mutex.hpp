@@ -4,14 +4,13 @@
 #include "Common.hpp"
 
 namespace xx{
-  enum {
-    ERROR_BUF_SIZE = 1024
-  };
+  
   class Mutex {
     public:
       void lock();
       void unlock();
       bool try_lock();
+      Mutex() = default;
       Mutex(const Mutex&) = delete;
       Mutex& operator=(const Mutex&) = delete;
     private:

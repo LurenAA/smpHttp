@@ -1,6 +1,6 @@
 #ifndef _HTTPCONNECTION_HPP
 #define _HTTPCONNECTION_HPP
-#include "Connection.hpp"
+#include "TcpConnection.hpp"
 
 namespace smpHttp {
   class HttpConnection : public uvx::Connection {

@@ -5,6 +5,7 @@
 #include "log4cpp/PropertyConfigurator.hh"
 #include <functional>
 #include <cassert>
+#include "Mutex.hpp"
 /**
  * 使用singleton模式，这样一来可以满足我要从文件初始化log4cpp的需求，
  * 而来可以保证程序结束时自动销毁（如果我使用静态方法，那么最后我需要自己来执行shutdown函数）
@@ -31,6 +32,7 @@ namespace xx {
       static FileLog* singleton;
       static std::string init_path; 
       static void init();
+      static Mutex mx;
   };
 }
 

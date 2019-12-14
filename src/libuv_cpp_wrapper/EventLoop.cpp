@@ -11,64 +11,23 @@
 using namespace std;
 using namespace xx;
 using namespace log4cpp;
-static 
-pthread_mutex_t mx = PTHREAD_MUTEX_INITIALIZER;
-pthread_once_t once = PTHREAD_ONCE_INIT;
 
-/**
- * 重新初始化mx
- **/ 
-static
-void reset_init_mx() {
-  pthread_mutex_t mx_c = PTHREAD_MUTEX_INITIALIZER;
-  ::memcpy(&mx, &mx_c, sizeof(mx_c));
-}
-
-/**
- * 重新初始化once
- **/ 
-static
-void reset_init_once() {
-  pthread_once_t once_c = PTHREAD_ONCE_INIT;
-  ::memcpy(&once,&once_c, sizeof once);
-}
-
-/**
- * 注册reset_init_mx,reset_init_once在fork时
- **/ 
-static 
-void reinit_at_fork() {
-  if(pthread_atfork(nullptr,nullptr, reset_init_mx) || 
-    pthread_atfork(nullptr, nullptr, reset_init_once)) {
-      FileLog& log = FileLog::getInstance();
-      Tools& tl = Tools::getInstance();
-      std::string error_str = "pthread_atfork error in EventLoop: " + tl.get_strerror_r(errno);
-      log.error(error_str, __func__, __FILE__, __LINE__);
-      terminate();
-    }
-}
-
+Mutex EventLoop::mx;
 /**
  * 初始化eventloop
  **/ 
 EventLoop::EventLoop(LoopMode m)
   : _is_run(false), _mode(m)
 {
-  if(pthread_once(&once, reinit_at_fork)) {
-    auto& log = FileLog::getInstance();
-    Tools& tl = Tools::getInstance();
-    log.error("pthread_once in EventLoop error: " + tl.get_strerror_r(errno), __func__, __FILE__, __LINE__);
-    terminate();
-  }
   FileLog& file_log = FileLog::getInstance();
   int err;
   if(_mode == DEFAULT_LOOP) {
     /**
      * default_loop非线程安全
      **/ 
-    pthread_mutex_lock(&mx);
+    EventLoop::mx.lock();
     _loop = uv_default_loop();
-    pthread_mutex_unlock(&mx);
+    EventLoop::mx.unlock();
     if(!_loop) {
       Tools& tl = Tools::getInstance();
       file_log.error("EventLoop uv_default_loop() error" + tl.get_strerror_r(errno), __func__, __FILE__, __LINE__);
