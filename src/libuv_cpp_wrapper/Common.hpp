@@ -15,6 +15,18 @@ struct AddressInfo {
 enum {
   ERROR_BUF_SIZE = 1024
 };
+enum Method {
+    GET = 1,
+    HEAD,
+    POST,
+    PUT,
+    DELETE,
+    CONNECT,
+    OPTIONS,
+    TRACE,
+    ALL,
+    NOTSET
+  };
 using InCloseCbType = std::function<void(Handle*)>;
 using AfterConnectionType = std::function<void(std::shared_ptr<TcpConnection>)>;
 using InReadCbType = std::function<void(std::shared_ptr<TcpConnection>, ssize_t nread, const uv_buf_t *buf, bool isEof)>;

@@ -4,7 +4,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <Connection.hpp>
+#include <TcpConnection.hpp>
 
 namespace smpHttp {
   using WriteCallback = std::function<void()>;

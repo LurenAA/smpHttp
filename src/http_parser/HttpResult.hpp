@@ -4,6 +4,7 @@
 #include <cstring>
 #include <memory>
 #include <map>
+#include "Common.hpp"
 
 #define MethodValue(XX, ME, str) \
   XX(GET, ME, str) \
@@ -20,16 +21,6 @@
     ME = V;  \
 
 namespace xx {
-  enum Method {
-    GET = 1,
-    HEAD,
-    POST,
-    PUT,
-    DELETE,
-    CONNECT,
-    OPTIONS,
-    TRACE
-  };
 
   class HttpResult {
     friend class HttpParser;

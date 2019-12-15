@@ -30,7 +30,6 @@ public:
   static 
   EventLoop* default_event_loop();
 private:
-  
   pthread_t _id = ULONG_MAX;
   std::atomic_bool _is_run;
   uv_loop_t *_loop;

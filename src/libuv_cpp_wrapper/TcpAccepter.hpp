@@ -38,8 +38,10 @@ public:
 
   void add_tcp_connection(std::shared_ptr<TcpConnection> c);
   void remove_tcp_connection(int index);
-private:
+protected:
   EventLoop& _lp;  //事件循环
+private:
+  
   AddressInfo _address; //地址信息
   uv_tcp_t _server;  //原生handle
   

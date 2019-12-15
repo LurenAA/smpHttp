@@ -3,13 +3,13 @@
 #include "HttpResult.hpp"
 #include <string>
 #include "IfstreamCon.hpp"
-#include "Connection.hpp"
+#include "TcpConnection.hpp"
 #include <iostream>
-#include "Loop.hpp"
+#include "EventLoop.hpp"
 
-namespace smpHttp {
+namespace xx {
   class HttpServer;
-  class HttpRequest : public hpr::HttpResult{
+  class HttpRequest : public xx::HttpResult{
     friend class HttpServer;
     public:
       HttpRequest() = default;

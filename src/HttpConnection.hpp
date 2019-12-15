@@ -1,17 +1,22 @@
 #ifndef _HTTPCONNECTION_HPP
 #define _HTTPCONNECTION_HPP
 #include "TcpConnection.hpp"
+#include "Common.hpp"
 
-namespace smpHttp {
-  class HttpConnection : public uvx::Connection {
+namespace xx {
+  class HttpConnection : public xx::TcpConnection {
   public:
-    using uvx::Connection::Connection;
-    const std::string& getDatagram() {return reserve_for_read;}
+    using xx::TcpConnection::TcpConnection;
+    std::string& getReserveForRead() {return reserve_for_read;}
+    
+    ssize_t getRemain() const {return remain;}
+    void setRemain(ssize_t r) {remain = r;}
+    void setMethod(Method m) {method = m;}
+    Method getMethod() const {return method;}
   private:
     ssize_t remain = INT_MIN; //  remain len to read
-    std::string method = "";
+    Method method = Method::NOTSET;
     std::string reserve_for_read = "";
-    void onStartRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) override;
   };
 }
 

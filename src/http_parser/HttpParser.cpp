@@ -4,10 +4,11 @@
 #include <iostream>
 #include <cstring>
 #include <pthread.h>
+
 using namespace std;
 using namespace xx;
-static 
-pthread_mutex_t mx = PTHREAD_MUTEX_INITIALIZER;
+
+Mutex HttpParser::mx;
 
 HttpParser* HttpParser::pr = nullptr;
 string trimString(string::const_iterator,string::const_iterator);
@@ -25,8 +26,7 @@ HttpResult* HttpParser::handleDatagram(const std::string& datagram) {
       parseContent(iter, iend, res);
       check(res);
     }
-      
-
+    
     parseQueries(res);
     parseRequestPath(res); 
   } catch(HttpParserError& e) {
@@ -147,10 +147,15 @@ void HttpParser::check(HttpResult* res){
 
 HttpParser& HttpParser::getInstance(){
   if(!pr) {
-    
+    mx.lock();
     if(!pr) {
-
+      pr = new HttpParser();
+      if(!pr) {
+        cout << "HttpParser::getInstance error " << endl;
+        terminate(); 
+      }
     }
+    mx.unlock();
   }
   return *pr;
 }

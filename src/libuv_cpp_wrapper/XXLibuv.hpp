@@ -4,5 +4,7 @@
 #include "Tools.hpp"
 #include "TcpAccepter.hpp"
 #include "TcpConnection.hpp"
+#include "FileLog.hpp"
+#include "Mutex.hpp"
 
 #endif 

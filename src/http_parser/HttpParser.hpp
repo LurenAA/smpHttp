@@ -2,6 +2,7 @@
 #define __HTTP_PARSER_HPP_
 #include <memory>
 #include "HttpResult.hpp"
+#include "Mutex.hpp"
 
 namespace xx {
   class HttpParserError : public std::runtime_error {
@@ -39,6 +40,8 @@ namespace xx {
         std::string::const_iterator& iend, 
         HttpResult* res);
       void check(HttpResult* res);
+      static
+      Mutex mx;
   };
 }
 
