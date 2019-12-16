@@ -21,6 +21,7 @@
 + Accept-Ranges: bytes
 + 检查数据报格式是否正确
 + 定时处理没响应的连接
++ 对于DELETE、PUT等等方法的处理
 &ensp;
 
 ### 🗼 第三方依赖

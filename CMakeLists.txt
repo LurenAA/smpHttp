@@ -14,11 +14,9 @@ include_directories(${dics})
 add_subdirectory(src/libuv_cpp_wrapper)
 add_subdirectory(src/http_parser)
 
-# AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/src srcs)
-# AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/test srcs)
-# AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/src/mysql_con srcs)
-list(APPEND srcs ${PROJECT_SOURCE_DIR}/test/main.cpp ${PROJECT_SOURCE_DIR}/src/RouteWq.cpp ${PROJECT_SOURCE_DIR}/src/RouteElement.cpp
-${PROJECT_SOURCE_DIR}/src/HttpServer.cpp)
+AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/src srcs)
+AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/test srcs)
+AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/src/mysql_con srcs)
 
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") 

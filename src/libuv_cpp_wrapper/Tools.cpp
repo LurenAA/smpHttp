@@ -24,9 +24,6 @@ Tools& Tools::getInstance() {
   return *singleton;
 }
 
-Tools::~Tools() {
-}
-
 /**
  * 线程安全的strerror_r
  **/ 

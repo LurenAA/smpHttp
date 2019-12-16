@@ -8,7 +8,7 @@ namespace xx {
   class HttpRequest;
   class RouteWq : public std::enable_shared_from_this<RouteWq>{
     public:
-      RouteWq() = default;
+      RouteWq(HttpRequest* req) : req(req) {}
       RouteWq(const RouteWq&) = delete;
       RouteWq& operator=(const RouteWq&) = delete;
 
@@ -18,6 +18,7 @@ namespace xx {
       void pop();
       const RouteElement& top() const;
     private: 
+      HttpRequest* const req;
       std::priority_queue<RouteElement> wq;
   };
 }

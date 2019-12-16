@@ -2,22 +2,30 @@
 #include "Util.hpp"
 #include <iostream>
 #include <cstring>
-
+#include "FileLog.hpp"
+#include "Tools.hpp"
 using namespace std;
-using namespace smpHttp;
+using namespace xx;
 
 #define CRLF "\r\n"
 #define CHUNK_END "0\r\n\r\n"
 
+/**
+ * 添加头部
+ **/ 
 void Packet::addHeader(const std::string& name,const  std::string& value) {
   if(mode == CHUNKED || name == "Transfer-Encoding"){
-    cout << "log: cannot set Transfer-Encoding \
-    directly or set headers to a chunked datagram" << endl;
+    auto& fl = FileLog::getInstance();
+    fl.error("cannot set Transfer-Encoding \
+    directly or set headers to a chunked datagram", __func__ , __FILE__, __LINE__);
     return;
   }
   headers.insert({name, value});
 }
 
+/**
+ * 转化成数据报
+ **/ 
 std::string Packet::get() {
 #define AXX(nu, sm, des) \
   if(nu == static_cast<int>(status)) \
@@ -37,7 +45,7 @@ std::string Packet::get() {
     }
     if(mode == NORMAL && !if_set_content_length) 
       res += "Content-Length:" + to_string(message.size()) + CRLF;
-    else if(mode == CHUNKED_FIRST)
+    else if(mode == CHUNKED_START)
       res += "Transfer-Encoding:chunked\r\n";  
   } 
 
@@ -55,7 +63,10 @@ std::string Packet::get() {
   return res;
 }
 
-std::string Packet::chunk_data(std::string s) {
+/**
+ * chunked格式
+ **/ 
+std::string Packet::chunk_data(std::string s) const{
   char chunkSize[10] = "";
   sprintf(chunkSize, "%x", static_cast<unsigned int>(s.size()));
   string res(chunkSize);
@@ -63,6 +74,9 @@ std::string Packet::chunk_data(std::string s) {
   return res;
 }
 
+/**
+ * 添加content-type
+ **/ 
 void Packet::setContentType(const std::string &s) {
   string ext = Util::getExt(s);
   if(!ext.size()) 
@@ -73,7 +87,10 @@ void Packet::setContentType(const std::string &s) {
   addHeader("Content-Type", mime);
 }
 
-std::string Packet::translate_version_to_string() {
+/**
+ * 将httpversion从enum转化成string
+ **/ 
+std::string Packet::translate_version_to_string() const {
   if(http_version == HTTP_09)
     return "HTTP/0.9";
   else if (http_version == HTTP_10)
@@ -82,6 +99,10 @@ std::string Packet::translate_version_to_string() {
     return "HTTP/1.1";
 }
 
+/**
+ * 标记已经是最后一个chunked的包了，
+ * 在get（）的时候会添加最后一个chunked包的结尾
+ **/ 
 void Packet::setLastChunked(bool b) {
   if(mode != NORMAL) 
     is_last_chunked = b;

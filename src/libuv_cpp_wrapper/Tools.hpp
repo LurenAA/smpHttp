@@ -5,7 +5,7 @@
 
 namespace xx {
 class Tools {
-  public:
+public:
   static Tools& getInstance();
 
   std::string get_strerror_r(int errno_r);
@@ -13,9 +13,7 @@ class Tools {
 
   Tools& operator=(const Tools&) = delete;
   Tools(const Tools&) = delete;
-  virtual ~Tools();
-
-  private:
+private:
   Tools() = default;
   static Tools* singleton;
   static Mutex mx, mx_sr, mx_uv_sr;

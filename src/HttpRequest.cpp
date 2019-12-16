@@ -2,4 +2,4 @@
 #include "HttpRequest.hpp"
 
 using namespace std;
-using namespace smpHttp;
+using namespace xx;

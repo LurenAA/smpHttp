@@ -5,8 +5,10 @@
 #include <memory>
 #include <vector>
 #include "mysqlx/xdevapi.h"
+#include "CCommon.hpp"
+#include "Tools.hpp"
 
-namespace smpHttp {
+namespace xx {
   class Util {
     public:
       static void trim(std::string& s);
@@ -19,8 +21,8 @@ namespace smpHttp {
       static std::string utf16Toutf8(const mysqlx::Value& v);
       static bool isBase64(const std::string& s);
       static std::string getStaticDirnameUrl(const std::string& host, int port);
-      static bool checkIsHostOrIp(const std::string& s);
-      static void showUvError(int _errno);
+      static std::string get_uv_strerror_t(int errno_r);
+      static std::string get_strerror_r(int errno_r);
     private:
       static std::shared_ptr<std::map<std::string, std::string>> mimes;
   };

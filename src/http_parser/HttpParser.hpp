@@ -16,8 +16,8 @@ namespace xx {
 
       HttpParser& operator=(const HttpParser&) = delete;
       HttpParser(const HttpParser&) = delete;
-      HttpResult* handleDatagram(const std::string& datagram);
-      HttpResult* handleDatagram(const char* str, int len);
+      HttpResult handleDatagram(const std::string& datagram);
+      HttpResult handleDatagram(const char* str, int len);
     private:
       static
       HttpParser* pr;

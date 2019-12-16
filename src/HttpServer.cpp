@@ -7,6 +7,9 @@
 #include <algorithm>
 #include <string>
 #include "HttpConnection.hpp"
+#include "HttpParser.hpp"
+#include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
 
 using namespace std;
 using namespace xx;
@@ -183,7 +186,7 @@ using namespace std::placeholders;
 // }
 
 HttpServer::HttpServer(AddressInfo a, EventLoop* lp) :
-  _lp(lp), _tcpServer(*_lp, a), _route()
+  _lp(lp), _tcpServer(*_lp, a),_route_vec()
 {
   auto af_con = bind(&HttpServer::after_connection, this, _1);
   _tcpServer.setAfterConnectionCb(af_con);
@@ -195,28 +198,104 @@ HttpServer::~HttpServer(){
   delete _lp;
 }
 
+/**
+ * 运行
+ **/ 
 void HttpServer::run() {
   _tcpServer.listen();
   _lp->run();
 }
 
+/**
+ * 请求连接后的回调函数
+ **/  
 void HttpServer::after_connection(std::shared_ptr<TcpConnection> tc) {
   tc->read();
   auto in_rd = bind(&HttpServer::in_read, this, _1, _2, _3, _4);
   tc->setInReadCb(in_rd);
 }
 
+/**
+ * 接受完整数据包后调用这个函数进行下一步处理
+ **/ 
 void HttpServer::in_read_second(std::shared_ptr<TcpConnection> tc) {
+  auto& fl = FileLog::getInstance();
+  HttpConnection* cn = dynamic_cast<HttpConnection*>(tc.get());
+  if(!cn) {
+    fl.error("HttpServer::in_read_second: cn is empty", __func__, __FILE__,__LINE__);
+    terminate();
+  }
+  try {
+    /**
+     * 生成HttpRequest对象
+     **/ 
+    HttpParser& hpr = HttpParser::getInstance();
+    HttpResult rst = hpr.handleDatagram(cn->getReserveForRead());\
+    shared_ptr<HttpRequest> req = make_shared<HttpRequest>(rst, tc , *this->_lp);
+    /**
+     * OPTION
+     **/ 
+    if(cn->getMethod() == Method::OPTIONS) {
+      shared_ptr<HttpResponse> res = newHttpResponse(tc);
+      string orig = req->getHeader("Origin");
+      res->addHeader("Access-Control-Allow-Origin", orig == "" ? "*" : orig);
+      res->addHeader("Access-Control-Allow-Methods","POST, GET, OPTIONS");
+      res->addHeader("Access-Control-Max-Age","86400");
+      res->addHeader("Connection","keep-alive");
+      res->addHeader("Access-Control-Expose-Headers", "token");
+      res->addHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept, token");
+      res->setAfterWrite([](std::shared_ptr<TcpConnection> tc) {
+        tc->close();
+      });
+      res->end();
+      return ;
+    }
+    /**
+     * GET 
+     * */  
+    else if (cn->getMethod() == Method::GET) {
 
+    } 
+    /**
+     * POST
+     **/ 
+    else if (cn->getMethod() == Method::POST){
+      
+    }
+    /**
+     * other method
+     **/ 
+    else {
+      shared_ptr<HttpResponse> res = newHttpResponse(tc);
+      res->setHttpStatus(HttpStatus(405));
+      res->addMessage("Method Not Allowed");
+      res->setAfterWrite([](std::shared_ptr<TcpConnection> tc) {
+        tc->close();
+      });
+      res->end();
+      return ;
+    }
+  }
+  catch(exception& e) {  
+    fl.debug(string("in_read_second:") + e.what(),__func__,__FILE__,__LINE__);
+    cn->close();
+  }
 }
 
+/**
+ * 在数据报没有接收完时通过这个函数进行处理
+ **/ 
 void HttpServer::in_read(std::shared_ptr<TcpConnection> tc, ssize_t nread, const uv_buf_t *buf, bool isEof) {
+  auto& fl = FileLog::getInstance();
+  auto& tl = Tools::getInstance();
   HttpConnection* cn = dynamic_cast<HttpConnection*>(tc.get());
+  if(!cn) {
+    fl.error("HttpServer::in_read: cn is empty", __func__, __FILE__,__LINE__);
+    terminate();
+  }
   ssize_t grm = cn->getRemain();
   Method mtd = cn->getMethod();
   string& rfd = cn->getReserveForRead();
-  auto& fl = FileLog::getInstance();
-  auto& tl = Tools::getInstance();
   try {
     if(isEof) {
       if(grm > 0) {
@@ -308,10 +387,10 @@ void HttpServer::in_read(std::shared_ptr<TcpConnection> tc, ssize_t nread, const
       }
     }
     /**
-     * other methods
+     * other methods 暂时不支持
      **/ 
     else {
-
+      this->in_read_second(tc);
     }
   } catch(exception& e) {
     fl.error(string("HttpServer::in_read : ") + e.what(), __func__, __FILE__, __LINE__);
@@ -319,6 +398,31 @@ void HttpServer::in_read(std::shared_ptr<TcpConnection> tc, ssize_t nread, const
   }
 }
 
+/**
+ * 重载tcpAccepter，连接时生成HttpConnection对象而不是TcpConnection
+ **/ 
 TcpConnection* HttpAccepter::tcp_connection_object() {
   return new HttpConnection(*this, _lp);
+}
+
+/**
+ * 添加一条路由
+ **/ 
+void HttpServer::add_route(const std::string& s, routeHandleFunc f
+  ,Method m ,uint16_t pri , 
+  const std::string& prefix, bool is_cover) 
+{
+  RouteElement el(regex(s), f, false, "", pri, m);
+  _route_vec.push_back(el);
+}
+
+/**
+ * 添加一条静态路由
+ **/ 
+void HttpServer::add_static_route(const std::string& s,Method m,
+  uint16_t pri, 
+  const std::string& prefix,bool is_cover )
+{
+  RouteElement el(regex(s), nullptr, false, "", pri, m);
+  _route_vec.push_back(el);
 }

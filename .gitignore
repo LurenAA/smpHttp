@@ -13,5 +13,5 @@ Makefile
 smpHttp_*
 core*
 log*
-fileAppender*.txt
-*.a
+fileAppender.txt*
+**/*.a

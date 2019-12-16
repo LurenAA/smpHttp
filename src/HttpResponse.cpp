@@ -1,56 +1,79 @@
 #include "HttpResponse.hpp"
-#include "Connection.hpp"
+#include "TcpConnection.hpp"
 #include <iostream>
+#include "FileLog.hpp"
 
 using namespace std;
-using namespace smpHttp;
-using namespace uvx;
+using namespace xx;
 
-HttpResponse::HttpResponse(std::shared_ptr<uvx::Connection> cl)
+/**
+ * 通过一个TcpConnection的对象来初始化，
+ * 用在HttpServer的in_read_second
+ **/ 
+HttpResponse::HttpResponse(std::shared_ptr<TcpConnection> cl)
  : Packet(), cl(cl)
 {
 }
 
-void HttpResponse::setAfterWrite(WriteCallback f) {
-  cl->setWriteCallback(f);
+/**
+ * 设置完成write操作后的回调函数
+ **/ 
+void HttpResponse::setAfterWrite(AfterWriteType f) {
+  cl->setAfterWriteCb(f);
 }
 
-void HttpResponse::end(){
+/**
+ * 显示调动end，发送数据包。
+ * 如果写过那么返回false
+ **/ 
+bool HttpResponse::end(){
   if(is_end)
-    return ;
+    return false;
   cl->write(get());
   is_end = true;
+  return true;
 }
 
-HttpResponse::~HttpResponse(){
-  
-}
-
-HttpResponse::HttpResponse(const HttpResponse& s) :
-  Packet(), cl(s.cl), is_first(s.is_first)
+/**
+ *获取一个当前状态的复制，但是Packet是不相关的，
+ *用在chunked传输文件时
+ */  
+std::shared_ptr<HttpResponse> 
+HttpResponse::getStatuCopy() const 
 {
+  std::shared_ptr<HttpResponse> r(make_shared<HttpResponse>(this->cl));
+  r->is_end = this->is_end;
+  r->is_first = this->is_first;
+  return r;
 }
 
 void HttpResponseDeleter::operator() (HttpResponse* hrq) const
 {
-  if(!hrq->is_end) { 
-    auto pref = hrq->cl->getWriteCallback();
-    auto func = bind([](HttpResponse* hrq1, decltype(pref) pfunc) {
-      if(pfunc) 
-        pfunc();
-      delete hrq1; 
-    }, hrq, pref);
-    hrq->cl->setWriteCallback(func);
-    if(hrq->cl->is_active()) 
-      hrq->end();
-  } else {
-    auto pref = hrq->cl->getWriteCallback();
-    if(pref)
-      pref();
-    delete hrq;
-  }
+  delete hrq;
+  // if(!hrq->is_end) { 
+  //   auto pref = hrq->cl->getWriteCallback();
+  //   auto func = bind([](HttpResponse* hrq1, decltype(pref) pfunc) {
+  //     if(pfunc) 
+  //       pfunc();
+  //     delete hrq1; 
+  //   }, hrq, pref);
+  //   hrq->cl->setWriteCallback(func);
+  //   if(hrq->cl->is_active()) 
+  //     hrq->end();
+  // } else {
+  //   auto pref = hrq->cl->getWriteCallback();
+  //   if(pref)
+  //     pref();
+  //   delete hrq;
+  // }
 }
 
+/**
+ * 关闭连接
+ **/ 
 void HttpResponse::close() {
+  auto& fl = FileLog::getInstance();
+  fl.debug("close HttpResponse " 
+    + cl->getIndex(), __func__, __FILE__, __LINE__);
   cl->close();
 }

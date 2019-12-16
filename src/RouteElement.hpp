@@ -13,14 +13,18 @@ namespace xx {
   using routeHandleFunc = void(*)(std::shared_ptr<HttpRequest>
     , std::shared_ptr<HttpResponse>, std::shared_ptr<RouteWq>);
   struct RouteElement {
-    RouteElement(std::regex reg, uint16_t pri, std::string prefix,routeHandleFunc callback,
-     bool is_static, xx::Method m = Method::ALL);
+    enum {
+      DEFAULT_PRIORITY = 3
+    };
+    RouteElement(std::regex reg,routeHandleFunc callback,
+     bool is_static,std::string prefix = "",
+     uint16_t pri = DEFAULT_PRIORITY ,xx::Method m = Method::ALL);
     bool operator<(const RouteElement& ele) const;
     std::regex reg;
-    uint16_t priority;
-    std::string prefix; //前缀
     routeHandleFunc callback; //回调
     bool is_static;
+    std::string prefix; //前缀
+    uint16_t priority;
     Method method;
   };
 }

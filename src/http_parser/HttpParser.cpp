@@ -13,22 +13,22 @@ Mutex HttpParser::mx;
 HttpParser* HttpParser::pr = nullptr;
 string trimString(string::const_iterator,string::const_iterator);
 
-HttpResult* HttpParser::handleDatagram(const std::string& datagram) {
+HttpResult HttpParser::handleDatagram(const std::string& datagram) {
   auto iter = datagram.cbegin(), 
     iend = datagram.cend();
-  HttpResult* res = new HttpResult();
+  HttpResult res;
   try {
-    parseMethod(iter, iend, res);
-    parseRequestTarget(iter, iend, res);
-    parseHttpVersion(iter, iend, res);
-    parseHeaders(iter, iend, res);
-    if(res->getMethod() == POST) {
-      parseContent(iter, iend, res);
-      check(res);
+    parseMethod(iter, iend, &res);
+    parseRequestTarget(iter, iend, &res);
+    parseHttpVersion(iter, iend, &res);
+    parseHeaders(iter, iend, &res);
+    if(res.getMethod() == POST) {
+      parseContent(iter, iend, &res);
+      check(&res);
     }
     
-    parseQueries(res);
-    parseRequestPath(res); 
+    parseQueries(&res);
+    parseRequestPath(&res); 
   } catch(HttpParserError& e) {
     throw HttpParserError(e.what());
   } catch(exception& e){
@@ -40,7 +40,7 @@ HttpResult* HttpParser::handleDatagram(const std::string& datagram) {
   return res;
 }
 
-HttpResult* HttpParser::handleDatagram(const char* str, int len) {
+HttpResult HttpParser::handleDatagram(const char* str, int len) {
   string datagram(str, len);
   return handleDatagram(datagram);
 }
