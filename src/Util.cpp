@@ -124,4 +124,22 @@ std::string Util::get_uv_strerror_t(int errno_r) {
   return tl.get_uv_strerror_t(errno_r);
 }
 
+/**
+ * 用于路由中将请求的前缀和路径结合到一起，
+ * 在in_read_second中有用到
+ **/ 
+std::string Util::conbine_prefix_and_path(std::string prefix , std::string path) 
+{
+  if(!prefix.size())
+    return path;
+  if(prefix.back() != '/' && path.front() != '/') {
+    prefix += '/';
+  }
+  string res = prefix + path;
+  auto itr = res.find("//");
+  if(itr != string::npos) {
+    res.erase(itr, itr + 2);
+  }
+  return res;
+}
 #undef CASE

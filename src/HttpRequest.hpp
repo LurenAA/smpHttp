@@ -7,20 +7,27 @@
 #include "EventLoop.hpp"
 #include "RouteWq.hpp"
 
+
 namespace xx {
   class HttpServer;
-  class HttpRequest : public xx::HttpResult{
+  class HttpRequest : std::enable_shared_from_this<HttpRequest>, public xx::HttpResult {
     friend class HttpServer;
     public:
-      HttpRequest(const xx::HttpResult& s, std::shared_ptr<xx::TcpConnection> c,xx::EventLoop& lp)
-        : HttpResult(s), connection(c), _lp(lp), _route(this) {}
-      void close() {connection->close();}
+      static
+      std::shared_ptr<HttpRequest> newHttpRequest(const xx::HttpResult& s, std::shared_ptr<xx::TcpConnection> c,xx::HttpServer& svr);
+
+      void close();
       virtual ~HttpRequest() {}
-      
+      RouteWq& getRoute() { return _route;}
+      HttpServer& getServer () {return svr;}
     private:
+      HttpRequest(const xx::HttpResult& s, std::shared_ptr<xx::TcpConnection> c,xx::HttpServer& lp);
+
       std::shared_ptr<TcpConnection> connection;
-      EventLoop& _lp;
+      HttpServer& svr;
       RouteWq _route;
   };
+  
+  
 }
 #endif //__HTTP_REQUREST_HPP_

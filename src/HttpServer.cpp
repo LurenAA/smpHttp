@@ -10,6 +10,7 @@
 #include "HttpParser.hpp"
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
+#include "Util.hpp"
 
 using namespace std;
 using namespace xx;
@@ -186,7 +187,7 @@ using namespace std::placeholders;
 // }
 
 HttpServer::HttpServer(AddressInfo a, EventLoop* lp) :
-  _lp(lp), _tcpServer(*_lp, a),_route_vec()
+  _lp(lp), _tcpServer(*_lp, a),_route_vec(), _req_set()
 {
   auto af_con = bind(&HttpServer::after_connection, this, _1);
   _tcpServer.setAfterConnectionCb(af_con);
@@ -230,13 +231,13 @@ void HttpServer::in_read_second(std::shared_ptr<TcpConnection> tc) {
      * 生成HttpRequest对象
      **/ 
     HttpParser& hpr = HttpParser::getInstance();
-    HttpResult rst = hpr.handleDatagram(cn->getReserveForRead());\
-    shared_ptr<HttpRequest> req = make_shared<HttpRequest>(rst, tc , *this->_lp);
+    HttpResult rst = hpr.handleDatagram(cn->getReserveForRead());
+    shared_ptr<HttpRequest> req = HttpRequest::newHttpRequest(rst, tc , *this);
     /**
      * OPTION
      **/ 
     if(cn->getMethod() == Method::OPTIONS) {
-      shared_ptr<HttpResponse> res = newHttpResponse(tc);
+      shared_ptr<HttpResponse> res = newHttpResponse(tc, req);
       string orig = req->getHeader("Origin");
       res->addHeader("Access-Control-Allow-Origin", orig == "" ? "*" : orig);
       res->addHeader("Access-Control-Allow-Methods","POST, GET, OPTIONS");
@@ -251,22 +252,11 @@ void HttpServer::in_read_second(std::shared_ptr<TcpConnection> tc) {
       return ;
     }
     /**
-     * GET 
-     * */  
-    else if (cn->getMethod() == Method::GET) {
-
-    } 
-    /**
-     * POST
-     **/ 
-    else if (cn->getMethod() == Method::POST){
-      
-    }
-    /**
      * other method
      **/ 
-    else {
-      shared_ptr<HttpResponse> res = newHttpResponse(tc);
+    else if(cn->getMethod() != Method::GET 
+    && cn->getMethod() != Method::POST){
+      shared_ptr<HttpResponse> res = newHttpResponse(tc, req);
       res->setHttpStatus(HttpStatus(405));
       res->addMessage("Method Not Allowed");
       res->setAfterWrite([](std::shared_ptr<TcpConnection> tc) {
@@ -274,6 +264,28 @@ void HttpServer::in_read_second(std::shared_ptr<TcpConnection> tc) {
       });
       res->end();
       return ;
+    }
+    /**
+     * GET 
+     * */  
+    else if (cn->getMethod() == Method::GET) {
+      for(auto cbe : _route_vec) {
+        std::string path = Util::conbine_prefix_and_path(cbe.prefix, req->getRequestPath());
+        bool is_reg = regex_match(path.begin(),path.end(), cbe.reg);
+        if(is_reg && (cbe.method == Method::GET || cbe.method == Method::ALL)){
+          req->getRoute().push(cbe);
+        }
+      }
+      /**
+       * 开始执行回调函数
+       **/ 
+
+    } 
+    /**
+     * POST
+     **/ 
+    else if (cn->getMethod() == Method::POST){
+      
     }
   }
   catch(exception& e) {  
@@ -425,4 +437,22 @@ void HttpServer::add_static_route(const std::string& s,Method m,
 {
   RouteElement el(regex(s), nullptr, false, "", pri, m);
   _route_vec.push_back(el);
+}
+
+/**
+ * 添加req到请求的队列中
+ **/ 
+void HttpServer::add_req(const std::shared_ptr<HttpRequest>& req) {
+  _req_set.insert(req);
+}
+
+/**
+ * 移除req
+ **/ 
+bool HttpServer::remove_req(const std::shared_ptr<HttpRequest>& req) {
+  std::set<std::shared_ptr<HttpRequest>>::size_type 
+  siz = _req_set.erase(req);
+  if(!siz)
+    return false;
+  return true;
 }

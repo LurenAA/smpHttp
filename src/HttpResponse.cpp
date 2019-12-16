@@ -1,7 +1,8 @@
 #include "HttpResponse.hpp"
-#include "TcpConnection.hpp"
 #include <iostream>
 #include "FileLog.hpp"
+#include "HttpRequest.hpp"
+
 
 using namespace std;
 using namespace xx;
@@ -10,8 +11,8 @@ using namespace xx;
  * 通过一个TcpConnection的对象来初始化，
  * 用在HttpServer的in_read_second
  **/ 
-HttpResponse::HttpResponse(std::shared_ptr<TcpConnection> cl)
- : Packet(), cl(cl)
+HttpResponse::HttpResponse(std::shared_ptr<TcpConnection> cl, std::shared_ptr<HttpRequest> hrq)
+ : Packet(), cl(cl), req(hrq)
 {
 }
 
@@ -41,7 +42,7 @@ bool HttpResponse::end(){
 std::shared_ptr<HttpResponse> 
 HttpResponse::getStatuCopy() const 
 {
-  std::shared_ptr<HttpResponse> r(make_shared<HttpResponse>(this->cl));
+  std::shared_ptr<HttpResponse> r(newHttpResponse(this->cl, this->req));
   r->is_end = this->is_end;
   r->is_first = this->is_first;
   return r;
@@ -72,8 +73,5 @@ void HttpResponseDeleter::operator() (HttpResponse* hrq) const
  * 关闭连接
  **/ 
 void HttpResponse::close() {
-  auto& fl = FileLog::getInstance();
-  fl.debug("close HttpResponse " 
-    + cl->getIndex(), __func__, __FILE__, __LINE__);
-  cl->close();
+  req->close();
 }
