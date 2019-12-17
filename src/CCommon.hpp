@@ -264,8 +264,11 @@ namespace xx
   class HttpResponse;
   class HttpRequest;
   class RouteWq;
+  class QueueWork;
   using routeHandleFunc = void(*)(std::shared_ptr<HttpRequest>
     , std::shared_ptr<HttpResponse>,RouteWq&);
+  using QueueWorkCbType = std::function<void(std::shared_ptr<QueueWork>)>;
+  using QueueAfterWorkCbType = std::function<void(std::shared_ptr<QueueWork>, int status)>;
   enum TransMode {
     CHUNKED = 109,
     CHUNKED_START,

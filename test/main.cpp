@@ -72,11 +72,14 @@
 //   cli.close();
 //   return 0;
 // }
-
 #include "HttpServer.hpp"
 #include "HttpResponse.hpp"
 #include "RouteWq.hpp"
+#include "HttpRequest.hpp"
+#include "QueueWork.hpp"
+#include "unistd.h"
 
+using namespace std;
 using namespace xx;
 void a(std::shared_ptr<HttpRequest> req, std::shared_ptr<HttpResponse> res,RouteWq& wq) 
 {
@@ -87,10 +90,16 @@ void a(std::shared_ptr<HttpRequest> req, std::shared_ptr<HttpResponse> res,Route
 void b(std::shared_ptr<HttpRequest> req, std::shared_ptr<HttpResponse> res, RouteWq& wq) 
 {
   res->addMessage("asdas2d");
-  res->setAfterWrite([](std::shared_ptr<TcpConnection> tc) {
-    tc->close();
+  shared_ptr<QueueWork> qwk = QueueWork::newQueueWork(req,res,req->getServer());
+  qwk->setWorkCb([](shared_ptr<QueueWork> qwk){
+    sleep(10);
+    
   });
-  // res->end();
+  qwk->setAfterWorkCb([](shared_ptr<QueueWork> qwk, int sta) {
+    cout << 123 << endl;
+    qwk->getRes()->addMessage("12345456788");
+  });
+  qwk->work();
 }
 
 int main() {

@@ -19,7 +19,7 @@ namespace xx {
       void close();
       virtual ~HttpRequest() {}
       RouteWq& getRoute() { return _route;}
-      HttpServer& getServer () {return svr;}
+      HttpServer& getServer () const;
     private:
       HttpRequest(const xx::HttpResult& s, std::shared_ptr<xx::TcpConnection> c,xx::HttpServer& lp);
 

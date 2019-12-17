@@ -41,3 +41,10 @@ HttpRequest::newHttpRequest(const xx::HttpResult& s, std::shared_ptr<xx::TcpConn
   // svr.add_req(sr);
   return sr;
 }
+
+/**
+ * 返回HttpServer对象的引用
+ **/ 
+HttpServer& HttpRequest::getServer () const {
+  return svr;
+}

@@ -231,7 +231,7 @@ void HttpServer::in_read_second(std::shared_ptr<TcpConnection> tc) {
      * OPTION
      **/ 
     if(cn->getMethod() == Method::OPTIONS) {
-      shared_ptr<HttpResponse> res = newHttpResponse(tc, req);
+      shared_ptr<HttpResponse> res = HttpResponse::newHttpResponse(tc, req);
       string orig = req->getHeader("Origin");
       res->addHeader("Access-Control-Allow-Origin", orig == "" ? "*" : orig);
       res->addHeader("Access-Control-Allow-Methods","POST, GET, OPTIONS");
@@ -250,7 +250,7 @@ void HttpServer::in_read_second(std::shared_ptr<TcpConnection> tc) {
      **/ 
     else if(cn->getMethod() != Method::GET 
     && cn->getMethod() != Method::POST){
-      shared_ptr<HttpResponse> res = newHttpResponse(tc, req);
+      shared_ptr<HttpResponse> res = HttpResponse::newHttpResponse(tc, req);
       res->setHttpStatus(HttpStatus(405));
       res->addMessage("Method Not Allowed");
       res->setAfterWrite([](std::shared_ptr<TcpConnection> tc) {
@@ -273,7 +273,7 @@ void HttpServer::in_read_second(std::shared_ptr<TcpConnection> tc) {
       /**
        * 创建HttpResponse对象
        **/ 
-      shared_ptr<HttpResponse> res = newHttpResponse(tc, req);
+      shared_ptr<HttpResponse> res = HttpResponse::newHttpResponse(tc, req);
       /**
        * 开始执行回调函数
        **/ 
@@ -438,20 +438,22 @@ void HttpServer::add_static_route(const std::string& s,Method m,
   _route_vec.push_back(el);
 }
 
-// /**
-//  * 添加req到请求的队列中
-//  **/ 
-// void HttpServer::add_req(const std::shared_ptr<HttpRequest>& req) {
-//   _req_set.insert(req);
-// }
+/**
+ * 添加queue_work
+ **/ 
+void HttpServer::add_queue_work(std::shared_ptr<QueueWork> wk)
+{
+  _queue_work_set.insert(wk);
+}
 
-// /**
-//  * 移除req
-//  **/ 
-// bool HttpServer::remove_req(const std::shared_ptr<HttpRequest>& req) {
-//   std::set<std::shared_ptr<HttpRequest>>::size_type 
-//   siz = _req_set.erase(req);
-//   if(!siz)
-//     return false;
-//   return true;
-// }
+/**
+ * 移除queue_work
+ **/ 
+bool HttpServer::remove_queue_work(std::shared_ptr<QueueWork> wk) 
+{
+  auto x = _queue_work_set.find(wk);
+  if(x == _queue_work_set.end())
+    return false;
+  _queue_work_set.erase(x);
+  return true;
+}

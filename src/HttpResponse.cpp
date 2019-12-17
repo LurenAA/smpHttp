@@ -54,7 +54,10 @@ void HttpResponseDeleter::operator() (HttpResponse* res) const
    *如果是普通请求并且在最后没有发送数据报
    **/ 
   if(res->getMode() == TransMode::NORMAL && !res->getIsEnd()) {
-    if(res->getAfterWriteCb() == nullptr) {
+    /**
+     * 如果用户没有自己设置回调函数
+     **/ 
+    if(!res->getAfterWriteCb()) {
       res->setAfterWrite([](std::shared_ptr<TcpConnection> tc) {
         tc->close();
       });
@@ -86,4 +89,9 @@ void HttpResponseDeleter::operator() (HttpResponse* res) const
  **/ 
 void HttpResponse::close() {
   req->close();
+}
+
+template<typename... A>
+std::shared_ptr<HttpResponse> HttpResponse::newHttpResponse(A... args) {
+  return std::shared_ptr<HttpResponse> (new HttpResponse(args...), HttpResponseDeleter());
 }

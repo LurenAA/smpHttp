@@ -20,7 +20,9 @@ namespace xx {
   class HttpResponse : public Packet{
     friend void HttpResponseDeleter::operator() (HttpResponse* ) const; //给删除器友元
     public:
-      HttpResponse(std::shared_ptr<TcpConnection>, std::shared_ptr<HttpRequest>); 
+      template<typename... A>
+      static std::shared_ptr<HttpResponse> newHttpResponse(A... args);
+      
       ~HttpResponse() override {};
       HttpResponse(const HttpResponse&) = delete;
       HttpResponse& operator=(const HttpResponse&) = delete;
@@ -36,6 +38,7 @@ namespace xx {
       void close(); 
       bool getIsEnd() const {return is_end;}
     private:
+      HttpResponse(std::shared_ptr<TcpConnection>, std::shared_ptr<HttpRequest>); 
       bool is_end = false; //是否已经发送过
       std::shared_ptr<TcpConnection> cl;
       std::shared_ptr<HttpRequest> req;
@@ -45,13 +48,8 @@ namespace xx {
        **/ 
       bool is_first = true;  
   };
-  /**
-   *工厂模式的一种实现
-   **/ 
-  template<typename... A>
-  std::shared_ptr<HttpResponse> newHttpResponse(A... args) {
-    return std::shared_ptr<HttpResponse> (new HttpResponse(args...), HttpResponseDeleter());
-  }
+  
+  
 }
 
 #endif //__HTTP_RESPONSE_
