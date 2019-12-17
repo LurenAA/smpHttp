@@ -28,7 +28,7 @@ namespace xx {
         Method m = Method::ALL,uint16_t pri = RouteElement::DEFAULT_PRIORITY,
         const std::string& prefix = "", bool is_cover = true);
       void add_static_route(const std::string& s,Method m = Method::ALL,
-        uint16_t pri = RouteElement::DEFAULT_PRIORITY , 
+        uint16_t pri = RouteElement::FILE_PRIORITY, 
         const std::string& prefix = "",bool is_cover = true);
       // void remove_route(const std::string& s);
       

@@ -10,7 +10,7 @@ void RouteWq::next(std::shared_ptr<HttpRequest> req,
     return;
   RouteElement re = wq.top();
   wq.pop();
-  re.callback(req, res, shared_from_this());
+  re.callback(req, res, *this);
 }
 
 void RouteWq::push(const RouteElement& r)

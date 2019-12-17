@@ -277,9 +277,14 @@ void HttpServer::in_read_second(std::shared_ptr<TcpConnection> tc) {
         }
       }
       /**
+       * 创建HttpResponse对象
+       **/ 
+      shared_ptr<HttpResponse> res = newHttpResponse(tc, req);
+      /**
        * 开始执行回调函数
        **/ 
-
+      auto& rtwq = req->getRoute();
+      rtwq.next(req, res);
     } 
     /**
      * POST

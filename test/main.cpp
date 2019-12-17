@@ -74,10 +74,29 @@
 // }
 
 #include "HttpServer.hpp"
+#include "HttpResponse.hpp"
+#include "RouteWq.hpp"
+
 using namespace xx;
+void a(std::shared_ptr<HttpRequest> req, std::shared_ptr<HttpResponse> res,RouteWq& wq) 
+{
+  res->addMessage("asdasd");
+  wq.next(req, res);
+}
+
+void b(std::shared_ptr<HttpRequest> req, std::shared_ptr<HttpResponse> res, RouteWq& wq) 
+{
+  res->addMessage("asdas2d");
+  res->setAfterWrite([](std::shared_ptr<TcpConnection> tc) {
+    tc->close();
+  });
+  res->end();
+}
 
 int main() {
   HttpServer server;
+  server.add_route("/", a);
+  server.add_route("/", b);
   server.run();
   
   return 0;

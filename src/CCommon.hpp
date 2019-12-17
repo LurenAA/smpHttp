@@ -265,7 +265,7 @@ namespace xx
   class HttpRequest;
   class RouteWq;
   using routeHandleFunc = void(*)(std::shared_ptr<HttpRequest>
-    , std::shared_ptr<HttpResponse>, std::shared_ptr<RouteWq>);
+    , std::shared_ptr<HttpResponse>,RouteWq&);
   enum TransMode {
     CHUNKED = 109,
     CHUNKED_START,

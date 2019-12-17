@@ -6,7 +6,7 @@
 namespace xx {
   class HttpResponse;
   class HttpRequest;
-  class RouteWq : public std::enable_shared_from_this<RouteWq>{
+  class RouteWq {
     public:
       RouteWq(HttpRequest* req) : req(req) {}
       RouteWq(const RouteWq&) = delete;

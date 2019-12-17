@@ -3,18 +3,17 @@
 #include <memory>
 #include <regex>
 #include <string>
-#include "Common.hpp"
+#include "CCommon.hpp"
 
 namespace xx {
   class RouteWq;
   class HttpResponse;
   class HttpRequest;
   struct RouteElement;
-  using routeHandleFunc = void(*)(std::shared_ptr<HttpRequest>
-    , std::shared_ptr<HttpResponse>, std::shared_ptr<RouteWq>);
   struct RouteElement {
     enum {
-      DEFAULT_PRIORITY = 3
+      DEFAULT_PRIORITY = 3,
+      FILE_PRIORITY = 4
     };
     RouteElement(std::regex reg,routeHandleFunc callback,
      bool is_static,std::string prefix = "",
