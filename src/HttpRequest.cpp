@@ -14,14 +14,14 @@ void HttpRequest::close() {
   auto& fl = FileLog::getInstance();
   fl.debug("close HttpRequest " 
     + connection->getIndex(), __func__, __FILE__, __LINE__);
-  /**
-   * 设置关闭时的回调，从server中移除req
-   **/ 
-  auto close_cb1 =bind([](std::shared_ptr<HttpRequest> rq, Handle* hd){
-    HttpServer& svr = rq->getServer();
-    svr.remove_req(rq);
-  } , shared_from_this(), std::placeholders::_1);
-  connection->setInCloseCb(close_cb1);
+  // /**
+  //  * 设置关闭时的回调，从server中移除req
+  //  **/ 
+  // auto close_cb1 =bind([](std::shared_ptr<HttpRequest> rq, Handle* hd){
+  //   HttpServer& svr = rq->getServer();
+  //   svr.remove_req(rq);
+  // } , shared_from_this(), std::placeholders::_1);
+  // connection->setInCloseCb(close_cb1);
   connection->close();
 }
 
@@ -38,6 +38,6 @@ std::shared_ptr<HttpRequest>
 HttpRequest::newHttpRequest(const xx::HttpResult& s, std::shared_ptr<xx::TcpConnection> c,xx::HttpServer& svr)
 {
   std::shared_ptr<HttpRequest> sr(new HttpRequest(s, c, svr));
-  svr.add_req(sr);
+  // svr.add_req(sr);
   return sr;
 }

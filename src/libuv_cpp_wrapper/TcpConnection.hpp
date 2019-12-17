@@ -24,6 +24,7 @@ public:
   void invokeInReadCb(ssize_t nread, const uv_buf_t *buf, bool isEof);
   void setInReadCb(InReadCbType f);
   void setAfterWriteCb(AfterWriteType f);
+  AfterWriteType getAfterWriteCb() const {return after_write_cb;}
   void invokeAfterWriteCb();
 
   void write(const char* str, std::string::size_type len) ;

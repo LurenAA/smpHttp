@@ -90,7 +90,7 @@ void b(std::shared_ptr<HttpRequest> req, std::shared_ptr<HttpResponse> res, Rout
   res->setAfterWrite([](std::shared_ptr<TcpConnection> tc) {
     tc->close();
   });
-  res->end();
+  // res->end();
 }
 
 int main() {

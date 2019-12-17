@@ -29,7 +29,8 @@ namespace xx {
 
       void setAfterWrite(AfterWriteType);
       bool end();
-      
+      AfterWriteType getAfterWriteCb() const {return cl->getAfterWriteCb();}
+
       void setNotFirst() {is_first = false;}
       bool getIsFirst() const {return is_first;}
       void close(); 

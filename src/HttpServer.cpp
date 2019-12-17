@@ -180,14 +180,8 @@ using namespace std::placeholders;
 // #undef CHUNK_SIZE
 // }
 
-// void HttpServer::deal_with_error(std::shared_ptr<HttpRequest> req,
-//   std::shared_ptr<HttpResponse> res,const std::string& s)
-// {
-//   res->addMessage(s);
-// }
-
 HttpServer::HttpServer(AddressInfo a, EventLoop* lp) :
-  _lp(lp), _tcpServer(*_lp, a),_route_vec(), _req_set()
+  _lp(lp), _tcpServer(*_lp, a),_route_vec()//, _req_set()
 {
   auto af_con = bind(&HttpServer::after_connection, this, _1);
   _tcpServer.setAfterConnectionCb(af_con);
@@ -444,20 +438,20 @@ void HttpServer::add_static_route(const std::string& s,Method m,
   _route_vec.push_back(el);
 }
 
-/**
- * 添加req到请求的队列中
- **/ 
-void HttpServer::add_req(const std::shared_ptr<HttpRequest>& req) {
-  _req_set.insert(req);
-}
+// /**
+//  * 添加req到请求的队列中
+//  **/ 
+// void HttpServer::add_req(const std::shared_ptr<HttpRequest>& req) {
+//   _req_set.insert(req);
+// }
 
-/**
- * 移除req
- **/ 
-bool HttpServer::remove_req(const std::shared_ptr<HttpRequest>& req) {
-  std::set<std::shared_ptr<HttpRequest>>::size_type 
-  siz = _req_set.erase(req);
-  if(!siz)
-    return false;
-  return true;
-}
+// /**
+//  * 移除req
+//  **/ 
+// bool HttpServer::remove_req(const std::shared_ptr<HttpRequest>& req) {
+//   std::set<std::shared_ptr<HttpRequest>>::size_type 
+//   siz = _req_set.erase(req);
+//   if(!siz)
+//     return false;
+//   return true;
+// }

@@ -48,9 +48,21 @@ HttpResponse::getStatuCopy() const
   return r;
 }
 
-void HttpResponseDeleter::operator() (HttpResponse* hrq) const
+void HttpResponseDeleter::operator() (HttpResponse* res) const
 {
-  delete hrq;
+  /**
+   *如果是普通请求并且在最后没有发送数据报
+   **/ 
+  if(res->getMode() == TransMode::NORMAL && !res->getIsEnd()) {
+    if(res->getAfterWriteCb() == nullptr) {
+      res->setAfterWrite([](std::shared_ptr<TcpConnection> tc) {
+        tc->close();
+      });
+    }
+    res->end(); 
+  }
+  delete res;
+  
   // if(!hrq->is_end) { 
   //   auto pref = hrq->cl->getWriteCallback();
   //   auto func = bind([](HttpResponse* hrq1, decltype(pref) pfunc) {

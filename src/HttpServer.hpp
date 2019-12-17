@@ -32,8 +32,8 @@ namespace xx {
         const std::string& prefix = "",bool is_cover = true);
       // void remove_route(const std::string& s);
       
-      void add_req(const std::shared_ptr<HttpRequest>&);
-      bool remove_req(const std::shared_ptr<HttpRequest>&);
+      // void add_req(const std::shared_ptr<HttpRequest>&);
+      // bool remove_req(const std::shared_ptr<HttpRequest>&);
     private:
       EventLoop* _lp;
       HttpAccepter _tcpServer;
@@ -41,11 +41,11 @@ namespace xx {
        * 存放路由的回调函数
        **/ 
       std::vector<RouteElement> _route_vec; 
-      /**
-       * 存放HttpRequest对象的共享指针，
-       * 防止在in_read_second之后内存被释放
-       **/ 
-      std::set<std::shared_ptr<HttpRequest>> _req_set;
+      // /**
+      //  * 存放HttpRequest对象的共享指针，
+      //  * 防止在in_read_second之后内存被释放
+      //  **/ 
+      // std::set<std::shared_ptr<HttpRequest>> _req_set;
 
       void in_read_second(std::shared_ptr<TcpConnection> tc);
       void in_read(std::shared_ptr<TcpConnection> tc, ssize_t nread, const uv_buf_t *buf, bool isEof);
