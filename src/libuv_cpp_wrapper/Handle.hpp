@@ -37,7 +37,9 @@ class Handle
 
     explicit Handle(HandleType);
     virtual ~Handle();
-
+    /**
+     * 返回类型不同不可以override
+     **/ 
     uv_handle_t* handle();
     bool is_active() const;
     virtual bool is_closing() const;

@@ -14,9 +14,7 @@ class HttpResponse;
 class QueueWork : public std::enable_shared_from_this<QueueWork>
 {
 public:
-  static std::shared_ptr<QueueWork> newQueueWork(std::shared_ptr<HttpRequest> req, std::shared_ptr<HttpResponse> res,
-                                                 HttpServer &_server);
-
+  static std::shared_ptr<QueueWork> newQueueWork(std::shared_ptr<HttpRequest> req, std::shared_ptr<HttpResponse> res,HttpServer &_server);
   QueueWork(const QueueWork &) = delete;
   QueueWork &operator=(const QueueWork &) = delete;
   bool remove();

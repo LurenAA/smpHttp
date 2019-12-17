@@ -4,7 +4,11 @@
 #include <algorithm>
 #include <codecvt>
 #include <locale>
+#include <cstdlib>
 #include "uv.h"
+#include "Mutex.hpp"
+#include "CCommon.hpp"
+#include "FileLog.hpp"
 
 using namespace std;
 using namespace xx;
@@ -141,5 +145,41 @@ std::string Util::conbine_prefix_and_path(std::string prefix , std::string path)
     res.erase(itr, itr + 2);
   }
   return res;
+}
+
+/**
+ * 返回线程数
+ **/ 
+int Util::get_thread_num() 
+{
+  static Mutex mx;
+  char* s = nullptr;
+  int res = 0;
+  mx.lock();
+  s = getenv("UV_THREADPOOL_SIZE");
+  if(!s) {
+    mx.unlock();
+    return PTHREAD_DEFAULT_NUM;
+  }
+  res = atoi(s);
+  mx.unlock();
+  return res;
+}
+
+
+bool Util::set_thread_num(int num) {
+  if(num > PTHREAD_MAX_NUM)
+    num = PTHREAD_MAX_NUM;
+  else if(num < PTHREAD_DEFAULT_NUM)
+    num = PTHREAD_DEFAULT_NUM;
+  string num_s = to_string(num);
+  int flag = ::setenv("UV_THREADPOOL_SIZE", num_s.c_str(), 1);
+  if(flag == -1) {
+    auto& fl = FileLog::getInstance();
+    fl.error("set_thread_num error : " + Util::get_strerror_r(errno), 
+    __func__, __FILE__, __LINE__);
+    return false;
+  }
+  return true;
 }
 #undef CASE

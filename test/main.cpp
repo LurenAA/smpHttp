@@ -78,6 +78,7 @@
 #include "HttpRequest.hpp"
 #include "QueueWork.hpp"
 #include "unistd.h"
+#include "Fs.hpp"
 
 using namespace std;
 using namespace xx;
@@ -92,21 +93,31 @@ void b(std::shared_ptr<HttpRequest> req, std::shared_ptr<HttpResponse> res, Rout
   res->addMessage("asdas2d");
   shared_ptr<QueueWork> qwk = QueueWork::newQueueWork(req,res,req->getServer());
   qwk->setWorkCb([](shared_ptr<QueueWork> qwk){
-    sleep(10);
-    
+    sleep(1);
   });
   qwk->setAfterWorkCb([](shared_ptr<QueueWork> qwk, int sta) {
-    cout << 123 << endl;
     qwk->getRes()->addMessage("12345456788");
   });
   qwk->work();
 }
 
 int main() {
-  HttpServer server;
-  server.add_route("/", a);
-  server.add_route("/", b);
-  server.run();
+  // HttpServer server;
+  // server.add_route("/", a);
+  // server.add_route("/", b);
+  // server.run();
+  EventLoop lp;
+  Fs fs(lp);
+  fs.setCb([](Fs* fsa){
+    cout << fsa->req()->result << endl;
+    fsa->clean_up();
+   fsa->setCb([](Fs* fsa){
+    cout << fsa->req()->result << endl;
+  });
+  fsa->open("./.gitignore", O_RDWR, NULL);
+  });
+  fs.open("./file_log.ini", O_RDWR, NULL);
   
+  lp.run();
   return 0;
 }

@@ -260,7 +260,7 @@ void HttpServer::in_read_second(std::shared_ptr<TcpConnection> tc) {
       return ;
     }
     /**
-     * GET 
+     * GET ：添加方法到路由队列
      * */  
     else if (cn->getMethod() == Method::GET) {
       for(auto cbe : _route_vec) {
@@ -270,22 +270,28 @@ void HttpServer::in_read_second(std::shared_ptr<TcpConnection> tc) {
           req->getRoute().push(cbe);
         }
       }
-      /**
-       * 创建HttpResponse对象
-       **/ 
-      shared_ptr<HttpResponse> res = HttpResponse::newHttpResponse(tc, req);
-      /**
-       * 开始执行回调函数
-       **/ 
-      auto& rtwq = req->getRoute();
-      rtwq.next(req, res);
     } 
     /**
-     * POST
+     * POST ：添加方法到路由队列
      **/ 
     else if (cn->getMethod() == Method::POST){
-      
+      for(auto cbe : _route_vec) {
+        std::string path = Util::conbine_prefix_and_path(cbe.prefix, req->getRequestPath());
+        bool is_reg = regex_match(path.begin(),path.end(), cbe.reg);
+        if(is_reg && (cbe.method == Method::POST || cbe.method == Method::ALL)){
+          req->getRoute().push(cbe);
+        }
+      }
     }
+    /**
+     * 创建HttpResponse对象
+     **/ 
+    shared_ptr<HttpResponse> res = HttpResponse::newHttpResponse(tc, req);
+    /**
+     * 开始执行回调函数
+     **/ 
+    auto& rtwq = req->getRoute();
+    rtwq.next(req, res);
   }
   catch(exception& e) {  
     fl.debug(string("in_read_second:") + e.what(),__func__,__FILE__,__LINE__);

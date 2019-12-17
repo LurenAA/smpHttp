@@ -11,9 +11,16 @@ namespace xx {
   class HttpRequest;
   struct RouteElement;
   struct RouteElement {
+    /**
+     * 定义优先级
+     **/ 
     enum {
+      LOWER_DEFAULT_PRIORITY = 2,
       DEFAULT_PRIORITY = 3,
-      FILE_PRIORITY = 4
+      HIGHER_DEFAULT_PRIORITY = 4,
+      LOWER_FILE_PRIORITY = 18,
+      FILE_PRIORITY = 19,
+      HIGEHER_FILE_PRIORITY
     };
     RouteElement(std::regex reg,routeHandleFunc callback,
      bool is_static,std::string prefix = "",

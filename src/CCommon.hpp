@@ -259,6 +259,8 @@
   XX(z	,"application/x-compress",tar) \
   XX(zip	,"application/zip",tar) \
   
+#define PTHREAD_MAX_NUM 1024
+#define PTHREAD_DEFAULT_NUM 4
 namespace xx
 {
   class HttpResponse;

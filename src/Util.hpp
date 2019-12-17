@@ -24,6 +24,8 @@ namespace xx {
       static std::string get_uv_strerror_t(int errno_r);
       static std::string get_strerror_r(int errno_r);
       static std::string conbine_prefix_and_path(std::string, std::string);
+      static int get_thread_num();
+      static bool set_thread_num(int num);
     private:
       static std::shared_ptr<std::map<std::string, std::string>> mimes;
   };

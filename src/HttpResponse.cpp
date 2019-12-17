@@ -28,7 +28,7 @@ void HttpResponse::setAfterWrite(AfterWriteType f) {
  * 如果写过那么返回false
  **/ 
 bool HttpResponse::end(){
-  if(is_end)
+  if(is_end || cl->is_closing() || !cl->is_active())
     return false;
   cl->write(get());
   is_end = true;
