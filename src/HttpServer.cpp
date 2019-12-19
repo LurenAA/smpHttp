@@ -365,7 +365,7 @@ void HttpServer::in_read(std::shared_ptr<TcpConnection> tc, ssize_t nread, const
     /**
      * post
      **/ 
-    if(mtd == Method::POST) {
+    if(cn->getMethod() == Method::POST) {
       if(grm == INT_MIN) {
         char* l = strstr(buf->base, "Content-Length:");
         if(!l) {
