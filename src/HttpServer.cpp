@@ -304,6 +304,8 @@ void HttpServer::in_read_second(std::shared_ptr<TcpConnection> tc) {
  * 在数据报没有接收完时通过这个函数进行处理
  **/ 
 void HttpServer::in_read(std::shared_ptr<TcpConnection> tc, ssize_t nread, const uv_buf_t *buf, bool isEof) {
+  if(isEof) 
+    return ;
   auto& fl = FileLog::getInstance();
   auto& tl = Tools::getInstance();
   HttpConnection* cn = dynamic_cast<HttpConnection*>(tc.get());

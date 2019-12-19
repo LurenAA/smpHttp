@@ -21,14 +21,14 @@ namespace xx {
     friend void HttpResponseDeleter::operator() (HttpResponse* ) const; //给删除器友元
     public:
       template<typename... A>
-      static std::shared_ptr<HttpResponse> newHttpResponse(A... args);
+      static std::shared_ptr<HttpResponse> newHttpResponse(A... args){
+        return std::shared_ptr<HttpResponse> (new HttpResponse(args...), HttpResponseDeleter());
+      }
       
       ~HttpResponse() override {};
       HttpResponse(const HttpResponse&) = delete;
       HttpResponse& operator=(const HttpResponse&) = delete;
-
-      std::shared_ptr<HttpResponse> getStatuCopy() const;
-
+      
       void setAfterWrite(AfterWriteType);
       bool end();
       AfterWriteType getAfterWriteCb() const {return cl->getAfterWriteCb();}

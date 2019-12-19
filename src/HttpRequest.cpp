@@ -49,10 +49,15 @@ HttpServer& HttpRequest::getServer () const {
   return svr;
 }
 
-void HttpRequest::setCurRe(RouteElement* re) {
-  this->cur_re = re;
+void HttpRequest::setCurRe(const RouteElement& el){
+  this->cur_re = el;
 }
 
-RouteElement* HttpRequest::getCurRe() const{
-  return cur_re;
+const RouteElement& HttpRequest::getCurRe() const {
+  return this->cur_re;
+}
+
+std::shared_ptr<TcpConnection> HttpRequest::getTcpConnection()
+{
+  return connection;
 }

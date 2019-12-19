@@ -15,6 +15,7 @@ namespace xx {
       std::string get();
       void setContentType(const std::string &s);
       void addMessage(const std::string& s) {message += s;}
+      void addMessage(const char* s, int size);
       void setLastChunked(bool b);
       void setLastChunked() {is_last_chunked = true;}
       const TransMode getMode() {return mode;}

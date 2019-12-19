@@ -21,15 +21,16 @@ namespace xx {
       virtual ~HttpRequest() {}
       RouteWq& getRoute() { return _route;}
       HttpServer& getServer () const;
-      void setCurRe(RouteElement*);
-      RouteElement* getCurRe() const;
+      void setCurRe(const RouteElement&);
+      const RouteElement& getCurRe() const;
+      std::shared_ptr<TcpConnection> getTcpConnection();
     private:
       HttpRequest(const xx::HttpResult& s, std::shared_ptr<xx::TcpConnection> c,xx::HttpServer& lp);
 
       std::shared_ptr<TcpConnection> connection;
       HttpServer& svr;
       RouteWq _route;
-      RouteElement* cur_re = nullptr;
+      RouteElement cur_re;
   };
   
   

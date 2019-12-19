@@ -162,10 +162,14 @@ Fs::FsState Fs::getState() {
 /**
  * 为缓存分配内存
  **/ 
-int Fs::enable_buf(unsigned int size) {
-  mx_for_new.lock();
+size_t Fs::enable_buf(size_t size) {
   if(is_use_buf)
+    return false;
+  mx_for_new.lock();
+  if(is_use_buf) {
+    mx_for_new.unlock();
     return false; 
+  }
   is_use_buf = true;
   buf.base = new char[size]();
   buf.len = size;
@@ -177,9 +181,13 @@ int Fs::enable_buf(unsigned int size) {
  * 释放buf的内存
  **/ 
 void Fs::release_buf() {
-  mx_for_new.lock();
-  if(!is_use_buf) 
+  if(is_use_buf)
     return ;
+  mx_for_new.lock();
+  if(!is_use_buf) {
+    mx_for_new.unlock();
+    return ;
+  }
   delete [] buf.base;
   is_use_buf = false;
   mx_for_new.unlock();
@@ -187,4 +195,8 @@ void Fs::release_buf() {
 
 Fs::~Fs() {
   release_buf();
+}
+
+const uv_buf_t& Fs::getBuf() const {
+  return this->buf;
 }

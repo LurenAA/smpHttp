@@ -27,6 +27,8 @@ namespace xx {
       FILE_PRIORITY = 19,
       HIGEHER_FILE_PRIORITY
     };
+    RouteElement() =default;
+    RouteElement(const RouteElement&) = default;
     RouteElement(std::regex reg,routeHandleFunc callback,
      bool is_static,std::string prefix = "",
      uint16_t pri = DEFAULT_PRIORITY ,xx::Method m = Method::ALL);

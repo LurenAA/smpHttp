@@ -108,3 +108,6 @@ void Packet::setLastChunked(bool b) {
     is_last_chunked = b;
 }
 
+void Packet::addMessage(const char* s, int size) {
+  message += string(s, size);
+}

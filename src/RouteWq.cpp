@@ -14,9 +14,8 @@ void RouteWq::next(std::shared_ptr<HttpRequest> req,
     RouteElement re = wq.top();
     wq.pop();
     if(re.callback) {
-      req->setCurRe(&re);
+      req->setCurRe(re);
       re.callback(req, res, *this);
-      req->setCurRe(nullptr);
     }
   } catch(exception& e) {
     FileLog::getInstance().error(string("RouteWq::next") + e.what(), __func__, __FILE__, __LINE__);

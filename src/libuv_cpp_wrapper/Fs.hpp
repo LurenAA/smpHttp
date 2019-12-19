@@ -27,8 +27,9 @@ namespace xx
       void setState(FsState state);
       FsState getState() ;
 
-      int enable_buf(unsigned int size);
+      size_t enable_buf(size_t size);
       void release_buf();
+      const uv_buf_t& getBuf() const;
 
       uv_fs_t* req();
       void clean_up();

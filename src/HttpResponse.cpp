@@ -35,19 +35,6 @@ bool HttpResponse::end(){
   return true;
 }
 
-/**
- *获取一个当前状态的复制，但是Packet是不相关的，
- *用在chunked传输文件时
- */  
-std::shared_ptr<HttpResponse> 
-HttpResponse::getStatuCopy() const 
-{
-  std::shared_ptr<HttpResponse> r(newHttpResponse(this->cl, this->req));
-  r->is_end = this->is_end;
-  r->is_first = this->is_first;
-  return r;
-}
-
 void HttpResponseDeleter::operator() (HttpResponse* res) const
 {
   /**
@@ -63,6 +50,10 @@ void HttpResponseDeleter::operator() (HttpResponse* res) const
       });
     }
     res->end(); 
+  } else if (res->getMode() == TransMode::CHUNKED && !res->getIsEnd()) {
+    res->end();
+  } else if (res->getMode() == TransMode::CHUNKED_START  && !res->getIsEnd()) {
+    res->end();
   }
   delete res;
   
@@ -89,9 +80,4 @@ void HttpResponseDeleter::operator() (HttpResponse* res) const
  **/ 
 void HttpResponse::close() {
   req->close();
-}
-
-template<typename... A>
-std::shared_ptr<HttpResponse> HttpResponse::newHttpResponse(A... args) {
-  return std::shared_ptr<HttpResponse> (new HttpResponse(args...), HttpResponseDeleter());
 }

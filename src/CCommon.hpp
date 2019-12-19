@@ -177,6 +177,7 @@
   XX(pfx	,"application/x-pkcs12",tar) \
   XX(pgm	,"image/x-portable-graymap",tar) \
   XX(pko	,"application/ynd.ms-pkipko",tar) \
+  XX(png, "image/png",tar) \
   XX(pma	,"application/x-perfmon",tar) \
   XX(pmc	,"application/x-perfmon",tar) \
   XX(pml	,"application/x-perfmon",tar) \
@@ -261,6 +262,8 @@
   
 #define PTHREAD_MAX_NUM 1024
 #define PTHREAD_DEFAULT_NUM 4
+#define DEFAULT_MAX_SIZE_DIRECT_READ 4096 
+
 namespace xx
 {
   class HttpResponse;
