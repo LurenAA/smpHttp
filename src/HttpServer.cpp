@@ -10,6 +10,7 @@
 #include "HttpParser.hpp"
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
+#include "RouteElement.hpp"
 #include "Util.hpp"
 
 using namespace std;
@@ -440,7 +441,7 @@ void HttpServer::add_static_route(const std::string& s,Method m,
   uint16_t pri, 
   const std::string& prefix,bool is_cover )
 {
-  RouteElement el(regex(s), nullptr, false, "", pri, m);
+  RouteElement el(regex(s), nullptr, true, "", pri, m);
   _route_vec.push_back(el);
 }
 
@@ -461,5 +462,22 @@ bool HttpServer::remove_queue_work(std::shared_ptr<QueueWork> wk)
   if(x == _queue_work_set.end())
     return false;
   _queue_work_set.erase(x);
+  return true;
+}
+
+HttpServer::HttpServer(int port, EventLoop* lp) 
+  : HttpServer(AddressInfo{"0.0.0.0", port})
+{
+}
+
+void HttpServer::add_fs_work(std::shared_ptr<FsWork> q) {
+  _fs_work_set.insert(q);
+}
+
+bool HttpServer::remove_fs_work(std::shared_ptr<FsWork> wk) {
+  auto x = _fs_work_set.find(wk);
+  if(x == _fs_work_set.end())
+    return false;
+  _fs_work_set.erase(x);
   return true;
 }

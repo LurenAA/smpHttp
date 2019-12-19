@@ -122,16 +122,16 @@ TcpConnection* TcpAccepter::tcp_connection_object() {
   return new TcpConnection(*this, _lp);
 }
 
-char* TcpAccepter::indexes = new char[INT_MAX]();
+char* TcpAccepter::indexes = new char[INT_MAX / 100]();
 /**
  * 添加连接到map中
  **/ 
 void TcpAccepter::add_tcp_connection(std::shared_ptr<TcpConnection> c) {
   auto& fl = FileLog::getInstance();
-  auto rs_fd = find_if(TcpAccepter::indexes, TcpAccepter::indexes + INT_MAX, [](const char& val) {
+  auto rs_fd = find_if(TcpAccepter::indexes, TcpAccepter::indexes + INT_MAX / 100, [](const char& val) {
     return val == 0;
   });
-  if(rs_fd == indexes + INT_MAX) {
+  if(rs_fd == indexes + INT_MAX / 100) {
     fl.error("tcp connection exceed the limit", __func__, __FILE__, __LINE__);
     terminate();
   }

@@ -48,3 +48,11 @@ HttpRequest::newHttpRequest(const xx::HttpResult& s, std::shared_ptr<xx::TcpConn
 HttpServer& HttpRequest::getServer () const {
   return svr;
 }
+
+void HttpRequest::setCurRe(RouteElement* re) {
+  this->cur_re = re;
+}
+
+RouteElement* HttpRequest::getCurRe() const{
+  return cur_re;
+}

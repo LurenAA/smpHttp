@@ -50,7 +50,7 @@ add_library(nlohmann_json::nlohmann_json INTERFACE IMPORTED)
 
 set_target_properties(nlohmann_json::nlohmann_json PROPERTIES
   INTERFACE_COMPILE_FEATURES "cxx_std_11"
-  INTERFACE_INCLUDE_DIRECTORIES "/home/ele/smpHttp/src/nlohmann_json/single_include/"
+  INTERFACE_INCLUDE_DIRECTORIES "/root/smpHttp/src/nlohmann_json/single_include/"
 )
 
 # This file does not depend on other imported targets which have

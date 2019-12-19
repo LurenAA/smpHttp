@@ -10,6 +10,11 @@ namespace xx {
   class HttpResponse;
   class HttpRequest;
   struct RouteElement;
+  /**
+   * 必须由声明，不然外界无法访问到在cpp文件中的函数
+   **/ 
+  void static_file_handle(std::shared_ptr<HttpRequest> req
+    , std::shared_ptr<HttpResponse> res, RouteWq& wq);
   struct RouteElement {
     /**
      * 定义优先级

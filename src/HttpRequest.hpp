@@ -10,6 +10,7 @@
 
 namespace xx {
   class HttpServer;
+  class RouteElement;
   class HttpRequest : std::enable_shared_from_this<HttpRequest>, public xx::HttpResult {
     friend class HttpServer;
     public:
@@ -20,12 +21,15 @@ namespace xx {
       virtual ~HttpRequest() {}
       RouteWq& getRoute() { return _route;}
       HttpServer& getServer () const;
+      void setCurRe(RouteElement*);
+      RouteElement* getCurRe() const;
     private:
       HttpRequest(const xx::HttpResult& s, std::shared_ptr<xx::TcpConnection> c,xx::HttpServer& lp);
 
       std::shared_ptr<TcpConnection> connection;
       HttpServer& svr;
       RouteWq _route;
+      RouteElement* cur_re = nullptr;
   };
   
   

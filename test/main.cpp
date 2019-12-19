@@ -7,23 +7,6 @@
 // extern 
 // int port;
 
-
-// //帮助信息
-// #define HELP_INFO 
-// "Usage: smpHttp [OPTION...]\n" 
-// "-p, --port=PORT_NUMBER\t\t指明端口号,必须和前端保持一致,默认值为8080\n" 
-// "-H, --host=HOST_NAME  \t\t用于外部访问的域名或者IP,否则存在数据库中存放的静态资源路径为相对路径，\n"
-// "                      \t\t只有挂载在本地的前台可以访问图片文字资源\n" 
-// "-h, --help            \t\t显示帮助" 
-// int _help = 0; //记录命令行参数状态
-// static 
-// const struct option long_option[]={
-//    {"port",optional_argument,NULL,'p'},
-//    {"host",optional_argument,NULL,'H'},
-//    {"help",no_argument, &_help, 1},
-//    {NULL,0,NULL,0}
-// };
-
 // int main(int argc, char * argv[]) {
 //   int opt=0;
 //   while((opt=getopt_long(argc,argv,"p:H:h",long_option,NULL))!=-1)
@@ -79,9 +62,27 @@
 #include "QueueWork.hpp"
 #include "unistd.h"
 #include "Fs.hpp"
+#include "Util.hpp"
+#include <getopt.h>
+#include "FsWork.hpp"
 
 using namespace std;
 using namespace xx;
+
+//帮助信息
+#define HELP_INFO \
+"Usage: smpHttp [OPTION...]\n" \
+"-p, --port=PORT_NUMBER\t\t指明端口号,必须和前端保持一致,默认值为8080\n"  \
+"-h, --help            \t\t显示帮助" 
+
+int _help = 0; //记录命令行参数状态
+static 
+const struct option long_option[]={
+   {"port",optional_argument,NULL,'p'},
+   {"help",no_argument, &_help, 1},
+   {NULL,0,NULL,0}
+};
+
 void a(std::shared_ptr<HttpRequest> req, std::shared_ptr<HttpResponse> res,RouteWq& wq) 
 {
   res->addMessage("asdasd");
@@ -101,23 +102,39 @@ void b(std::shared_ptr<HttpRequest> req, std::shared_ptr<HttpResponse> res, Rout
   qwk->work();
 }
 
-int main() {
-  // HttpServer server;
-  // server.add_route("/", a);
-  // server.add_route("/", b);
-  // server.run();
-  EventLoop lp;
-  Fs fs(lp);
-  fs.setCb([](Fs* fsa){
-    cout << fsa->req()->result << endl;
-    fsa->clean_up();
-   fsa->setCb([](Fs* fsa){
-    cout << fsa->req()->result << endl;
-  });
-  fsa->open("./.gitignore", O_RDWR, NULL);
-  });
-  fs.open("./file_log.ini", O_RDWR, NULL);
-  
-  lp.run();
+int main(int argc, char * argv[]) {
+  int opt=0;
+  int port = 8080;
+  while((opt=getopt_long(argc,argv,"p:h",long_option,NULL))!=-1)
+  {
+    switch(opt)
+    {
+      case 0: break;
+      case 'p':
+        port = atoi(optarg);
+        if(port == 0) 
+          _help = 1; 
+        break;                       
+      case 'h': 
+        _help = 1;
+        break;
+      case '?':
+        std::cout << "错误的参数" << std::endl;
+        _help = 1;
+        break;
+    }
+    if(_help == 1) 
+      break;
+  }
+  if(_help == 1) {
+    std::cout << HELP_INFO << std::endl;
+    return 1;
+  }
+  Util::set_thread_num(100);
+  HttpServer server(port);
+  server.add_route("/", a);
+  server.add_route("/", b);
+  server.add_static_route("/resources/.*");
+  server.run();
   return 0;
 }

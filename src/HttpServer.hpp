@@ -11,8 +11,10 @@
 #include "CCommon.hpp"
 
 namespace xx {
+  class RouteWq;
   class HttpResponse;
   class HttpRequest;
+  class FsWork;
   class QueueWork;
   class HttpAccepter : public TcpAccepter {
     using TcpAccepter::TcpAccepter;
@@ -22,6 +24,7 @@ namespace xx {
     public:
       explicit HttpServer(AddressInfo a = AddressInfo{"0.0.0.0", 8080}, 
         EventLoop* lp = new EventLoop(EventLoop::DEFAULT_LOOP));
+      explicit HttpServer(int port, EventLoop* lp = new EventLoop(EventLoop::DEFAULT_LOOP));
       ~HttpServer();
 
       void run();
@@ -36,6 +39,8 @@ namespace xx {
       
       void add_queue_work(std::shared_ptr<QueueWork>);
       bool remove_queue_work(std::shared_ptr<QueueWork>);
+      void add_fs_work(std::shared_ptr<FsWork>);
+      bool remove_fs_work(std::shared_ptr<FsWork>);
     private:
       EventLoop* _lp;
       HttpAccepter _tcpServer;
@@ -48,6 +53,10 @@ namespace xx {
        * HttpRequest和HttpResponse的生命周期
        **/ 
       std::set<std::shared_ptr<QueueWork>> _queue_work_set;
+      /**
+       * 存放异步的文件操作
+       **/ 
+      std::set<std::shared_ptr<FsWork>> _fs_work_set;
 
       void in_read_second(std::shared_ptr<TcpConnection> tc);
       void in_read(std::shared_ptr<TcpConnection> tc, ssize_t nread, const uv_buf_t *buf, bool isEof);
