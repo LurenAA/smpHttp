@@ -29,9 +29,10 @@ add_subdirectory(src/nlohmann_json)
 list(APPEND links /root/libuv-v1.30.0/out/Debug/libuv.a -pthread 
 /usr/local/lib/libjwt.a
 HttpParser libuv_cpp_wrapper
-/usr/local/mysql/connector-c++-8.0/lib64/debug/libmysqlcppconn8.so
-/usr/local/mysql/connector-c++-8.0/lib64/debug/libmysqlcppconn8.so.2
+# /usr/local/mysql/connector-c++-8.0/lib64/debug/libmysqlcppconn8.so
+# /usr/local/mysql/connector-c++-8.0/lib64/debug/libmysqlcppconn8.so.2
 # /home/ele/mysql-cpp-8-static/libmysqlcppconn8-static.a 
+/root/mysql-connector-cpp/libmysqlcppconn8-static.a 
 -lcrypto
 -lssl
 )
