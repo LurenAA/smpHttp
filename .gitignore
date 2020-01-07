@@ -16,5 +16,5 @@ log*
 fileAppender.txt*
 **/*.a
 nohup*
-./smpHttp
+smpHttp
 src/nlohmann_json/**
