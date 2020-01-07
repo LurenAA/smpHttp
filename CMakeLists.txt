@@ -5,9 +5,9 @@ list(APPEND dics /root/libuv/include
 ${PROJECT_SOURCE_DIR}/src/libuv_cpp_wrapper/
 ${PROJECT_SOURCE_DIR}/src/
 ${PROJECT_SOURCE_DIR}/src/http_parser/
-/usr/local/mysql/connector-c++-8.0/include/
+${PROJECT_SOURCE_DIR}/src/modules/mysql-connector-cpp/include/
 ${PROJECT_SOURCE_DIR}/src/mysql_con/
-/home/ele/libuv/src
+${PROJECT_SOURCE_DIR}/src/modules/
 )
 
 include_directories(${dics})
@@ -23,16 +23,20 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 SET(CMAKE_BUILD_TYPE "Debug")
 # SET(CMAKE_BUILD_TYPE "Release")
 SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g3 -ggdb")
-set(JSON_BuildTests OFF CACHE INTERNAL "")
-add_subdirectory(src/nlohmann_json)
+# set(JSON_BuildTests OFF CACHE INTERNAL "")
 
-list(APPEND links /root/libuv-v1.30.0/out/Debug/libuv.a -pthread 
-/usr/local/lib/libjwt.a
+if(NOT DEFINED NLO_PATH)
+  set(NLO_PATH "src/nlohmann_json")
+endif() 
+add_subdirectory(${NLO_PATH})
+
+list(APPEND links ${PROJECT_SOURCE_DIR}/src/modules/libuv/libuv.a -pthread 
+${PROJECT_SOURCE_DIR}/src/modules/jwt/libjwt.a
 HttpParser libuv_cpp_wrapper
 # /usr/local/mysql/connector-c++-8.0/lib64/debug/libmysqlcppconn8.so
 # /usr/local/mysql/connector-c++-8.0/lib64/debug/libmysqlcppconn8.so.2
 # /home/ele/mysql-cpp-8-static/libmysqlcppconn8-static.a 
-/root/mysql-connector-cpp/libmysqlcppconn8-static.a 
+${PROJECT_SOURCE_DIR}/src/modules/mysql-connector-cpp/libmysqlcppconn8-static.a
 -lcrypto
 -lssl
 )

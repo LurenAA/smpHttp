@@ -474,6 +474,7 @@ int main(int argc, char *argv[])
   server.add_route("/users.*", post_user, xx::POST);
   server.add_route("/collection", post_collection, xx::POST);
   server.add_route("/collection", get_collection, xx::GET);
+  server.add_static_route("/resources.*");
   server.run();
   return 0;
 }

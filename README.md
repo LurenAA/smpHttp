@@ -24,6 +24,12 @@
 + 对于DELETE、PUT等等方法的处理
 &ensp;
 
+### 🥘 配置
+```
+cmake . -DNLO_PATH=src/nlohmann_json
+make
+```
+-DNLO_PATH=...指定[json](https://github.com/nlohmann/json)库的位置，默认是src/nlohmann_json
 ### 🗼 第三方依赖
 + [libuv](https://github.com/libuv/libuv)
 + [json](https://github.com/nlohmann/json)
@@ -33,22 +39,17 @@
 ### 🚇 simple example
 
 ```
-#include <iostream>
-#include "smpHttp.hpp"
-using namespace std;
-
-void test1(std::shared_ptr<smpHttp::HttpRequest> req
-  , std::shared_ptr<smpHttp::HttpResponse> res) 
+void get_collection(std::shared_ptr<HttpRequest> req, std::shared_ptr<HttpResponse> res, RouteWq &wq)
 {
-  res->addMessage("hello world");
 }
 
-int main() {
-  smpHttp::HttpServer server;
-  server.add_static_path("/http"); //add static route
-  server.add_route("/hello", test1);
+int main(int argc, char *argv[])
+{
+  int port = 8080;
+  HttpServer server(port);
+  server.add_route("/collection", get_collection, xx::GET);
+  server.add_static_route("/resources.*");
   server.run();
-  
   return 0;
 }
 ```
