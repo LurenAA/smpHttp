@@ -16,6 +16,7 @@ log*
 fileAppender.txt*
 src/http_parser/*.a
 src/libuv_cpp_wrapper/*.a
+libmysqlcppconn8-static.a
 nohup*
 smpHttp
 src/nlohmann_json/**

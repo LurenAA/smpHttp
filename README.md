@@ -26,10 +26,11 @@
 
 ### 🥘 配置
 ```
-cmake . -DNLO_PATH=src/nlohmann_json
+cmake . -DNLO_PATH=src/nlohmann_json -DMYSQL_PATH=src/modules/mysql-connector-cpp/libmysqlcppconn8-static.a
 make
 ```
--DNLO_PATH=...指定[json](https://github.com/nlohmann/json)库的位置，默认是src/nlohmann_json
+-DNLO_PATH=...指定[json](https://github.com/nlohmann/json)库的位置，默认是src/nlohmann_json <br>
+-DMYSQL_PATH=...指定[mysql-connector-cpp](https://github.com/mysql/mysql-connector-cpp)链接库的位置
 ### 🗼 第三方依赖
 + [libuv](https://github.com/libuv/libuv)
 + [json](https://github.com/nlohmann/json)

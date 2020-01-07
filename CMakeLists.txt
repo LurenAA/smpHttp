@@ -30,13 +30,18 @@ if(NOT DEFINED NLO_PATH)
 endif() 
 add_subdirectory(${NLO_PATH})
 
+if(NOT DEFINED LIBMYSQL)
+  set(MYSQL_PATH "${PROJECT_SOURCE_DIR}/src/modules/mysql-connector-cpp/libmysqlcppconn8-static.a")
+endif()
+
 list(APPEND links ${PROJECT_SOURCE_DIR}/src/modules/libuv/libuv.a -pthread 
 ${PROJECT_SOURCE_DIR}/src/modules/jwt/libjwt.a
 HttpParser libuv_cpp_wrapper
 # /usr/local/mysql/connector-c++-8.0/lib64/debug/libmysqlcppconn8.so
 # /usr/local/mysql/connector-c++-8.0/lib64/debug/libmysqlcppconn8.so.2
 # /home/ele/mysql-cpp-8-static/libmysqlcppconn8-static.a 
-${PROJECT_SOURCE_DIR}/src/modules/mysql-connector-cpp/libmysqlcppconn8-static.a
+# ${PROJECT_SOURCE_DIR}/src/modules/mysql-connector-cpp/libmysqlcppconn8-static.a
+${MYSQL_PATH}
 -lcrypto
 -lssl
 )
