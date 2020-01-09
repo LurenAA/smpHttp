@@ -13,6 +13,7 @@ Makefile
 smpHttp_*
 core*
 log*
+src/modules
 fileAppender.txt*
 src/http_parser/*.a
 src/libuv_cpp_wrapper/*.a
